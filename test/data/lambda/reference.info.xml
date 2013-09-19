@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<reference_info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="v1.4.0" last_modified="2012-08-09T16:20:05-0700" id="lambda" xsi:schemaLocation="http://www.w3.org/2001/XMLSchema-instance">
+    <reference>
+        <description>lambda</description>
+        <file format="text/fasta">./sequence/lambda.fasta</file>
+        <index_file type="indexer">./sequence/lambda.fasta.index</index_file>
+        <index_file type="sawriter">./sequence/lambda.fasta.sa</index_file>
+        <index_file type="gatk_dict">./sequence/lambda.dict</index_file>
+        <index_file type="sam_idx">./sequence/lambda.fasta.fai</index_file>
+        <max_contig_length>48502</max_contig_length>
+        <num_contigs>1</num_contigs>
+        <type>sample</type>
+    </reference>
+    <contigs>
+        <contig length="48502" id="ref000001" displayName="lambda_NEB3011">
+            <digest type="md5">a1319ff90e994c8190a4fe6569d0822a</digest>
+            <header>lambda_NEB3011</header>
+        </contig>
+    </contigs>
+</reference_info>
