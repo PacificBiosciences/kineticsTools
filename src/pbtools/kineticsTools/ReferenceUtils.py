@@ -32,7 +32,6 @@
 #!/usr/bin/env python
 
 import os
-from pbcore.deprecated import ReferenceEntry
 from pbcore.io import FastaReader
 from pbcore.io import CmpH5Reader
 
@@ -42,14 +41,9 @@ class ReferenceUtils():
     @staticmethod
     def loadReferenceContigs(referencePath, cmpH5Path):
         """Load the reference contigs, and tag each one with the ref.ID it was assigned in the cmp.h5 file.  Return a list of contigs, which are used to set up IpdModel"""
-        if os.path.isdir(referencePath):
-            referenceEntry = ReferenceEntry(referencePath)
-            fastaFile = referenceEntry.sequenceFiles[0]
-        else:
-            fastaFile = referencePath
 
         # Read contigs from FASTA file
-        fastaReader = FastaReader(fastaFile)
+        fastaReader = FastaReader(referencePath)
         contigs = [ x for x in fastaReader ]
         contigDict = dict([ (x.md5, x) for x in contigs ])
 

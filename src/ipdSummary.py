@@ -39,7 +39,6 @@ import os, logging, sys, multiprocessing, time, threading
 import numpy as np
 import Queue
 
-from pbcore.deprecated import ReferenceEntry
 from pbcore.io import FastaReader
 from pbcore.io import CmpH5Reader
 
