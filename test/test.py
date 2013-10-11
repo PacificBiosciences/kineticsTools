@@ -44,7 +44,7 @@ class TestSetup(unittest.TestCase):
         # Load the lambda genome from our sample data
 
         dataDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
-        ref = os.path.join(dataDir, 'lambda')
+        ref = os.path.join(dataDir, 'lambda', 'sequence', 'lambda.fasta')
         cmpFile = os.path.join(dataDir, "lambda-mod-decode.cmp.h5")
 
         self.contigs = ReferenceUtils.loadReferenceContigs(ref, cmpFile)
