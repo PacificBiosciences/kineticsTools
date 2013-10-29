@@ -33,12 +33,17 @@ import math
 from scipy.special import erfc
 import logging
 
-# from scipy.optimize import fmin_tnc	# Conjugate gradient
-from scipy.optimize import fminbound
 import scipy.stats as s
 import numpy as np
 import scipy.stats.mstats as mstats
 import sys
+
+from MixtureEstimationMethods import MixtureEstimationMethods
+from MultiSiteCommon import MultiSiteCommon, canonicalBaseMap, modNames, ModificationPeakMask, FRAC, FRAClow, FRACup, log10e
+
+from BasicLdaEnricher import BasicLdaEnricher
+from PositiveControlEnricher import PositiveControlEnricher
+
 from pbtools.kineticsTools.ModificationDecode import ModificationDecode, ModificationPeakMask
 
 from WorkerProcess import WorkerProcess, WorkerThread
@@ -46,12 +51,6 @@ from WorkerProcess import WorkerProcess, WorkerThread
 
 # Raw ipd record
 ipdRec = [('tpl', '<u4'), ('strand', '<i8'), ('ipd', '<f4')]
-
-# Labels for modified fraction:
-
-FRAC = 'frac'
-FRAClow = 'fracLow'
-FRACup = 'fracUp'
 
 
 class HitSelection:
@@ -68,6 +67,7 @@ class HitSelection:
 
 
 class KineticWorker(object):
+
     """
     Manages the summarization of pulse features over a single reference
     """
@@ -91,55 +91,7 @@ class KineticWorker(object):
         self.cognateBaseFunc = self.ipdModel.cognateBaseFunc(reference)
 
 
-    def useLDAmodel(self, kinetics, pos, model, up, down ):
-        """ Test out LDA model """
-
-        res = np.zeros( (up + down + 1, 5) )
-        ind = 0
-
-        # range from -down to +up
-        for offset in range(-down, (up+1)):
-            a = pos + offset
-            # res[ind,] = [kinetics[a]["tMean"], kinetics[a]["modelPrediction"], kinetics[a]["tErr"], kinetics[a]["coverage"]]
-            res[ind,] = [kinetics[a]["tMean"], kinetics[a]["modelPrediction"], kinetics[a]["tErr"], kinetics[a]["coverage"], np.exp(kinetics[a]["tStatistic"]) - 0.01]
-            ind += 1
-
-        apply = np.hstack( np.log(res + 0.01).transpose() )
-        tmp = sum( np.multiply( apply, model[1:] ) ) + model[0]
-        return tmp
-
-   
-    def callLDAstrand( self, kinetics, strand, model, up, down ):
-        tmp = [d for d in kinetics if d["strand"] == strand]
-        tmp.sort( key = lambda x: x["tpl"] )
-
-        L = len(tmp)
-        for pos in range( down, (L-up) ): 
-            if tmp[pos]["base"] == 'C':
-                tmp[pos]["Ca5C"] = self.useLDAmodel( tmp, pos, model, up, down )
-
-        return tmp
- 
-
-    def callLDAfunction( self, kinetics, fwd_model, rev_model, up = 10, down = 10 ):
-
-        fwd = self.callLDAstrand( kinetics, 0, fwd_model, up, down )
-        rev = self.callLDAstrand( kinetics, 1, rev_model, up, down )
-        res = fwd + rev
-        res.sort( key = lambda x: x["tpl"] )
-        return res
-
-
     def onChunk(self, referenceWindow):
-
-        # FIXME:  For debugging LDA, load in LDA models for forward and reverse strands:
-        if self.options.useLDA:
-            if 'K' in self.options.modsToCall:
-                fwd_model = np.genfromtxt( "/home/UNIXHOME/obanerjee/tet_fwd_model_expanded.csv", delimiter=',')
-                rev_model = np.genfromtxt( "/home/UNIXHOME/obanerjee/tet_rev_model_expanded.csv", delimiter=',')
-            else:
-                fwd_model = np.genfromtxt( "/home/UNIXHOME/obanerjee/nat_fwd_model_expanded.csv", delimiter=',')
-                rev_model = np.genfromtxt( "/home/UNIXHOME/obanerjee/nat_rev_model_expanded.csv", delimiter=',')
 
 
         # start and end are the windows of the reference that we are responsible for reporting data from.
@@ -158,6 +110,8 @@ class KineticWorker(object):
 
         self.refId = reference
 
+        self.sequence = self.ipdModel.getReferenceWindow(self.refId, 0, start, end)
+
         # Compute the data for this chunk
 
         if self.options.identify:
@@ -169,8 +123,14 @@ class KineticWorker(object):
             perSiteResults = self._summarizeReferenceRegion((padStart, padEnd), self.options.methylFraction, self.options.identify)
 
             if self.options.useLDA:
+
                 # FIXME: add on a column "Ca5C" containing LDA score for each C-residue site
-                perSiteResults = self.callLDAfunction( perSiteResults, fwd_model, rev_model )
+                # Below is an example of how to use an alternative, the BasicLdaEnricher, which does not use the positive control model
+                # PositiveControlEnricher currently uses a logistic regression model trained using SMRTportal job 65203 (native E. coli)
+
+                # lda = BasicLdaEnricher( self.ipdModel.gbmModel, self.sequence, perSiteResults, self.options.identify, self.options.modsToCall )
+                lda = PositiveControlEnricher( self.ipdModel.gbmModel, self.sequence, perSiteResults )
+                perSiteResults = lda.callEnricherFunction( perSiteResults )
 
             mods = self._decodePositiveControl(perSiteResults, (start, end))
 
@@ -226,8 +186,11 @@ class KineticWorker(object):
             result = self._summarizeReferenceRegion((start, end), self.options.methylFraction, self.options.identify)
 
             if self.options.useLDA and self.controlCmpH5 is None:
+
                 # FIXME: add on a column "Ca5C" containing LDA score for each C-residue site
-                result = self.callLDAfunction( result, fwd_model, rev_model )
+                # lda = BasicLdaEnricher(self.ipdModel.gbmModel, self.sequence, result, self.options.identify)
+                lda = PositiveControlEnricher( self.ipdModel.gbmModel, self.sequence, result )
+                results = lda.callEnricherFunction( result )
 
             result.sort(key = lambda x: x['tpl'])
             return result
@@ -636,7 +599,12 @@ class KineticWorker(object):
         if methylFractionFlag and pvalue < self.options.pvalue and not identifyFlag:
             if res['coverage'] > self.options.methylMinCov:
                 modelPrediction = self.meanIpdFunc(tpl, strand).item()
-                x = self.detectionMixModelBootstrap(modelPrediction, d)
+
+                # Instantiate mixture estimation methods:
+                mixture = MixtureEstimationMethods(self.ipdModel.gbmModel.post, self.ipdModel.gbmModel.pre, res, self.options.methylMinCov)
+                x = mixture.detectionMixModelBootstrap(modelPrediction, d)
+                # x = self.detectionMixModelBootstrap(modelPrediction, d)
+
                 res[FRAC] = x[0]
                 res[FRAClow] = x[1]
                 res[FRACup] = x[2]
@@ -746,7 +714,11 @@ class KineticWorker(object):
         # If the methylFractionFlag is set, then estimate fraction using just modelPrediction in the detection case.
         if methylFractionFlag and pvalue < self.options.pvalue and not identifyFlag:
             if res['controlCoverage'] > self.options.methylMinCov and res['caseCoverage'] > self.options.methylMinCov:
-                x = self.detectionMixModelBootstrap( res['controlMean'], caseData )
+
+                # Instantiate mixture estimation methods:
+                mixture = MixtureEstimationMethods(self.ipdModel.gbmModel.post, self.ipdModel.gbmModel.pre, res, self.options.methylMinCov)
+                x = mixture.detectionMixModelBootstrap( res['controlMean'], caseData )
+
                 res[FRAC] = x[0]
                 res[FRAClow] = x[1]
                 res[FRACup] = x[2]
@@ -757,71 +729,6 @@ class KineticWorker(object):
 
         return res
 
-
-    # FIXME: The following methods:  mixModelFn, replaceScipyNormPdf, estimateSingleFraction are copied exactly from ModificationDecode:
-
-    # Return value of mixture model log likelihood function
-
-    def mixModelFn(self, p, a0, a1):
-        tmp = (1-p)*a0 + p*a1
-        return -np.log( tmp[ np.nonzero(tmp) ] ).sum()
-
-
-    # Try to speed up calculation by avoiding a call to scipy.stats.norm.pdf()
-
-    def replaceScipyNormPdf( self, data, mu ):
-        # return np.exp( -np.divide( data, mu) ) / mu
-        tmp = np.divide( data, mu )
-        return np.exp( np.subtract( tmp, np.power(tmp, 2) / 2.0 ) ) / mu
-        # pdf for normal distribution: res = res / sqrt( 2 * pi ) (can factor out sqrt(2 * pi))
-
-
-    # Return optimum argument (mixing proportion) of mixture model log likelihood function.
-
-    def estimateSingleFraction(self, mu1, data, mu0, L ):
-        a0 = self.replaceScipyNormPdf( data, mu0 )
-        a1 = self.replaceScipyNormPdf( data, mu1 )
-        # if f'(0) < 0 (equ. a1/a0 < L), then f'(1) < 0 as well and solution p-hat <= 0
-        if np.divide(a1, a0).sum() <= L:
-            return 0.0
-        # if f'(1) > 0 (equ. a0/a1 < L), then f'(0) > 0 as well and solution p-hat >= 1
-        if np.divide(a0, a1).sum() <= L:
-            return 1.0
-        # unconstrained minimization of convex, single-variable function
-        res = fminbound(self.mixModelFn, 0.01, 0.99, args=(a0, a1), xtol=1e-02)
-        return res
-
-
-    # Return the optimal mixing proportion in the detection case: estimate both p and mu1
-
-    def optimalMixProportion(self, data, mu0, L ):
-        mu1 = fminbound(self.estimateSingleFraction, mu0, 10.0*mu0, args=(data, mu0, L), xtol=1e-01)
-        res = self.estimateSingleFraction(mu1, data, mu0, L)
-        return res
-
-
-    # Bootstraps mix prop estimates to return estimate and simple bounds for 95% confidence interval 
-
-    def detectionMixModelBootstrap(self, modelPrediction, data, nSamples = 100):
-
-        # Case-resampled bootstrapped estimates:
-        L = len(data)
-        res = np.zeros(4)
-        res[0] = self.optimalMixProportion( data, modelPrediction, L ) 
-        X = np.zeros(nSamples + 1)
-        X[nSamples] = res[0]
-        for i in range(nSamples):
-            resampledData = [data[j] for j in s.randint.rvs(0, L-1, size=L)]
-            X[i] = self.optimalMixProportion( resampledData, modelPrediction, L ) 
-
-        # A very basic way to estimate the 95% confidence interval:
-        res[1] = np.percentile(X, 2.5)
-        res[2] = np.percentile(X, 97.5)
-
-        # Estimate a weight:
-        # weight = np.maximum( (x[1] - modelPrediction), 0 )
-        res[3] = 1.0
-        return res
 
 
 class KineticWorkerProcess(KineticWorker, WorkerProcess):
