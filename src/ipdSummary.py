@@ -150,7 +150,7 @@ class KineticsToolsRunner():
 
         self.parser.add_argument('--maxQueueSize',
             dest='maxQueueSize',
-            default=50,
+            default=20,
             type=int,
             help='Max Queue Size')
 
@@ -386,17 +386,21 @@ class KineticsToolsRunner():
             return
 
         # Maximum chunk size (set no larger than 1Mb for now)
-        MAX_BLOCK_SIZE = 500000
+        MAX_BLOCK_SIZE = 25000
 
         # Maximum number of hits per chunk
         MAX_HITS = 5000
         nBases = min(refInfo.Length, self.args.maxLength)
-        # nBlocks = max(self.options.numWorkers*4, numHits / MAX_HITS)
+
+        # Adjust numHits if we are only doing part of the contig
+        numHits = (numHits * nBases) / refInfo.Length 
+
         nBlocks = max([self.options.numWorkers*4, numHits / MAX_HITS, nBases / (MAX_BLOCK_SIZE - 1) + 1])
 
         # Including nBases / (MAX_BLOCK_SIZE - 1) + 1 in nBlocks calculation:
         # E. coli genome: this should be ~ 10.
         # Human genome: ought to be largest & is meant to ensure that blockSize < MAX_BLOCK_SIZE.
+
 
         # Block layout
         blockSize = min(nBases, max(nBases / nBlocks + 1, 1000))
@@ -404,13 +408,17 @@ class KineticsToolsRunner():
         blockEnds = blockStarts + blockSize
         blocks = zip(blockStarts, blockEnds)
 
-        
+        logging.info("Queueing chunks for ref: %d.  NumReads: %d, Block Size: %d " % (refGroupId, numHits, blockSize))
+
         # Queue up work blocks
         for block in blocks:
             # NOTE! The format of a work chunk is (refId <int>, refStartBase <int>, refEndBase <int>)
             chunk = (refInfo.ID, block[0], block[1])
             self._workQueue.put((self.workChunkCounter, chunk))
             self.workChunkCounter += 1
+
+            if self.workChunkCounter % 10 == 0:
+                logging.info("Queued chunk: %d.  Chunks in queue: %d" % (self.workChunkCounter, self._workQueue.qsize()))
 
 
     def loadReferenceAndModel(self, referencePath, cmpH5Path):

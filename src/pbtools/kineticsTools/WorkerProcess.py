@@ -31,7 +31,7 @@
 import cProfile, logging, os.path
 from multiprocessing import Process
 from multiprocessing.process import current_process
-from threading import Thread
+from threading import Thread, Event
 
 from pbcore.io import CmpH5Reader
 
@@ -67,6 +67,9 @@ class Worker(object):
         self.onStart()
 
         while True:
+            if self.isTerminated():
+                break
+
             chunkDesc = self._workQueue.get()
             if chunkDesc is None:
                 # Sentinel indicating end of input.  Place a sentinel
@@ -151,14 +154,24 @@ class WorkerProcess(Worker, Process):
         else:
             os.nice(10)
 
+    def isTerminated(self):
+        return False
+
 
 class WorkerThread(Worker, Thread):
     """Worker that executes as a thread (for debugging purposes only)."""
     def __init__(self, *args):
         Thread.__init__(self)
         super(WorkerThread,self).__init__(*args)
+        self._stop = Event()
         self.daemon = True
         self.exitcode = 0
+
+    def terminate(self):
+        self._stop.set()
+
+    def isTerminated(self):
+        return self._stop.isSet()
 
     @property
     def pid(self):
