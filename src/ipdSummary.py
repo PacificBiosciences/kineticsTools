@@ -46,7 +46,7 @@ from pbtools.kineticsTools.KineticWorker import KineticWorker, KineticWorkerThre
 from pbtools.kineticsTools.ResultWriter import KineticsWriter
 from pbtools.kineticsTools.ipdModel import IpdModel
 from pbtools.kineticsTools.ReferenceUtils import ReferenceUtils
-
+import pdb, traceback
 
 # Version info
 __p4revision__ = "$Revision: #1 $"
@@ -109,6 +109,11 @@ class KineticsToolsRunner():
             dest='csv',
             default=None,
             help='Name of output CSV file [%(default)s]')
+
+        self.parser.add_argument('--ms_csv',
+            dest='ms_csv',
+            default=None,
+            help='Multisite detection CSV file [%(default)s]')
 
         self.parser.add_argument('--pickle',
             dest='pickle',
@@ -395,7 +400,7 @@ class KineticsToolsRunner():
         # Adjust numHits if we are only doing part of the contig
         numHits = (numHits * nBases) / refInfo.Length 
 
-        nBlocks = max([self.options.numWorkers*4, numHits / MAX_HITS, nBases / (MAX_BLOCK_SIZE - 1) + 1])
+        nBlocks = max([numHits / MAX_HITS, nBases / (MAX_BLOCK_SIZE - 1) + 1])
 
         # Including nBases / (MAX_BLOCK_SIZE - 1) + 1 in nBlocks calculation:
         # E. coli genome: this should be ~ 10.
@@ -574,5 +579,11 @@ def monitorChildProcesses(children):
 
 
 if __name__=="__main__":
-    kt = KineticsToolsRunner()
-    kt.start()
+    try:
+        kt = KineticsToolsRunner()
+        kt.start()
+    except:
+        type, value, tb = sys.exc_info()
+        traceback.print_exc()
+        pdb.post_mortem(tb)
+

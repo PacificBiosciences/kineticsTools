@@ -54,7 +54,10 @@ seqCodeMap = np.ones(256, dtype=uint8) * 4
 for k in maps:
     seqCodeMap[ord(k)] = maps[k]
 seqMap = { 0: 'A', 1:'C', 2:'G', 3:'T', 4:'N'}
+seqMapNp = np.array(['A', 'C', 'G', 'T', 'N'])
+
 seqMapComplement = { 0: 'T', 1:'G', 2:'C', 3:'A', 4:'N'}
+seqMapComplementNp = np.array(['T', 'G', 'C', 'A', 'N'])
 
 # Base letters for modification calling
 # 'H' : m6A, 'I' : m5C, 'J' : m4C, 'K' : m5C/TET
@@ -414,15 +417,9 @@ class IpdModel:
             gbmModelGroup = h5File["/AllMods_GbmModel"]
             self.gbmModel = GbmContextModel(gbmModelGroup, modelIterations)
 
-            # We will use the LUT for the null model if it's available
-            if "NullModel_Lut" in h5File.keys():
-                nullModelGroup = h5File["/NullModel_Lut"]
-                self._loadIpdTable(nullModelGroup)
-                self.haveLut = True
-                self.predictIpdFunc = self.predictIpdFuncLut
-            else:
-                self.haveLut = False
-                self.predictIpdFunc = self.predictIpdFuncModel
+            # We always use the model -- no more LUTS 
+            self.predictIpdFunc = self.predictIpdFuncModel
+            self.predictManyIpdFunc = self.predictManyIpdFuncModel
         else:
             logging.info("Couldn't find model file: %s" % self.lutPath)
 
@@ -493,13 +490,13 @@ class IpdModel:
             if tplStrand==0:
                 slc = refArray[(tplPos-pre):(tplPos+1+post)]
                 slc = np.right_shift(slc, 4)
-                return "".join(seqMap[x] for x in slc)
+                return seqMapNp[slc].tostring()
 
             # Reverse strand
             else:
                 slc = refArray[(tplPos+pre):(tplPos-post-1):-1]
                 slc = np.right_shift(slc, 4)
-                return "".join(seqMapComplement[x] for x in slc)
+                return seqMapComplementNp[slc].tostring()
 
         return f
 
@@ -583,6 +580,26 @@ class IpdModel:
             return self.gbmModel.getPredictions([context])[0]
 
         return f
+
+
+    def predictManyIpdFuncModel(self, refId):
+        """
+        Each (pre+post+1) base context gets mapped to an integer
+        by converting each nucleotide to a base-4 number A=0, C=1, etc,
+        and treating the 'pre' end of the context of the least significant
+        digit.  This code is used to lookup the expected IPD in a
+        pre-computed table.  Contexts near the ends of the reference
+        are coded by padding the context with 0
+        """
+
+        # Materialized the numpy wrapper around the shared data
+        snipFunction = self.snippetFunc(refId, self.post, self.pre)
+
+        def fMany(sites):
+            contexts = [ snipFunction(x[0], x[1]) for x in sites ]
+            return self.gbmModel.getPredictions(contexts)
+
+        return fMany
 
     def modPredictIpdFunc(self, refId, mod):
         """

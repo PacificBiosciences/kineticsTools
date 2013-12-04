@@ -121,6 +121,91 @@ class KineticsWriter(ResultCollectorProcess):
         self.refInfo = refInfo
         self.ipdModel = ipdModel
 
+
+    @consumer
+    def msCsvConsumer(self, filename):
+        """
+        Consume IPD summary rows and write them to csv
+        """
+
+        # Open the csv file
+        f = self.openWriteHandle(filename)
+        delim = ","
+
+
+        cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", "signal", "variance", "MSscore" ]
+
+
+        # Special cases for formatting columns of the csv
+        handlers = dict()
+        threeF = lambda x : "%.3f" % x
+
+        handlers["refName"] = lambda x: "\"%s\"" % x
+
+        handlers["tpl"] = lambda x: str(x.item() + 1)
+        handlers["score"] = lambda x: "%d" % x
+
+        handlers["tMean"] = threeF
+        handlers["modelPrediction"] = threeF
+        handlers["caseMean"] = threeF
+        handlers["controlMean"] = threeF
+        handlers["ipdRatio"] = threeF
+        handlers["pvalue"] = lambda x: "%.3e" % x
+
+        handlers["controlStd"] = threeF
+        handlers["controlStd"] = threeF
+        handlers["tErr"] = threeF
+
+        fourF = lambda x : "%.4f" % x
+        handlers["signal"] = fourF
+        handlers["variance"] = fourF
+        handlers["MSscore"] = lambda x: "%d" % x
+
+        print >>f, delim.join(cols)
+
+        def fmt(rowData, colName):
+            if not rowData.has_key(colName):
+                return ""
+
+            if handlers.has_key(colName):
+                return handlers[colName](rowData[colName])
+            else:
+                return str(rowData[colName])
+
+        try:
+            while True:
+                # Pull a list of record in from the producer
+                itemList = (yield)
+
+                for item in itemList:
+                    if item.has_key("signal"):
+                        values = [ fmt(item, col) for col in cols ]
+                        print >>f, delim.join(values)
+
+        except GeneratorExit:
+            f.close()
+            return
+        except Exception as e:
+            print e
+
+
+
+    @consumer
+    def hdf5CsvConsumer(self, filename):
+
+        grp = h5py.File(filename, "w")
+
+        y = [int(ref.Length) for ref in self.refInfo]
+        dataLength = sum(y)
+        y.append(8192)
+        chunkSize = min(dataLength, 8192*2)
+        #print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
+
+        refIdDataset = grp.create_dataset( 'refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        tplDataset = grp.create_dataset( 'tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        strandDataset = grp.create_dataset( 'strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+
+
     @consumer
     def csvConsumer(self, filename):
         """
@@ -158,7 +243,7 @@ class KineticsWriter(ResultCollectorProcess):
 
         handlers["refName"] = lambda x: "\"%s\"" % x
 
-        handlers["tpl"] = lambda x: str(x + 1)
+        handlers["tpl"] = lambda x: str(x.item() + 1)
         handlers["score"] = lambda x: "%d" % x
 
         handlers["tMean"] = threeF
@@ -171,7 +256,7 @@ class KineticsWriter(ResultCollectorProcess):
         handlers["controlStd"] = threeF
         handlers["controlStd"] = threeF
         handlers["tErr"] = threeF
-       
+
         # FIXME: remove this line later:
         handlers["Ca5C"] = threeF
 
@@ -215,24 +300,24 @@ class KineticsWriter(ResultCollectorProcess):
         y = [int(ref.Length) for ref in self.refInfo]
         dataLength = sum(y)
         y.append(8192)
-        chunkSize = min(dataLength, 8192)
-        print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
- 
-        ds = grp.create_dataset( 'refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
-        ds = grp.create_dataset( 'tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
-        ds = grp.create_dataset( 'strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,))
-        ds = grp.create_dataset( 'base', (dataLength,), dtype="a1", compression="gzip", chunks=(chunkSize,))
-        ds = grp.create_dataset( 'score', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
-        ds = grp.create_dataset( 'tMean', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-        ds = grp.create_dataset( 'tErr', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-        ds = grp.create_dataset( 'modelPrediction', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-        ds = grp.create_dataset( 'ipdRatio', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-        ds = grp.create_dataset( 'coverage', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
+        chunkSize = min(dataLength, 8192*2)
+        #print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
+
+        refIdDataset = grp.create_dataset( 'refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        tplDataset = grp.create_dataset( 'tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        strandDataset = grp.create_dataset( 'strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        baseDataset = grp.create_dataset( 'base', (dataLength,), dtype="a1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        scoreDataset = grp.create_dataset( 'score', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        tMeanDataset = grp.create_dataset( 'tMean', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        tErrDataset = grp.create_dataset( 'tErr', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        modelPredictionDataset = grp.create_dataset( 'modelPrediction', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        ipdRatioDataset = grp.create_dataset( 'ipdRatio', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        coverageDataset = grp.create_dataset( 'coverage', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
 
         if self.options.methylFraction:
-            ds = grp.create_dataset( FRAC, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( FRAClow, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( FRACup, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+            fracDataset = grp.create_dataset( FRAC, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+            fracLowDataset = grp.create_dataset( FRAClow, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+            fracUpDataset = grp.create_dataset( FRACup, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
 
         try:
             while True:
@@ -242,6 +327,7 @@ class KineticsWriter(ResultCollectorProcess):
                 if len(chunk) == 0:
                     continue
 
+                '''
                 # determine the correct group:
                 refIdDataset = grp['refId']
                 tplDataset = grp['tpl']
@@ -257,7 +343,7 @@ class KineticsWriter(ResultCollectorProcess):
                     fracDataset = grp[FRAC]
                     fracLowDataset = grp[FRAClow]
                     fracUpDataset = grp[FRACup]
-
+                '''
 
                 start = min(x['tpl'] for x in chunk)
                 end = min(max(x['tpl'] for x in chunk), tplDataset.shape[0]- 1)
@@ -288,15 +374,15 @@ class KineticsWriter(ResultCollectorProcess):
                     # Data points past the end of the reference can make it through -- filter them out here
                     if idx < arrLen:
                         refId[idx] = int( x['refId'] )
-                        tpl[idx] += int( x['tpl'] )
-                        strand[idx] += int( x['strand'] )
+                        tpl[idx] = int( x['tpl'] )
+                        strand[idx] = int( x['strand'] )
                         base[idx] = x['base']
-                        score[idx] += int( x['score'] )
-                        tMean[idx] += float( x['tMean'] )
-                        tErr[idx] += float( x['tErr'] )
-                        modelPrediction[idx] += float( x['modelPrediction'] )
-                        ipdRatio[idx] += float( x['ipdRatio'] )
-                        coverage[idx] += int( x['coverage'] )
+                        score[idx] = int( x['score'] )
+                        tMean[idx] = float( x['tMean'] )
+                        tErr[idx] = float( x['tErr'] )
+                        modelPrediction[idx] = float( x['modelPrediction'] )
+                        ipdRatio[idx] = float( x['ipdRatio'] )
+                        coverage[idx] = int( x['coverage'] )
                         if self.options.methylFraction:
                             if FRAC in x:
                                 frac[idx] = float( x[FRAC] )
@@ -706,6 +792,7 @@ class KineticsWriter(ResultCollectorProcess):
         fileSpec = [
             ('gff', 'gff', self.gffConsumer),
             ('csv', 'csv', self.csvConsumer),
+            ('ms_csv', 'csv', self.msCsvConsumer),
             ('pickle', 'pickle', self.csvConsumer),
             ('summary_h5', 'summary.h5', self.ipdRatioH5Consumer),
             ('csv_h5', 'h5', self.hdf5CsvConsumer)

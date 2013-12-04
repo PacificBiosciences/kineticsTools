@@ -45,7 +45,7 @@ class TestSetup(unittest.TestCase):
 
         dataDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
         ref = os.path.join(dataDir, 'lambda', 'sequence', 'lambda.fasta')
-        cmpFile = os.path.join(dataDir, "lambda-mod-decode.cmp.h5")
+        cmpFile = os.path.join(dataDir, "p4-c2-lambda-mod-decode.cmp.h5")
 
         self.contigs = ReferenceUtils.loadReferenceContigs(ref, cmpFile)
         self.ipdModel = IpdModel(self.contigs)

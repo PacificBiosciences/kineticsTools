@@ -41,13 +41,15 @@ import sys
 from MixtureEstimationMethods import MixtureEstimationMethods
 from MultiSiteCommon import MultiSiteCommon, canonicalBaseMap, modNames, ModificationPeakMask, FRAC, FRAClow, FRACup, log10e
 
+from MultiSiteDetection import *
+
 from BasicLdaEnricher import BasicLdaEnricher
 from PositiveControlEnricher import PositiveControlEnricher
 
 from pbtools.kineticsTools.ModificationDecode import ModificationDecode, ModificationPeakMask
 
 from WorkerProcess import WorkerProcess, WorkerThread
-
+import pdb, traceback
 
 # Raw ipd record
 ipdRec = [('tpl', '<u4'), ('strand', '<i8'), ('ipd', '<f4')]
@@ -78,48 +80,43 @@ class KineticWorker(object):
 
 
     def _prepForReferenceWindow(self, referenceWindow):
-        """
-        Helper function for testing
-        """
+        """ Set up member variable to call modifications on a window. """
+
         (reference, start, end) = referenceWindow
         self.refId = reference
 
         # Each chunk is from a single reference -- fire up meanIpd func on the current reference
         self.meanIpdFunc = self.ipdModel.predictIpdFunc(reference)
+        self.manyManyIpdFunc = self.ipdModel.predictManyIpdFunc(reference)
 
         # Get the cognate base at a given position
         self.cognateBaseFunc = self.ipdModel.cognateBaseFunc(reference)
 
+        # Padding needed for multi-site models
+        self.pad = self.ipdModel.gbmModel.pre + self.ipdModel.gbmModel.post + 1
+
+        # Sequence we work over
+        self.sequence = self.ipdModel.getReferenceWindow(self.refId, 0, start, end)
 
     def onChunk(self, referenceWindow):
 
+        # Setup the object for a new window.
+        self._prepForReferenceWindow(referenceWindow)
 
         # start and end are the windows of the reference that we are responsible for reporting data from.
         # We may elect to pull data from a wider window for use with positive control
-
         (reference, start, end) = referenceWindow
 
         # Trim end coordinate to length of current template
         end = min(end,self.ipdModel.refLength(reference))
 
-        # Each chunk is from a single reference -- fire up meanIpd func on the current reference
-        self.meanIpdFunc = self.ipdModel.predictIpdFunc(reference)
-
-        # Get the cognate base at a given position
-        self.cognateBaseFunc = self.ipdModel.cognateBaseFunc(reference)
-
-        self.refId = reference
-
-        self.sequence = self.ipdModel.getReferenceWindow(self.refId, 0, start, end)
-
-        # Compute the data for this chunk
 
         if self.options.identify:
             # If we are attempting to identify modifications, get the raw data for a slightly expanded window
             # then do the decoding, then weave the modification results back into the main results
 
-            padStart = start - 8
-            padEnd = end + 8
+            padStart = start - self.pad
+            padEnd = end + self.pad
             perSiteResults = self._summarizeReferenceRegion((padStart, padEnd), self.options.methylFraction, self.options.identify)
 
             if self.options.useLDA:
@@ -132,7 +129,14 @@ class KineticWorker(object):
                 lda = PositiveControlEnricher( self.ipdModel.gbmModel, self.sequence, perSiteResults )
                 perSiteResults = lda.callEnricherFunction( perSiteResults )
 
-            mods = self._decodePositiveControl(perSiteResults, (start, end))
+            try:
+                # Handle different modes of 'extra analysis' here -- this one is for multi-site m5C detection
+                # mods = self._multiSiteDetection(perSiteResults, (start, end))
+                mods = self._decodePositiveControl(perSiteResults, (start, end))
+            except:
+                type, value, tb = sys.exc_info()
+                traceback.print_exc()
+                pdb.post_mortem(tb)
 
             finalCalls = []
 
@@ -151,15 +155,20 @@ class KineticWorker(object):
                     # coverage on the cognate base!
                     if siteDict.has_key(mod['tpl']):
 
-                        # Copy mod identification data 
-                        siteDict[mod['tpl']]['modificationScore'] = mod['QMod']
-                        siteDict[mod['tpl']]['modification'] = mod['modification']
-		
+                        # Copy mod identification data
+                        #siteDict[mod['tpl']]['modificationScore'] = mod['QMod']
+                        #siteDict[mod['tpl']]['modification'] = mod['modification']
+
                         if self.options.methylFraction and mod.has_key(FRAC):
                             siteDict[mod['tpl']][FRAC] = mod[FRAC]
                             siteDict[mod['tpl']][FRAClow] = mod[FRAClow]
                             siteDict[mod['tpl']][FRACup] = mod[FRACup]
 
+
+                            # Copy any extra properties that were added
+                            newKeys = set.difference(siteDict[mod['tpl']].keys(), mod.keys())
+                            for nk in newKeys:
+                                siteDict[mod['tpl']][nk] = mod[nk]
 
                     if mod.has_key('Mask'):
                         # The decoder should supply the off-target peak mask
@@ -207,7 +216,14 @@ class KineticWorker(object):
 
         if self.controlCmpH5 is None:
             # in silico control workflow -- only get data from the main 'case' cmp.h5
-            return [self._computePositionSyntheticControl(x, capValue, methylFractionFlag, identifyFlag) for x in caseChunks if x['data']['ipd'].size > 2]
+
+            goodSites = [ x for x in caseChunks if x['data']['ipd'].size > 2 ]
+
+            # Flip the strand, and make predictions for the whole chunk
+            predictions = self.manyManyIpdFunc([ (x['tpl'], 1-x['strand']) for x in goodSites ])
+            goodSitesWithPred = zip(goodSites, predictions)
+
+            return [ self._computePositionSyntheticControl(x, capValue, methylFractionFlag, identifyFlag, prediction.item()) for (x, prediction) in goodSitesWithPred ]
 
         else:
             # case/control workflow -- get data from the case and control files and compare
@@ -245,7 +261,7 @@ class KineticWorker(object):
         """Compute the ipd stats for a chunk of the reference"""
 
         (kinStart, kinEnd) = bounds
-        callBounds = (8, kinEnd-kinStart + 8)
+        callBounds = (self.pad, kinEnd-kinStart + self.pad)
 
         chunkFwd = dict((x['tpl'], x) for x in kinetics if x['strand'] == 0 and x['coverage'] > self.options.identifyMinCov )
         chunkRev = dict((x['tpl'], x) for x in kinetics if x['strand'] == 1 and x['coverage'] > self.options.identifyMinCov )
@@ -253,13 +269,13 @@ class KineticWorker(object):
         modCalls = []
 
         # Fwd sequence window
-        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 0, kinStart-8, kinEnd + 8)
+        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 0, kinStart-self.pad, kinEnd + self.pad)
 
         # Map the raw kinetics into the frame-of reference of our sequence snippets
         def toRef(p):
-            return p - (kinStart - 8)
+            return p - (kinStart - self.pad)
         def fromRef(r):
-            return r + (kinStart - 8)
+            return r + (kinStart - self.pad)
 
         mappedChunk = dict((toRef(pos), k) for (pos, k) in chunkFwd.items())
 
@@ -275,13 +291,13 @@ class KineticWorker(object):
 
         # Repeat decoding on reverse sequence
         # Reverse sequence
-        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 1, kinStart-8, kinEnd + 8)
+        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 1, kinStart-self.pad, kinEnd + self.pad)
 
         # Map the raw kinetics into the frame-of reference of our sequence snippets
         def toRef(p):
-            return len(canonicalSequence) - p + (kinStart - 8)
+            return len(canonicalSequence) - p + (kinStart - self.pad)
         def fromRef(r):
-            return len(canonicalSequence) - r + (kinStart - 8)
+            return len(canonicalSequence) - r + (kinStart - self.pad)
 
         mappedChunk = dict((toRef(pos), k) for (pos, k) in chunkRev.items())
         decoder = ModificationDecode(self.ipdModel.gbmModel, canonicalSequence, mappedChunk, callBounds, self.options.methylMinCov, self.options.modsToCall, self.options.methylFraction, self.options.useLDA)
@@ -293,6 +309,57 @@ class KineticWorker(object):
 
         return modCalls
 
+    def _multiSiteDetection(self, kinetics, bounds):
+        """Compute the ipd stats for a chunk of the reference"""
+
+        (kinStart, kinEnd) = bounds
+        callBounds = (self.pad, kinEnd-kinStart + self.pad)
+
+        chunkFwd = dict((x['tpl'], x) for x in kinetics if x['strand'] == 0 and x['coverage'] > self.options.identifyMinCov )
+        chunkRev = dict((x['tpl'], x) for x in kinetics if x['strand'] == 1 and x['coverage'] > self.options.identifyMinCov )
+
+        modCalls = []
+
+        # Fwd sequence window
+        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 0, kinStart - self.pad, kinEnd + self.pad)
+
+        # Map the raw kinetics into the frame-of reference of our sequence snippets
+        def toRef(p):
+            return p - (kinStart - self.pad)
+        def fromRef(r):
+            return r + (kinStart - self.pad)
+
+        mappedChunk = dict((toRef(pos), k) for (pos, k) in chunkFwd.items())
+
+        # Decode the modifications
+        decoder = MultiSiteDetection(self.ipdModel.gbmModel, canonicalSequence, mappedChunk, callBounds, self.options.methylMinCov)
+
+        # Map the modification positions back to normal template indices
+        for (r, mod) in decoder.decode().items():
+            mod["strand"] = 0
+            mod['tpl'] = fromRef(r)
+            modCalls.append(mod)
+
+
+        # Repeat decoding on reverse sequence
+        # Reverse sequence
+        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 1, kinStart - self.pad, kinEnd + self.pad)
+
+        # Map the raw kinetics into the frame-of reference of our sequence snippets
+        def toRef(p):
+            return len(canonicalSequence) - p + (kinStart - self.pad)
+        def fromRef(r):
+            return len(canonicalSequence) - r + (kinStart - self.pad)
+
+        mappedChunk = dict((toRef(pos), k) for (pos, k) in chunkRev.items())
+        decoder = MultiSiteDetection(self.ipdModel.gbmModel, canonicalSequence, mappedChunk, callBounds, self.options.methylMinCov)
+
+        for (r, mod) in decoder.decode().items():
+            mod["strand"] = 1
+            mod['tpl'] = fromRef(r)
+            modCalls.append(mod)
+
+        return modCalls
 
 
     def _fetchChunks(self, refGroupId, targetBounds, cmpH5File):
@@ -353,6 +420,7 @@ class KineticWorker(object):
 
             # Normalize kinetics of the entire subread
             rawIpd = aln.IPD() * factor
+
             np.logical_and(np.logical_not(np.isnan(rawIpd)), matched, out=matched)
 
             normalization = self._subreadNormalizationFactor(rawIpd[matched])
@@ -524,13 +592,13 @@ class KineticWorker(object):
         t = siteObs['tStatistic']
         df = max(1, siteObs['coverage'] - 1)
 
-        pvalue = s.t.cdf(t, df)
+        pvalue = s.t._cdf(t, df)
         return pvalue.item()
 
 
 
 
-    def _computePositionSyntheticControl(self, caseObservations, capValue, methylFractionFlag, identifyFlag):
+    def _computePositionSyntheticControl(self, caseObservations, capValue, methylFractionFlag, identifyFlag, modelPrediction = None):
         """Summarize the observed ipds at one template position/strand, using the synthetic ipd model"""
 
         # Compute stats on the observed ipds
@@ -556,13 +624,14 @@ class KineticWorker(object):
 
         # Compute the predicted IPD from the model
         # # NOTE! The ipd model is in the observed read strand
-        modelPrediction = self.meanIpdFunc(tpl, strand).item()
+        if modelPrediction is None:
+            modelPrediction = self.meanIpdFunc(tpl, strand).item()
         res['modelPrediction'] = modelPrediction
 
         res['base'] = self.cognateBaseFunc(tpl, strand)
 
-	# Store in case of methylated fraction estimtion:
-	res['rawData'] = d
+        # Store in case of methylated fraction estimtion:
+        res['rawData'] = d
 
         # Try a hybrid capping approach -- cap at the higher of
         #  - 5x the model prediction
