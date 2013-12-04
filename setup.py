@@ -8,7 +8,7 @@ setup(
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license='LICENSE.txt',
-    scripts = ['src/ipdSummary.py', 'src/summarizeModifications.py', 'src/copyIpdSummaryDataset.py'],
+    scripts = ['src/smIpdSummary.py','src/ipdSummary.py', 'src/summarizeModifications.py', 'src/copyIpdSummaryDataset.py'],
     packages = find_packages('src'),  
     package_dir = {'':'src'},
     namespace_packages = ['pbtools'],
