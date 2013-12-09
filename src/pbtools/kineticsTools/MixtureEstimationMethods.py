@@ -79,8 +79,8 @@ class MixtureEstimationMethods(object):
         # Temporary:
         # self.useLDA = useLDAFlag
         # self.modsToCall = modsToCall
-        # self.methylFractionFlag = methylFractionFlag	
-   
+        # self.methylFractionFlag = methylFractionFlag
+
         # log1p = math.log(0.05)
         # self.modPriors = { 'H': log1p, 'I': log1p, 'J': log1p, 'K': log1p }
 
@@ -106,30 +106,23 @@ class MixtureEstimationMethods(object):
 
         self.rawKinetics = rawKinetics
 
-
-
     # Return value of mixture model log likelihood function
-
     def mixModelFn(self, p, a0, a1):
-        tmp = (1-p)*a0 + p*a1
-        return -np.log( tmp[ np.nonzero(tmp) ] ).sum()
+        tmp = (1 - p) * a0 + p * a1
+        return -np.log(tmp[np.nonzero(tmp)]).sum()
         # return -np.ma.log( tmp ).sum()
 
-
-    # Try to speed up calculation by avoiding a call to scipy.stats.norm.pdf() 
-
-    def replaceScipyNormPdf( self, data, mu ):
+    # Try to speed up calculation by avoiding a call to scipy.stats.norm.pdf()
+    def replaceScipyNormPdf(self, data, mu):
         # return np.exp( -np.divide( data, mu) ) / mu
-        tmp = np.divide( data, mu )
-        return np.exp( np.subtract( tmp, np.power(tmp, 2) / 2.0 ) ) / mu 
+        tmp = np.divide(data, mu)
+        return np.exp(np.subtract(tmp, np.power(tmp, 2) / 2.0)) / mu
         # pdf for normal distribution: res = res / sqrt( 2 * pi ) (can factor out sqrt(2 * pi))
 
-
     # Return optimum argument (mixing proportion) of mixture model log likelihood function.
-
-    def estimateSingleFraction(self, mu1, data, mu0, L ):
-        a0 = self.replaceScipyNormPdf( data, mu0 )
-        a1 = self.replaceScipyNormPdf( data, mu1 )
+    def estimateSingleFraction(self, mu1, data, mu0, L):
+        a0 = self.replaceScipyNormPdf(data, mu0)
+        a1 = self.replaceScipyNormPdf(data, mu1)
         # if f'(0) < 0 (equ. a1/a0 < L), then f'(1) < 0 as well and solution p-hat <= 0
         if np.divide(a1, a0).sum() <= L:
             return 0.0
@@ -140,33 +133,30 @@ class MixtureEstimationMethods(object):
         res = fminbound(self.mixModelFn, 0.01, 0.99, args=(a0, a1), xtol=1e-02)
         return res
 
-
-
     # Try bias-corrected, accelerated quantiles for bootstrap confidence intervals
+    def bcaQuantile(self, estimate, bootDist, data, mu0, mu1, nSamples, n):
 
-    def bcaQuantile( self, estimate, bootDist, data, mu0, mu1, nSamples, n ):
-
-        tmp = sum( y <= estimate for y in bootDist ) / float(nSamples + 1)
+        tmp = sum(y <= estimate for y in bootDist) / float(nSamples + 1)
         if tmp > 0 and tmp < 1:
 
             # bias correction
-            z0 = s.norm.ppf( tmp )
+            z0 = s.norm.ppf(tmp)
 
             # acceleration
             x = np.zeros(n)
             for i in range(n):
-                x[i] = self.estimateSingleFraction(mu1, np.delete(data, i), mu0, n-1)
+                x[i] = self.estimateSingleFraction(mu1, np.delete(data, i), mu0, n - 1)
             xbar = np.mean(x)
-            denom =  np.power( np.sum( np.power( x - xbar, 2) ), 1.5 )
+            denom = np.power(np.sum(np.power(x - xbar, 2)), 1.5)
             if abs(denom) < 1e-4:
                 q1 = 2.5
                 q2 = 97.5
             else:
-                a = np.divide( np.sum( np.power( x - xbar, 3) ),  denom ) / 6.0
+                a = np.divide(np.sum(np.power(x - xbar, 3)), denom) / 6.0
 
                 # quantiles: (k1 and k2 are defined globally)
-                q1 = 100*s.norm.cdf( z0 + (z0 + k1)/(1 - a*(z0 + k1)) )
-                q2 = 100*s.norm.cdf( z0 + (z0 + k2)/(1 - a*(z0 + k2)) )
+                q1 = 100 * s.norm.cdf(z0 + (z0 + k1) / (1 - a * (z0 + k1)))
+                q2 = 100 * s.norm.cdf(z0 + (z0 + k2) / (1 - a * (z0 + k2)))
 
         elif tmp == 0.0:
             q1 = 0
@@ -178,40 +168,36 @@ class MixtureEstimationMethods(object):
 
         return (q1, q2)
 
-
     # Bootstraps mix prop estimates to return estimate and simple bounds for 95% confidence interval
+    def bootstrap(self, pos, mu0, mu1, nSamples=500):
 
-    def bootstrap(self, pos, mu0, mu1, nSamples = 500):
-
-        if not self.rawKinetics.has_key( pos ):
-            return np.array( [ float('nan'), float('nan'), float('nan') ] )
+        if not self.rawKinetics.has_key(pos):
+            return np.array([float('nan'), float('nan'), float('nan')])
 
         res = np.zeros(3)
         sample = self.rawKinetics[pos]["rawData"]
         L = len(sample)
-        X = np.zeros(nSamples+1)
+        X = np.zeros(nSamples + 1)
         res[0] = self.estimateSingleFraction(mu1, sample, mu0, L)
         X[nSamples] = res[0]
 
         for i in range(nSamples):
-            bootstrappedSamples = sample[s.randint.rvs(0, L-1, size=L)]
+            bootstrappedSamples = sample[s.randint.rvs(0, L - 1, size=L)]
             X[i] = self.estimateSingleFraction(mu1, bootstrappedSamples, mu0, L)
 
-        q1,q2 = self.bcaQuantile( res[0], X, sample, mu0, mu1, (nSamples+1), L )
+        q1, q2 = self.bcaQuantile(res[0], X, sample, mu0, mu1, (nSamples + 1), L)
         res[1] = np.percentile(X, q1)
         res[2] = np.percentile(X, q2)
         return res
 
-
     # Returns [estimate, 95% CI lower bnd, 95% CI upper bound] using a weighted sum
     # The hope is that this would work better for a multi-site signature, such as m5C_TET
-
-    def estimateMethylatedFractions(self, pos, meanVector, modMeanVector, maskPos ):
+    def estimateMethylatedFractions(self, pos, meanVector, modMeanVector, maskPos):
 
         maskPos = np.array(maskPos)
         L = len(maskPos)
         if L == 0:
-            res = self.bootstrap(pos, meanVector[self.post], modMeanVector[self.post] )
+            res = self.bootstrap(pos, meanVector[self.post], modMeanVector[self.post])
         else:
             est = np.zeros(L)
             low = np.zeros(L)
@@ -222,17 +208,17 @@ class MixtureEstimationMethods(object):
             # for offset in maskPos:
             for count in range(L):
                 offset = maskPos[count]
-                mu0 = meanVector[ self.post + offset ]
-                mu1 = modMeanVector[ self.post + offset ]
+                mu0 = meanVector[self.post + offset]
+                mu1 = modMeanVector[self.post + offset]
                 if mu1 > mu0:
-                    k = self.bootstrap( (pos + offset), mu0, mu1 )
+                    k = self.bootstrap((pos + offset), mu0, mu1)
                     wts[count] = k[0] * (mu1 - mu0)
                     est[count] = k[0]
                     low[count] = k[1]
                     upp[count] = k[2]
 
             if sum(wts) > 1e-3:
-                wts = wts/sum(wts)
+                wts = wts / sum(wts)
                 res[0] = np.multiply(est, wts).sum()
                 res[1] = np.multiply(low, wts).sum()
                 res[2] = np.multiply(upp, wts).sum()
@@ -240,30 +226,24 @@ class MixtureEstimationMethods(object):
         # print str(res)
         return res
 
-
-
     # Return the optimal mixing proportion in the detection case: estimate both p and mu1
-
-    def optimalMixProportion(self, data, mu0, L ):
-        mu1 = fminbound(self.estimateSingleFraction, mu0, 10.0*mu0, args=(data, mu0, L), xtol=1e-01)
+    def optimalMixProportion(self, data, mu0, L):
+        mu1 = fminbound(self.estimateSingleFraction, mu0, 10.0 * mu0, args=(data, mu0, L), xtol=1e-01)
         res = self.estimateSingleFraction(mu1, data, mu0, L)
         return res
 
-
-
     # Bootstraps mix prop estimates to return estimate and simple bounds for 95% confidence interval
-
-    def detectionMixModelBootstrap(self, modelPrediction, data, nSamples = 100):
+    def detectionMixModelBootstrap(self, modelPrediction, data, nSamples=100):
 
         # Case-resampled bootstrapped estimates:
         L = len(data)
         res = np.zeros(4)
-        res[0] = self.optimalMixProportion( data, modelPrediction, L )
+        res[0] = self.optimalMixProportion(data, modelPrediction, L)
         X = np.zeros(nSamples + 1)
         X[nSamples] = res[0]
         for i in range(nSamples):
-            resampledData = [data[j] for j in s.randint.rvs(0, L-1, size=L)]
-            X[i] = self.optimalMixProportion( resampledData, modelPrediction, L )
+            resampledData = [data[j] for j in s.randint.rvs(0, L - 1, size=L)]
+            X[i] = self.optimalMixProportion(resampledData, modelPrediction, L)
 
         # A very basic way to estimate the 95% confidence interval:
         res[1] = np.percentile(X, 2.5)
@@ -274,55 +254,47 @@ class MixtureEstimationMethods(object):
         res[3] = 1.0
         return res
 
-
     # Everything below here is unused for now:
-
-
     # Return second derivative of mixture model log likelihood function - unused for now
     def mixModelFnPrime2(self, p, a0, a1):
-        tmp = np.square( (1-p)*a0 + p*a1 )
+        tmp = np.square((1 - p) * a0 + p * a1)
         nonzero_indices = np.nonzero(tmp)
-        return np.divide( np.square(a1 - a0)[nonzero_indices], tmp[nonzero_indices] ).sum()
-
+        return np.divide(np.square(a1 - a0)[nonzero_indices], tmp[nonzero_indices]).sum()
 
     # Return third derivative of mixture model log likelihood function - unused for now
     def mixModelFnPrime3(self, p, a0, a1):
-        tmp = np.power( (1-p)*a0 + p*a1, 3 )
+        tmp = np.power((1 - p) * a0 + p * a1, 3)
         nonzero_indices = np.nonzero(tmp)
-        return -np.divide( np.power(a1 - a0, 3)[nonzero_indices], tmp[nonzero_indices] ).sum()
-
+        return -np.divide(np.power(a1 - a0, 3)[nonzero_indices], tmp[nonzero_indices]).sum()
 
     # Try removing very large values before case resampling for bootstrap estimation - unused for now
-    def processSample( self, sample ):
+    def processSample(self, sample):
         q1 = np.percentile(sample, 25)
         q2 = np.percentile(sample, 75)
-        iqr = 1.5*(q2 - q1)
+        iqr = 1.5 * (q2 - q1)
         uif = q2 + iqr
         lif = q1 - iqr
+
         def removeBoxplotOutliers(x):
             if (x > lif) and (x < uif):
                 return x
         return filter(removeBoxplotOutliers, sample)
 
-
     # Return derivative of mixture model log likelihood function -- unused for now
     def mixModelFnPrime(self, p, a0, a1):
-        tmp = (1-p)*a0 + p*a1
+        tmp = (1 - p) * a0 + p * a1
         nonzero_indices = np.nonzero(tmp)
-        return -np.divide( (a1 - a0)[nonzero_indices], tmp[nonzero_indices] ).sum()
-
+        return -np.divide((a1 - a0)[nonzero_indices], tmp[nonzero_indices]).sum()
 
     # unconstrained minimization of convex, single-variable function - unused for now
     # much slower than fminbound
-    def homeMadeMinimization( self, a0, a1, low, up, xtol = 1e-02, maxIters = 500 ):
+    def homeMadeMinimization(self, a0, a1, low, up, xtol=1e-02, maxIters=500):
         nIters = 0
         while (up - low) > xtol and nIters < maxIters:
-            p0 = (up - low)/2.0
+            p0 = (up - low) / 2.0
             if self.mixModelFnPrime(p0, a0, a1) <= 0:
                 low = p0
             else:
                 up = p0
             nIters += 1
         return p0
-
-

@@ -28,7 +28,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
-import cProfile, logging, os.path
+import cProfile
+import logging
+import os.path
 import os
 from multiprocessing import Process
 import cPickle
@@ -45,10 +47,13 @@ FRAC = 'frac'
 FRAClow = 'fracLow'
 FRACup = 'fracUp'
 
+
 class ResultCollectorProcess(Process):
+
     """
     Gathers results and writes to a file.
     """
+
     def __init__(self, options, resultsQueue):
         Process.__init__(self)
         self.daemon = True
@@ -90,17 +95,15 @@ class ResultCollectorProcess(Process):
 
         if self.options.doProfiling:
             cProfile.runctx("self._run()",
-                globals=globals(),
-                locals=locals(),
-                filename="profile-%s.out" % self.name)
+                            globals=globals(),
+                            locals=locals(),
+                            filename="profile-%s.out" % self.name)
         else:
             self._run()
-
 
     # ==================================
     # Overridable interface begins here.
     #
-
     def onStart(self):
         pass
 
@@ -111,8 +114,6 @@ class ResultCollectorProcess(Process):
         pass
 
 
-
-
 class KineticsWriter(ResultCollectorProcess):
 
     def __init__(self, options, resultQueue, refInfo, ipdModel):
@@ -120,7 +121,6 @@ class KineticsWriter(ResultCollectorProcess):
 
         self.refInfo = refInfo
         self.ipdModel = ipdModel
-
 
     @consumer
     def msCsvConsumer(self, filename):
@@ -132,13 +132,11 @@ class KineticsWriter(ResultCollectorProcess):
         f = self.openWriteHandle(filename)
         delim = ","
 
-
-        cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", "signal", "variance", "MSscore" ]
-
+        cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", "signal", "variance", "MSscore"]
 
         # Special cases for formatting columns of the csv
         handlers = dict()
-        threeF = lambda x : "%.3f" % x
+        threeF = lambda x: "%.3f" % x
 
         handlers["refName"] = lambda x: "\"%s\"" % x
 
@@ -156,7 +154,7 @@ class KineticsWriter(ResultCollectorProcess):
         handlers["controlStd"] = threeF
         handlers["tErr"] = threeF
 
-        fourF = lambda x : "%.4f" % x
+        fourF = lambda x: "%.4f" % x
         handlers["signal"] = fourF
         handlers["variance"] = fourF
         handlers["MSscore"] = lambda x: "%d" % x
@@ -179,7 +177,7 @@ class KineticsWriter(ResultCollectorProcess):
 
                 for item in itemList:
                     if item.has_key("signal"):
-                        values = [ fmt(item, col) for col in cols ]
+                        values = [fmt(item, col) for col in cols]
                         print >>f, delim.join(values)
 
         except GeneratorExit:
@@ -187,8 +185,6 @@ class KineticsWriter(ResultCollectorProcess):
             return
         except Exception as e:
             print e
-
-
 
     @consumer
     def hdf5CsvConsumer(self, filename):
@@ -198,13 +194,12 @@ class KineticsWriter(ResultCollectorProcess):
         y = [int(ref.Length) for ref in self.refInfo]
         dataLength = sum(y)
         y.append(8192)
-        chunkSize = min(dataLength, 8192*2)
-        #print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
+        chunkSize = min(dataLength, 8192 * 2)
+        # print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
 
-        refIdDataset = grp.create_dataset( 'refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        tplDataset = grp.create_dataset( 'tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        strandDataset = grp.create_dataset( 'strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-
+        refIdDataset = grp.create_dataset('refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        tplDataset = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        strandDataset = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
 
     @consumer
     def csvConsumer(self, filename):
@@ -220,26 +215,24 @@ class KineticsWriter(ResultCollectorProcess):
 
             # Columns for in-silico control
             if self.options.methylFraction:
-                cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", FRAC, FRAClow, FRACup ]
+                cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", FRAC, FRAClow, FRACup]
             else:
                 if self.options.useLDA:
                     # FIXME: For testing LDA model, to look at LDA scores in csv output (run without --methylFraction or --control):
-                    cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", "Ca5C" ]
+                    cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", "Ca5C"]
                 else:
-                    cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage" ]
+                    cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage"]
 
         else:
             # Columns for case-control
             if self.options.methylFraction:
-                cols = ["refName", "tpl", "strand", "base", "score", "pvalue", "caseMean", "controlMean", "caseStd", "controlStd", "ipdRatio", "testStatistic", "coverage", "controlCoverage", "caseCoverage"\
-                       ,FRAC, FRAClow, FRACup ]
+                cols = ["refName", "tpl", "strand", "base", "score", "pvalue", "caseMean", "controlMean", "caseStd", "controlStd", "ipdRatio", "testStatistic", "coverage", "controlCoverage", "caseCoverage", FRAC, FRAClow, FRACup]
             else:
                 cols = ["refName", "tpl", "strand", "base", "score", "pvalue", "caseMean", "controlMean", "caseStd", "controlStd", "ipdRatio", "testStatistic", "coverage", "controlCoverage", "caseCoverage"]
 
-
         # Special cases for formatting columns of the csv
         handlers = dict()
-        threeF = lambda x : "%.3f" % x
+        threeF = lambda x: "%.3f" % x
 
         handlers["refName"] = lambda x: "\"%s\"" % x
 
@@ -281,7 +274,7 @@ class KineticsWriter(ResultCollectorProcess):
                 itemList = (yield)
 
                 for item in itemList:
-                    values = [ fmt(item, col) for col in cols ]
+                    values = [fmt(item, col) for col in cols]
                     print >>f, delim.join(values)
 
         except GeneratorExit:
@@ -289,8 +282,6 @@ class KineticsWriter(ResultCollectorProcess):
             return
         except Exception as e:
             print e
-
-
 
     @consumer
     def hdf5CsvConsumer(self, filename):
@@ -300,24 +291,24 @@ class KineticsWriter(ResultCollectorProcess):
         y = [int(ref.Length) for ref in self.refInfo]
         dataLength = sum(y)
         y.append(8192)
-        chunkSize = min(dataLength, 8192*2)
-        #print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
+        chunkSize = min(dataLength, 8192 * 2)
+        # print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
 
-        refIdDataset = grp.create_dataset( 'refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        tplDataset = grp.create_dataset( 'tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        strandDataset = grp.create_dataset( 'strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        baseDataset = grp.create_dataset( 'base', (dataLength,), dtype="a1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        scoreDataset = grp.create_dataset( 'score', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        tMeanDataset = grp.create_dataset( 'tMean', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        tErrDataset = grp.create_dataset( 'tErr', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        modelPredictionDataset = grp.create_dataset( 'modelPrediction', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        ipdRatioDataset = grp.create_dataset( 'ipdRatio', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        coverageDataset = grp.create_dataset( 'coverage', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        refIdDataset = grp.create_dataset('refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        tplDataset = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        strandDataset = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        baseDataset = grp.create_dataset('base', (dataLength,), dtype="a1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        scoreDataset = grp.create_dataset('score', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        tMeanDataset = grp.create_dataset('tMean', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        tErrDataset = grp.create_dataset('tErr', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        modelPredictionDataset = grp.create_dataset('modelPrediction', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        ipdRatioDataset = grp.create_dataset('ipdRatio', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        coverageDataset = grp.create_dataset('coverage', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
 
         if self.options.methylFraction:
-            fracDataset = grp.create_dataset( FRAC, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-            fracLowDataset = grp.create_dataset( FRAClow, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-            fracUpDataset = grp.create_dataset( FRACup, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+            fracDataset = grp.create_dataset(FRAC, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+            fracLowDataset = grp.create_dataset(FRAClow, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+            fracUpDataset = grp.create_dataset(FRACup, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
 
         try:
             while True:
@@ -346,7 +337,7 @@ class KineticsWriter(ResultCollectorProcess):
                 '''
 
                 start = min(x['tpl'] for x in chunk)
-                end = min(max(x['tpl'] for x in chunk), tplDataset.shape[0]- 1)
+                end = min(max(x['tpl'] for x in chunk), tplDataset.shape[0] - 1)
 
                 arrLen = end - start + 1
 
@@ -365,7 +356,6 @@ class KineticsWriter(ResultCollectorProcess):
                     fracLow = np.empty(arrLen, dtype="f4")
                     fracUp = np.empty(arrLen, dtype="f4")
 
-
                 # Fill out the ipd observations into the dataset
                 for x in chunk:
                     # offset into the current chunk
@@ -373,50 +363,47 @@ class KineticsWriter(ResultCollectorProcess):
 
                     # Data points past the end of the reference can make it through -- filter them out here
                     if idx < arrLen:
-                        refId[idx] = int( x['refId'] )
-                        tpl[idx] = int( x['tpl'] )
-                        strand[idx] = int( x['strand'] )
+                        refId[idx] = int(x['refId'])
+                        tpl[idx] = int(x['tpl'])
+                        strand[idx] = int(x['strand'])
                         base[idx] = x['base']
-                        score[idx] = int( x['score'] )
-                        tMean[idx] = float( x['tMean'] )
-                        tErr[idx] = float( x['tErr'] )
-                        modelPrediction[idx] = float( x['modelPrediction'] )
-                        ipdRatio[idx] = float( x['ipdRatio'] )
-                        coverage[idx] = int( x['coverage'] )
+                        score[idx] = int(x['score'])
+                        tMean[idx] = float(x['tMean'])
+                        tErr[idx] = float(x['tErr'])
+                        modelPrediction[idx] = float(x['modelPrediction'])
+                        ipdRatio[idx] = float(x['ipdRatio'])
+                        coverage[idx] = int(x['coverage'])
                         if self.options.methylFraction:
                             if FRAC in x:
-                                frac[idx] = float( x[FRAC] )
-                                fracLow[idx] = float( x[FRAClow] )
-                                fracUp[idx] = float( x[FRACup] )
+                                frac[idx] = float(x[FRAC])
+                                fracLow[idx] = float(x[FRAClow])
+                                fracUp[idx] = float(x[FRACup])
                             else:
                                 frac[idx] = np.nan
                                 fracLow[idx] = np.nan
                                 fracUp[idx] = np.nan
 
-
-                refIdDataset[start:(end+1)] = refId
-                tplDataset[start:(end+1)] = tpl
-                strandDataset[start:(end+1)] = strand
-                baseDataset[start:(end+1)] = base
-                scoreDataset[start:(end+1)] = score
-                tMeanDataset[start:(end+1)] = tMean
-                tErrDataset[start:(end+1)] = tErr
-                modelPredictionDataset[start:(end+1)] = modelPrediction
-                ipdRatioDataset[start:(end+1)] = ipdRatio
-                coverageDataset[start:(end+1)] = coverage
+                refIdDataset[start:(end + 1)] = refId
+                tplDataset[start:(end + 1)] = tpl
+                strandDataset[start:(end + 1)] = strand
+                baseDataset[start:(end + 1)] = base
+                scoreDataset[start:(end + 1)] = score
+                tMeanDataset[start:(end + 1)] = tMean
+                tErrDataset[start:(end + 1)] = tErr
+                modelPredictionDataset[start:(end + 1)] = modelPrediction
+                ipdRatioDataset[start:(end + 1)] = ipdRatio
+                coverageDataset[start:(end + 1)] = coverage
                 if self.options.methylFraction:
-                    fracDataset[start:(end+1)] = frac
-                    fracLowDataset[start:(end+1)] = fracLow
-                    fracUpDataset[start:(end+1)] = fracUp
+                    fracDataset[start:(end + 1)] = frac
+                    fracLowDataset[start:(end + 1)] = fracLow
+                    fracUpDataset[start:(end + 1)] = fracUp
 
         except GeneratorExit:
             # Close down the h5 file
             grp.close()
             return
 
-
     # an alternative version that collects data into groups according to reference:
-
     @consumer
     def alt_hdf5CsvConsumer(self, filename):
         """
@@ -433,20 +420,20 @@ class KineticsWriter(ResultCollectorProcess):
             # Create a group for each reference:
             grp = f.create_group(str(ref.Name))
 
-            ds = grp.create_dataset( 'tpl', (ref.Length,), dtype="u4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( 'strand', (ref.Length,), dtype="u1", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( 'base', (ref.Length,), dtype="a1", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( 'score', (ref.Length,), dtype="u4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( 'tMean', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( 'tErr', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( 'modelPrediction', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( 'ipdRatio', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset( 'coverage', (ref.Length,), dtype="u4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('tpl', (ref.Length,), dtype="u4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('strand', (ref.Length,), dtype="u1", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('base', (ref.Length,), dtype="a1", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('score', (ref.Length,), dtype="u4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('tMean', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('tErr', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('modelPrediction', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('ipdRatio', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('coverage', (ref.Length,), dtype="u4", compression="gzip", chunks=(chunkSize,))
 
             if self.options.methylFraction:
-                ds = grp.create_dataset( FRAC, (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-                ds = grp.create_dataset( FRAClow, (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-                ds = grp.create_dataset( FRACup, (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+                ds = grp.create_dataset(FRAC, (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+                ds = grp.create_dataset(FRAClow, (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+                ds = grp.create_dataset(FRACup, (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
 
             # Maintain a dictionary of group paths?
             dsDict[ref.ID] = grp
@@ -459,7 +446,6 @@ class KineticsWriter(ResultCollectorProcess):
 
                 if len(chunk) == 0:
                     continue
-
 
                 # determine the correct group:
                 grp = dsDict[chunk[0]['refId']]
@@ -478,9 +464,8 @@ class KineticsWriter(ResultCollectorProcess):
                     fracLowDataset = grp[FRAClow]
                     fracUpDataset = grp[FRACup]
 
-
                 start = min(x['tpl'] for x in chunk)
-                end = min(max(x['tpl'] for x in chunk), tplDataset.shape[0]- 1)
+                end = min(max(x['tpl'] for x in chunk), tplDataset.shape[0] - 1)
 
                 arrLen = end - start + 1
 
@@ -498,67 +483,60 @@ class KineticsWriter(ResultCollectorProcess):
                     fracLow = np.empty(arrLen, dtype="f4")
                     fracUp = np.empty(arrLen, dtype="f4")
 
-
                 # Fill out the ipd observations into the dataset
                 for x in chunk:
                     # offset into the current chunk
                     idx = x['tpl'] - start
-                    
+
                     # Data points past the end of the reference can make it through -- filter them out here
                     if idx < arrLen:
-                        tpl[idx] += int( x['tpl'] )
-                        strand[idx] += int( x['strand'] )
+                        tpl[idx] += int(x['tpl'])
+                        strand[idx] += int(x['strand'])
                         base[idx] = x['base']
-                        score[idx] += int( x['score'] )
-                        tMean[idx] += float( x['tMean'] )
-                        tErr[idx] += float( x['tErr'] )
-                        modelPrediction[idx] += float( x['modelPrediction'] )
-                        ipdRatio[idx] += float( x['ipdRatio'] )
-                        coverage[idx] += int( x['coverage'] )
+                        score[idx] += int(x['score'])
+                        tMean[idx] += float(x['tMean'])
+                        tErr[idx] += float(x['tErr'])
+                        modelPrediction[idx] += float(x['modelPrediction'])
+                        ipdRatio[idx] += float(x['ipdRatio'])
+                        coverage[idx] += int(x['coverage'])
                         if self.options.methylFraction:
                             if FRAC in x:
-                                frac[idx] = float( x[FRAC] )
-                                fracLow[idx] = float( x[FRAClow] )
-                                fracUp[idx] = float( x[FRACup] )
+                                frac[idx] = float(x[FRAC])
+                                fracLow[idx] = float(x[FRAClow])
+                                fracUp[idx] = float(x[FRACup])
                             else:
                                 frac[idx] = np.nan
                                 fracLow[idx] = np.nan
                                 fracUp[idx] = np.nan
- 
 
                 # Write our chunk into the main dataset
-                tplDataset[start:(end+1)] = tpl
-                strandDataset[start:(end+1)] = strand
-                baseDataset[start:(end+1)] = base
-                scoreDataset[start:(end+1)] = score
-                tMeanDataset[start:(end+1)] = tMean
-                tErrDataset[start:(end+1)] = tErr
-                modelPredictionDataset[start:(end+1)] = modelPrediction
-                ipdRatioDataset[start:(end+1)] = ipdRatio
-                coverageDataset[start:(end+1)] = coverage
+                tplDataset[start:(end + 1)] = tpl
+                strandDataset[start:(end + 1)] = strand
+                baseDataset[start:(end + 1)] = base
+                scoreDataset[start:(end + 1)] = score
+                tMeanDataset[start:(end + 1)] = tMean
+                tErrDataset[start:(end + 1)] = tErr
+                modelPredictionDataset[start:(end + 1)] = modelPrediction
+                ipdRatioDataset[start:(end + 1)] = ipdRatio
+                coverageDataset[start:(end + 1)] = coverage
                 if self.options.methylFraction:
-                    fracDataset[start:(end+1)] = frac
-                    fracLowDataset[start:(end+1)] = fracLow
-                    fracUpDataset[start:(end+1)] = fracUp
+                    fracDataset[start:(end + 1)] = frac
+                    fracLowDataset[start:(end + 1)] = fracLow
+                    fracUpDataset[start:(end + 1)] = fracUp
 
         except GeneratorExit:
             # Close down the h5 file
             f.close()
             return
 
-
-
-
-
     def openWriteHandle(self, filename):
         if filename[-2:] == 'gz':
             import gzip
             fileobj = gzip.GzipFile(filename, mode="w", compresslevel=3)
         else:
-            fileobj = open(filename, "w", 2<<15)
+            fileobj = open(filename, "w", 2 << 15)
 
         return fileobj
-
 
     @consumer
     def ipdRatioH5Consumer(self, fileName):
@@ -577,9 +555,9 @@ class KineticsWriter(ResultCollectorProcess):
             chunkSize = min(ref.Length, 8192)
 
             ds = f.create_dataset(str(ref.Name), (ref.Length,),
-                dtype="u4",
-                compression='gzip',
-                chunks=(chunkSize,))
+                                  dtype="u4",
+                                  compression='gzip',
+                                  chunks=(chunkSize,))
 
             dsDict[ref.ID] = ds
 
@@ -594,9 +572,8 @@ class KineticsWriter(ResultCollectorProcess):
 
                 ds = dsDict[chunk[0]['refId']]
 
-
                 start = min(x['tpl'] for x in chunk)
-                end = min(max(x['tpl'] for x in chunk), ds.shape[0]- 1)
+                end = min(max(x['tpl'] for x in chunk), ds.shape[0] - 1)
 
                 arrLen = end - start + 1
                 arr = np.zeros(arrLen, dtype="u4")
@@ -607,7 +584,7 @@ class KineticsWriter(ResultCollectorProcess):
                     idx = x['tpl'] - start
 
                     # convert to a 16 bit uint with a conversion factor of 100
-                    val = min(2**16-1, int(x['ipdRatio'] * 100))
+                    val = min(2 ** 16 - 1, int(x['ipdRatio'] * 100))
 
                     # strand 0 is the lower 16 bits, strand 1 is the upper 16 bits
                     val = val if x['strand'] == 0 else val << 16
@@ -618,13 +595,12 @@ class KineticsWriter(ResultCollectorProcess):
                         arr[idx] += val
 
                 # Write our chunk into the main dataset
-                ds[start:(end+1)] = arr
+                ds[start:(end + 1)] = arr
 
         except GeneratorExit:
             # Close down the h5 file
             f.close()
             return
-
 
     @consumer
     def pickleConsumer(self, fileName):
@@ -648,7 +624,6 @@ class KineticsWriter(ResultCollectorProcess):
             f.close()
             return
 
-
     def makeGffRecord(self, siteObs):
         """
         Convert the internal site observation object into a GFF entry
@@ -659,9 +634,9 @@ class KineticsWriter(ResultCollectorProcess):
         # - ipd ratio
         # - coverage
         snippet = self.snippetFunc(siteObs['tpl'], siteObs['strand'])
-        attributes = [ ('coverage', siteObs['coverage']),
-                       ('context', snippet),
-                       ('IPDRatio', siteObs['ipdRatio']) ]
+        attributes = [('coverage', siteObs['coverage']),
+                      ('context', snippet),
+                      ('IPDRatio', siteObs['ipdRatio'])]
 
         # Base of detected mod -- single position, closed,open
         # interval.
@@ -680,25 +655,21 @@ class KineticsWriter(ResultCollectorProcess):
         end = siteObs['tpl'] + 1
 
         if siteObs.has_key('motif'):
-            attributes.append( ('motif', "%s" % siteObs['motif']) )
-
+            attributes.append(('motif', "%s" % siteObs['motif']))
 
         if siteObs.has_key('id'):
-            attributes.append( ('id', "%s" % siteObs['id']) )
-
+            attributes.append(('id', "%s" % siteObs['id']))
 
         if self.options.methylFraction and siteObs.has_key(FRAC):
-            attributes.append( ('frac', "%.3f" % siteObs[FRAC])  )
-            attributes.append( ('fracLow', "%.3f" % siteObs[FRAClow])  )
-            attributes.append( ('fracUp', "%.3f" % siteObs[FRACup])  )
-
+            attributes.append(('frac', "%.3f" % siteObs[FRAC]))
+            attributes.append(('fracLow', "%.3f" % siteObs[FRAClow]))
+            attributes.append(('fracUp', "%.3f" % siteObs[FRACup]))
 
         if siteObs.has_key('modificationScore'):
             # Report the QV from the modification identification module as a special tag
             attributes.append(('identificationQv', "%d" % int(round(siteObs['modificationScore']))))
 
-
-        if siteObs.has_key('modification') :
+        if siteObs.has_key('modification'):
 
             if siteObs['modification'] == '.':
                 recordType = 'modified_base'
@@ -712,7 +683,6 @@ class KineticsWriter(ResultCollectorProcess):
 
         else:
             recordType = 'modified_base'
-
 
         refName = siteObs['refName']
         score = int(round(siteObs['score']))
@@ -740,13 +710,12 @@ class KineticsWriter(ResultCollectorProcess):
         gff.writeHeader('##source ipdSummary.py v2.0')
         gff.writeHeader('##source-commandline %s' % self.options.cmdLine)
 
-
         # Write the reference renaming info into the gff headers ala evicons
         for entry in self.refInfo:
-            gff.writeHeader("##sequence-region %s 1 %d" \
-                                % (entry.Name, entry.Length))
+            gff.writeHeader("##sequence-region %s 1 %d"
+                            % (entry.Name, entry.Length))
 
-        minScore = -10*math.log10(self.options.pvalue)
+        minScore = -10 * math.log10(self.options.pvalue)
         snippetRef = -1
         try:
             while True:
@@ -756,7 +725,7 @@ class KineticsWriter(ResultCollectorProcess):
                 for siteObs in siteObsList:
                     # self.snippetFunc is a function that return a reference snippet given a template position and a strand
                     if snippetRef != siteObs['refId']:
-                        self.snippetFunc = self.ipdModel.snippetFunc(siteObs['refId'],20,20)
+                        self.snippetFunc = self.ipdModel.snippetFunc(siteObs['refId'], 20, 20)
                         snippetRef = siteObs['refId']
 
                     # Two cases for gff entries:
@@ -783,7 +752,6 @@ class KineticsWriter(ResultCollectorProcess):
         except GeneratorExit:
             f.close()
             return
-
 
     def onStart(self):
 

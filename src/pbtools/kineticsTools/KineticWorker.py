@@ -49,13 +49,15 @@ from PositiveControlEnricher import PositiveControlEnricher
 from pbtools.kineticsTools.ModificationDecode import ModificationDecode, ModificationPeakMask
 
 from WorkerProcess import WorkerProcess, WorkerThread
-import pdb, traceback
+import pdb
+import traceback
 
 # Raw ipd record
 ipdRec = [('tpl', '<u4'), ('strand', '<i8'), ('ipd', '<f4')]
 
 
 class HitSelection:
+
     """
     Static methods for selecting sets of reads to use
     """
@@ -77,7 +79,6 @@ class KineticWorker(object):
     def __init__(self, ipdModel):
         self.ipdModel = ipdModel
         self.debug = False
-
 
     def _prepForReferenceWindow(self, referenceWindow):
         """ Set up member variable to call modifications on a window. """
@@ -108,8 +109,7 @@ class KineticWorker(object):
         (reference, start, end) = referenceWindow
 
         # Trim end coordinate to length of current template
-        end = min(end,self.ipdModel.refLength(reference))
-
+        end = min(end, self.ipdModel.refLength(reference))
 
         if self.options.identify:
             # If we are attempting to identify modifications, get the raw data for a slightly expanded window
@@ -126,8 +126,8 @@ class KineticWorker(object):
                 # PositiveControlEnricher currently uses a logistic regression model trained using SMRTportal job 65203 (native E. coli)
 
                 # lda = BasicLdaEnricher( self.ipdModel.gbmModel, self.sequence, perSiteResults, self.options.identify, self.options.modsToCall )
-                lda = PositiveControlEnricher( self.ipdModel.gbmModel, self.sequence, perSiteResults )
-                perSiteResults = lda.callEnricherFunction( perSiteResults )
+                lda = PositiveControlEnricher(self.ipdModel.gbmModel, self.sequence, perSiteResults)
+                perSiteResults = lda.callEnricherFunction(perSiteResults)
 
             try:
                 # Handle different modes of 'extra analysis' here -- this one is for multi-site m5C detection
@@ -164,7 +164,6 @@ class KineticWorker(object):
                             siteDict[mod['tpl']][FRAClow] = mod[FRAClow]
                             siteDict[mod['tpl']][FRACup] = mod[FRACup]
 
-
                             # Copy any extra properties that were added
                             newKeys = set.difference(siteDict[mod['tpl']].keys(), mod.keys())
                             for nk in newKeys:
@@ -173,7 +172,7 @@ class KineticWorker(object):
                     if mod.has_key('Mask'):
                         # The decoder should supply the off-target peak mask
                         mask = mod['Mask']
-                        mask.append(0) # make sure we always mask the cognate position
+                        mask.append(0)  # make sure we always mask the cognate position
                     else:
                         # If the decoder doesn't supply a mask - use a hard-coded version
                         # FIXME - this branch is deprecated
@@ -188,7 +187,7 @@ class KineticWorker(object):
                 finalCalls.extend(siteDict.values())
 
             # Sort by template position
-            finalCalls.sort(key = lambda x: x['tpl'])
+            finalCalls.sort(key=lambda x: x['tpl'])
             return finalCalls
 
         else:
@@ -198,12 +197,11 @@ class KineticWorker(object):
 
                 # FIXME: add on a column "Ca5C" containing LDA score for each C-residue site
                 # lda = BasicLdaEnricher(self.ipdModel.gbmModel, self.sequence, result, self.options.identify)
-                lda = PositiveControlEnricher( self.ipdModel.gbmModel, self.sequence, result )
-                results = lda.callEnricherFunction( result )
+                lda = PositiveControlEnricher(self.ipdModel.gbmModel, self.sequence, result)
+                results = lda.callEnricherFunction(result)
 
-            result.sort(key = lambda x: x['tpl'])
+            result.sort(key=lambda x: x['tpl'])
             return result
-
 
     def _summarizeReferenceRegion(self, targetBounds, methylFractionFlag, identifyFlag):
         """Compute the ipd stats for a chunk of the reference"""
@@ -217,13 +215,13 @@ class KineticWorker(object):
         if self.controlCmpH5 is None:
             # in silico control workflow -- only get data from the main 'case' cmp.h5
 
-            goodSites = [ x for x in caseChunks if x['data']['ipd'].size > 2 ]
+            goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
 
             # Flip the strand, and make predictions for the whole chunk
-            predictions = self.manyManyIpdFunc([ (x['tpl'], 1-x['strand']) for x in goodSites ])
+            predictions = self.manyManyIpdFunc([(x['tpl'], 1 - x['strand']) for x in goodSites])
             goodSitesWithPred = zip(goodSites, predictions)
 
-            return [ self._computePositionSyntheticControl(x, capValue, methylFractionFlag, identifyFlag, prediction.item()) for (x, prediction) in goodSitesWithPred ]
+            return [self._computePositionSyntheticControl(x, capValue, methylFractionFlag, identifyFlag, prediction.item()) for (x, prediction) in goodSitesWithPred]
 
         else:
             # case/control workflow -- get data from the case and control files and compare
@@ -237,43 +235,43 @@ class KineticWorker(object):
             # if self.refId in [ int( str.split('ref')[1] ) for str in self.controlCmpH5.referenceInfoTable.Name ]:
             if contigName in controlRefTable.FullName:
 
-                controlRefRow = controlRefTable[ controlRefTable['FullName'] == contigName ][0]
+                controlRefRow = controlRefTable[controlRefTable['FullName'] == contigName][0]
                 (controlChunks, _) = self._fetchChunks(controlRefRow.ID, targetBounds, self.controlCmpH5)
-                controlSites = { (x['strand'], x['tpl']) : x for x in controlChunks }
+                controlSites = {(x['strand'], x['tpl']): x for x in controlChunks}
 
                 for caseChunk in caseChunks:
-                    #try:
-                        ## FIXME: catch None or the exception.
+                    # try:
+                        # FIXME: catch None or the exception.
                         caseKey = (caseChunk['strand'], caseChunk['tpl'])
-                        controlChunk = controlSites.get(caseKey) # , default = None)
+                        controlChunk = controlSites.get(caseKey)  # , default = None)
 
                         if controlChunk and \
-                            caseChunk['data']['ipd'].size > 2 and \
-                            controlChunk['data']['ipd'].size > 2:
+                                caseChunk['data']['ipd'].size > 2 and \
+                                controlChunk['data']['ipd'].size > 2:
                             result.append(self._computePositionTraditionalControl(caseChunk, controlChunk, methylFractionFlag, identifyFlag))
-                    #except:
+                    # except:
                     #    pass
 
             return result
-
 
     def _decodePositiveControl(self, kinetics, bounds):
         """Compute the ipd stats for a chunk of the reference"""
 
         (kinStart, kinEnd) = bounds
-        callBounds = (self.pad, kinEnd-kinStart + self.pad)
+        callBounds = (self.pad, kinEnd - kinStart + self.pad)
 
-        chunkFwd = dict((x['tpl'], x) for x in kinetics if x['strand'] == 0 and x['coverage'] > self.options.identifyMinCov )
-        chunkRev = dict((x['tpl'], x) for x in kinetics if x['strand'] == 1 and x['coverage'] > self.options.identifyMinCov )
+        chunkFwd = dict((x['tpl'], x) for x in kinetics if x['strand'] == 0 and x['coverage'] > self.options.identifyMinCov)
+        chunkRev = dict((x['tpl'], x) for x in kinetics if x['strand'] == 1 and x['coverage'] > self.options.identifyMinCov)
 
         modCalls = []
 
         # Fwd sequence window
-        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 0, kinStart-self.pad, kinEnd + self.pad)
+        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 0, kinStart - self.pad, kinEnd + self.pad)
 
         # Map the raw kinetics into the frame-of reference of our sequence snippets
         def toRef(p):
             return p - (kinStart - self.pad)
+
         def fromRef(r):
             return r + (kinStart - self.pad)
 
@@ -288,14 +286,14 @@ class KineticWorker(object):
             mod['tpl'] = fromRef(r)
             modCalls.append(mod)
 
-
         # Repeat decoding on reverse sequence
         # Reverse sequence
-        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 1, kinStart-self.pad, kinEnd + self.pad)
+        canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 1, kinStart - self.pad, kinEnd + self.pad)
 
         # Map the raw kinetics into the frame-of reference of our sequence snippets
         def toRef(p):
             return len(canonicalSequence) - p + (kinStart - self.pad)
+
         def fromRef(r):
             return len(canonicalSequence) - r + (kinStart - self.pad)
 
@@ -313,10 +311,10 @@ class KineticWorker(object):
         """Compute the ipd stats for a chunk of the reference"""
 
         (kinStart, kinEnd) = bounds
-        callBounds = (self.pad, kinEnd-kinStart + self.pad)
+        callBounds = (self.pad, kinEnd - kinStart + self.pad)
 
-        chunkFwd = dict((x['tpl'], x) for x in kinetics if x['strand'] == 0 and x['coverage'] > self.options.identifyMinCov )
-        chunkRev = dict((x['tpl'], x) for x in kinetics if x['strand'] == 1 and x['coverage'] > self.options.identifyMinCov )
+        chunkFwd = dict((x['tpl'], x) for x in kinetics if x['strand'] == 0 and x['coverage'] > self.options.identifyMinCov)
+        chunkRev = dict((x['tpl'], x) for x in kinetics if x['strand'] == 1 and x['coverage'] > self.options.identifyMinCov)
 
         modCalls = []
 
@@ -326,6 +324,7 @@ class KineticWorker(object):
         # Map the raw kinetics into the frame-of reference of our sequence snippets
         def toRef(p):
             return p - (kinStart - self.pad)
+
         def fromRef(r):
             return r + (kinStart - self.pad)
 
@@ -340,7 +339,6 @@ class KineticWorker(object):
             mod['tpl'] = fromRef(r)
             modCalls.append(mod)
 
-
         # Repeat decoding on reverse sequence
         # Reverse sequence
         canonicalSequence = self.ipdModel.getReferenceWindow(self.refId, 1, kinStart - self.pad, kinEnd + self.pad)
@@ -348,6 +346,7 @@ class KineticWorker(object):
         # Map the raw kinetics into the frame-of reference of our sequence snippets
         def toRef(p):
             return len(canonicalSequence) - p + (kinStart - self.pad)
+
         def fromRef(r):
             return len(canonicalSequence) - r + (kinStart - self.pad)
 
@@ -360,7 +359,6 @@ class KineticWorker(object):
             modCalls.append(mod)
 
         return modCalls
-
 
     def _fetchChunks(self, refGroupId, targetBounds, cmpH5File):
         """Get the IPDs for each position/strand on the given reference in the given window, from the given cmpH5 file"""
@@ -382,10 +380,9 @@ class KineticWorker(object):
         elif ver == '1.3' or ver == '1.4':
             # NOTE -- assuming that all movies have the same frame rate!
             fr = cmpH5File.movieInfoTable[0].FrameRate
-            factor = 1.0/fr
+            factor = 1.0 / fr
         else:
             raise Exception('Unrecognized cmp.h5 version')
-
 
         rawIpds = self._loadRawIpds(hits, start, end, factor)
         ipdVect = rawIpds['ipd']
@@ -400,8 +397,7 @@ class KineticWorker(object):
         chunks = self._chunkRawIpds(rawIpds)
         return chunks, capValue
 
-
-    def _loadRawIpds(self, alnHitIter, targetStart = -1, targetEnd = 3e12, factor = 1.0):
+    def _loadRawIpds(self, alnHitIter, targetStart=-1, targetEnd=3e12, factor=1.0):
         """
         Get a DataFrame of the raw ipds in the give alignment hits, indexed by template position and strand.
         Factor is a normalization factor to the get units into seconds.
@@ -416,7 +412,7 @@ class KineticWorker(object):
 
         for aln in alnHitIter:
             # Pull out error-free position
-            matched = np.logical_and( np.array([x != '-' for x in aln.read()]), np.array([x != '-' for x in aln.reference()]))
+            matched = np.logical_and(np.array([x != '-' for x in aln.read()]), np.array([x != '-' for x in aln.reference()]))
 
             # Normalize kinetics of the entire subread
             rawIpd = aln.IPD() * factor
@@ -476,7 +472,7 @@ class KineticWorker(object):
 
         # Start off at the first chunk
         curIdx = (tpl[0], strand[0])
-        for i in xrange(1,rawIpds.shape[0]):
+        for i in xrange(1, rawIpds.shape[0]):
             newIdx = (tpl[i], strand[i])
 
             # In this case we are still int he same chunk -- continue
@@ -485,13 +481,13 @@ class KineticWorker(object):
 
             # In this case we have completed the chunk -- emit the chunk
             else:
-                obj = { 'tpl': curIdx[0], 'strand': curIdx[1], 'data': rawIpds[start:i] }
+                obj = {'tpl': curIdx[0], 'strand': curIdx[1], 'data': rawIpds[start:i]}
                 views.append(obj)
                 start = i
                 curIdx = newIdx
 
         # Make sure to return final chunk
-        obj = { 'tpl': curIdx[0], 'strand': curIdx[1], 'data': rawIpds[start:] }
+        obj = {'tpl': curIdx[0], 'strand': curIdx[1], 'data': rawIpds[start:]}
         views.append(obj)
 
         # If the user has specified a maximum coverage level to use, enforce it here -- just take the first n reads
@@ -503,7 +499,6 @@ class KineticWorker(object):
                 x['data'] = d
 
         return views
-
 
     def _subreadNormalizationFactor(self, rawIpds):
         """
@@ -524,8 +519,6 @@ class KineticWorker(object):
         capValue = min(10, np.percentile(rawIpds, 99))
         capIpds = np.minimum(rawIpds, capValue)
         return capIpds.mean()
-
-
 
     def computeObservationPValue(self, siteObs):
         """
@@ -552,10 +545,9 @@ class KineticWorker(object):
         uo = siteObs['tMean']
         eo = siteObs['tErr']
 
-        pvalue = erfc((uo - um) / sqrt(2 * (em**2 + eo**2))) / 2
+        pvalue = erfc((uo - um) / sqrt(2 * (em ** 2 + eo ** 2))) / 2
         return pvalue.item()
 
-    
     def computeObservationTstatistic(self, siteObs):
         """
         Compute a p-value on the observation of a kinetic event
@@ -576,7 +568,7 @@ class KineticWorker(object):
 
         # FIXME -- pipe through model error
         #em = 0.06 * um + 0.12 * um**2.0
-        em = 0.01 + 0.03*um + 0.06*um**(1.7)
+        em = 0.01 + 0.03 * um + 0.06 * um ** (1.7)
         # em = model.fractionalModelError * em
 
         uo = siteObs['tMean']
@@ -584,9 +576,8 @@ class KineticWorker(object):
 
         import scipy.stats as s
 
-        t = -(uo - um) / sqrt(em**2 + eo**2)
+        t = -(uo - um) / sqrt(em ** 2 + eo ** 2)
         return t
-
 
     def computeObservationPValueTTest(self, siteObs):
         t = siteObs['tStatistic']
@@ -595,10 +586,7 @@ class KineticWorker(object):
         pvalue = s.t._cdf(t, df)
         return pvalue.item()
 
-
-
-
-    def _computePositionSyntheticControl(self, caseObservations, capValue, methylFractionFlag, identifyFlag, modelPrediction = None):
+    def _computePositionSyntheticControl(self, caseObservations, capValue, methylFractionFlag, identifyFlag, modelPrediction=None):
         """Summarize the observed ipds at one template position/strand, using the synthetic ipd model"""
 
         # Compute stats on the observed ipds
@@ -616,14 +604,12 @@ class KineticWorker(object):
         tpl = res['tpl'] = caseObservations['tpl']
         res['coverage'] = d.size
 
-
         # Don't compute these stats - they just take time and confuse things
         # res['mean'] = d.mean().item()
         # res['median'] = np.median(d).item()
         # res['std'] = np.std(d).item()
-
         # Compute the predicted IPD from the model
-        # # NOTE! The ipd model is in the observed read strand
+        # NOTE! The ipd model is in the observed read strand
         if modelPrediction is None:
             modelPrediction = self.meanIpdFunc(tpl, strand).item()
         res['modelPrediction'] = modelPrediction
@@ -638,7 +624,7 @@ class KineticWorker(object):
         #  - 90th percentile of the local data (at low coverage we pick a lower percentile to ensure we trim the highest datapoint
         #  - global cap value
 
-        percentile = min(90, (1.0 - 1.0/(d.size - 1))*100)
+        percentile = min(90, (1.0 - 1.0 / (d.size - 1)) * 100)
         localPercentile = np.percentile(d, percentile)
         capValue = max(capValue, 4.0 * modelPrediction, localPercentile)
 
@@ -658,7 +644,6 @@ class KineticWorker(object):
         # res['pvalue'] = self.computeObservationPValue(res)
         res['tStatistic'] = self.computeObservationTstatistic(res)
         res['pvalue'] = self.computeObservationPValueTTest(res)
-
 
         pvalue = max(sys.float_info.min, res['pvalue'])
         score = round(-10.0 * math.log10(pvalue))
@@ -685,26 +670,25 @@ class KineticWorker(object):
         # print res
         return res
 
-
 ##
-## straight port from R's p.adjust. 
+# straight port from R's p.adjust.
 ##
     def _cummin(v):
-        r = array([v[0]]*len(v))
+        r = array([v[0]] * len(v))
         r[0] = v[0]
         for i in xrange(1, len(v)):
-            r[i] = r[i-1] if r[i-1] < v[i] else v[i]
+            r[i] = r[i - 1] if r[i - 1] < v[i] else v[i]
         return r
-        
+
     def _BH_FDR(pvals):
         s = array(range(len(pvals), 0, -1))
         o = array(argsort(pvals)[::-1])
         r = array(argsort(o))
-        return [ 1 if x > 1 else x for x in (_cummin(float(len(pvals))/s * pvals[o]))[r] ]
-    
+        return [1 if x > 1 else x for x in (_cummin(float(len(pvals)) / s * pvals[o]))[r]]
+
 ##
-## Null simulation. the test below assumes that IPDs are normal after
-## capping and logging. FIXME: permutation based
+# Null simulation. the test below assumes that IPDs are normal after
+# capping and logging. FIXME: permutation based
 ##
 # def sim(N=100):
 #     return [ _tTest(np.exp(x1),np.exp(x2), 100)['pvalue'] for x1,x2 in
@@ -713,31 +697,31 @@ class KineticWorker(object):
 #
 ##  _tTest(np.exp(np.random.normal(1.5, size = 100)), np.exp(np.random.normal(1., size = 100)))
 ##
-    def _tTest(x, y, exclude = 95):
+    def _tTest(x, y, exclude=95):
         """Compute a one-sided Welsh t-statistic."""
         def cappedSlog(v):
             q = np.percentile(v, exclude)
             v2 = v.copy()
             v2 = v2[~np.isnan(v2)]
-            v2[v2 <= 0] = 1./(75 + 1)
+            v2[v2 <= 0] = 1. / (75 + 1)
             v2[v2 > q] = q
             return np.log(v2)
         x1 = cappedSlog(x)
         x2 = cappedSlog(y)
-        sx1 = np.var(x1)/len(x1)
-        sx2 = np.var(x2)/len(x2)
-        stat = (np.mean(x1)-np.mean(x2))/np.sqrt(sx1 + sx2)
+        sx1 = np.var(x1) / len(x1)
+        sx2 = np.var(x2) / len(x2)
+        stat = (np.mean(x1) - np.mean(x2)) / np.sqrt(sx1 + sx2)
         #df   = (sx1 + sx2)**2 / (sx1**2/(len(x1)-1) + sx2**2/(len(x2) - 1))
         #pval = 1 - scidist.t.cdf(stat, df)
 
         # Scipy's t distribution CDF implementaton has inadequate
         # precision.  We have switched to the normal distribution for
         # better behaved p values.
-        pval = 0.5*erfc(stat/sqrt(2))
+        pval = 0.5 * erfc(stat / sqrt(2))
 
-        return {'testStatistic':stat, 'pvalue':pval}
+        return {'testStatistic': stat, 'pvalue': pval}
 
-    def _computePositionTraditionalControl(self, caseObservations, controlObservations, methylFractionFlag, identifyFlag, testProcedure = _tTest):
+    def _computePositionTraditionalControl(self, caseObservations, controlObservations, methylFractionFlag, identifyFlag, testProcedure=_tTest):
         """Summarize the observed ipds at one template position/strand, using a case-control analysis"""
         # Compute stats on the observed ipds
         caseData = caseObservations['data']['ipd']
@@ -753,7 +737,7 @@ class KineticWorker(object):
         tpl = res['tpl'] = caseObservations['tpl']
         res['base'] = self.cognateBaseFunc(tpl, strand)
 
-        res['coverage'] = int(round((caseData.size + controlData.size)/2.0)) ## need a coverage annotation
+        res['coverage'] = int(round((caseData.size + controlData.size) / 2.0))  # need a coverage annotation
 
         res['caseCoverage'] = caseData.size
         res['controlCoverage'] = controlData.size
@@ -769,7 +753,7 @@ class KineticWorker(object):
         trim = (0.001, 0.03)
         ctrlMean = mstats.trimmed_mean(controlData, trim).item()
         if abs(ctrlMean) > 1e-3:
-            res['ipdRatio'] = ( mstats.trimmed_mean(caseData, trim).item() / ctrlMean )
+            res['ipdRatio'] = (mstats.trimmed_mean(caseData, trim).item() / ctrlMean)
         else:
             res['ipdRatio'] = 1.0
 
@@ -786,7 +770,7 @@ class KineticWorker(object):
 
                 # Instantiate mixture estimation methods:
                 mixture = MixtureEstimationMethods(self.ipdModel.gbmModel.post, self.ipdModel.gbmModel.pre, res, self.options.methylMinCov)
-                x = mixture.detectionMixModelBootstrap( res['controlMean'], caseData )
+                x = mixture.detectionMixModelBootstrap(res['controlMean'], caseData)
 
                 res[FRAC] = x[0]
                 res[FRAClow] = x[1]
@@ -799,20 +783,19 @@ class KineticWorker(object):
         return res
 
 
-
 class KineticWorkerProcess(KineticWorker, WorkerProcess):
+
     """Worker that executes as a process."""
+
     def __init__(self, options, workQueue, resultsQueue, ipdModel):
         WorkerProcess.__init__(self, options, workQueue, resultsQueue)
         KineticWorker.__init__(self, ipdModel)
 
 
 class KineticWorkerThread(KineticWorker, WorkerThread):
+
     """Worker that executes as a thread (for debugging purposes only)."""
+
     def __init__(self, options, workQueue, resultsQueue, ipdModel):
         WorkerThread.__init__(self, options, workQueue, resultsQueue)
         KineticWorker.__init__(self, ipdModel)
-
-
-
-

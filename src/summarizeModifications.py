@@ -33,7 +33,9 @@
 import cProfile
 from itertools import groupby
 from pbcore.io import GffReader, Gff3Record
-import os, logging, sys
+import os
+import logging
+import sys
 
 from pbcore.util.ToolRunner import PBToolRunner
 
@@ -53,16 +55,16 @@ class ModificationSummary(PBToolRunner):
         super(ModificationSummary, self).__init__('\n'.join(desc))
 
         self.parser.add_argument('--modifications',
-            dest="modifications",
-            help='Name of input GFF file [%(default)s]')
+                                 dest="modifications",
+                                 help='Name of input GFF file [%(default)s]')
 
         self.parser.add_argument('--alignmentSummary',
-            dest="alignmentSummary",
-            help='Name alignment summary file [%(default)s]')
+                                 dest="alignmentSummary",
+                                 help='Name alignment summary file [%(default)s]')
 
         self.parser.add_argument('--outfile',
-            dest="outfile",
-            help='Name of modified alignment summary GFF file [%(default)s]')
+                                 dest="outfile",
+                                 help='Name of modified alignment summary GFF file [%(default)s]')
 
     def getVersion(self):
         return __version__
@@ -88,9 +90,9 @@ class ModificationSummary(PBToolRunner):
 
         if self.args.profile:
             cProfile.runctx("self._mainLoop()",
-                globals=globals(),
-                locals=locals(),
-                filename="profile.out")
+                            globals=globals(),
+                            locals=locals(),
+                            filename="profile.out")
 
         else:
             return self._mainLoop()
@@ -98,19 +100,18 @@ class ModificationSummary(PBToolRunner):
     def countModificationTypes(self, mods):
         mods = sorted(mods, key=lambda x: x["type"])
 
-        counts = dict([(x,0) for x in self.knownModificationEvents])
-        for k,g in groupby(mods, lambda x: x["type"]):
+        counts = dict([(x, 0) for x in self.knownModificationEvents])
+        for k, g in groupby(mods, lambda x: x["type"]):
             counts[k] = len(list(g))
 
         return counts
-
 
     def _mainLoop(self):
 
         # Read in the existing modifications.gff
         modReader = GffReader(self.args.modifications)
 
-        headerString = ",".join([ '"' + x + '"' for x in self.knownModificationEvents])
+        headerString = ",".join(['"' + x + '"' for x in self.knownModificationEvents])
 
         # Set up some additional headers to be injected
         headers = [
@@ -122,12 +123,11 @@ class ModificationSummary(PBToolRunner):
             ('region-modsfwd', headerString)
         ]
 
-
-        hitsByEvent = dict([(x,[]) for x in self.knownModificationEvents])
+        hitsByEvent = dict([(x, []) for x in self.knownModificationEvents])
 
         # Get modification calls
-        hits = [ { "pos": x.start, "strand": x.strand, "seqid" : x.seqid, "type" : x.type } \
-                for x in modReader if x.type in self.knownModificationEvents ]
+        hits = [{"pos": x.start, "strand": x.strand, "seqid": x.seqid, "type": x.type}
+                for x in modReader if x.type in self.knownModificationEvents]
 
         # Summary reader
         summaryFile = file(self.args.alignmentSummary)
@@ -144,9 +144,9 @@ class ModificationSummary(PBToolRunner):
             if line[0] == "#":
 
                 # Parse headers
-                splitFields  = line.replace('#', '').split(' ')
+                splitFields = line.replace('#', '').split(' ')
                 field = splitFields[0]
-                value = " ".join( splitFields[1:] )
+                value = " ".join(splitFields[1:])
                 if field == 'sequence-header':
                     [internalTag, delim, externalTag] = value.strip().partition(' ')
                     self.seqMap[internalTag] = externalTag
@@ -164,7 +164,7 @@ class ModificationSummary(PBToolRunner):
 
             if rec.type == 'region':
                 # Get the hits in this interval, add them to the gff record
-                intervalHits = [ h for h in hits if rec.start <= h['pos'] <= rec.end and rec.seqid == h['seqid']]
+                intervalHits = [h for h in hits if rec.start <= h['pos'] <= rec.end and rec.seqid == h['seqid']]
 
                 cFwd = self.countModificationTypes([h for h in intervalHits if h['strand'] == '+'])
                 cRev = self.countModificationTypes([h for h in intervalHits if h['strand'] == '-'])
@@ -174,6 +174,6 @@ class ModificationSummary(PBToolRunner):
 
                 print >>summaryWriter, str(rec)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     kt = ModificationSummary()
     kt.start()

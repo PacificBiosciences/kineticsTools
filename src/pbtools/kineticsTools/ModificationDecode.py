@@ -42,10 +42,9 @@ from MultiSiteCommon import MultiSiteCommon, canonicalBaseMap, modNames, Modific
 from MixtureEstimationMethods import MixtureEstimationMethods
 
 
+class ModificationDecode(MultiSiteCommon):
 
-class ModificationDecode( MultiSiteCommon ):
-
-    def __init__(self, gbmModel, sequence, rawKinetics, callBounds, methylMinCov, modsToCall = ['H', 'J', 'K'], methylFractionFlag = False, useLDAFlag = False ):
+    def __init__(self, gbmModel, sequence, rawKinetics, callBounds, methylMinCov, modsToCall=['H', 'J', 'K'], methylFractionFlag=False, useLDAFlag=False):
 
         MultiSiteCommon.__init__(self, gbmModel, sequence, rawKinetics)
 
@@ -57,9 +56,7 @@ class ModificationDecode( MultiSiteCommon ):
         self.methylMinCov = methylMinCov
         self.modsToCall = modsToCall
         self.methylFractionFlag = methylFractionFlag
-        self.useLDA = useLDAFlag        
-
-
+        self.useLDA = useLDAFlag
 
     def decode(self):
         """Use this method to do the full modification finding protocol"""
@@ -78,7 +75,6 @@ class ModificationDecode( MultiSiteCommon ):
 
         # Compute a confidence for each mod and return results
         return self.scoreMods(modCalls)
-      
 
     def findAlternates(self):
         """ Use rules about where IPD peaks appear to generate list
@@ -92,7 +88,7 @@ class ModificationDecode( MultiSiteCommon ):
             score = peak['score']
 
             # if self.useLDA:
-            #     # Try using LDA model to identify putative Ca5C, regardless of scores
+            # Try using LDA model to identify putative Ca5C, regardless of scores
             #     if peak.has_key('Ca5C'):
             #         if peak['Ca5C'] < 0:
             #             self.alternateBases[pos].add('K')
@@ -105,7 +101,7 @@ class ModificationDecode( MultiSiteCommon ):
             # we have reversed the indexing to deal with the reverse strand
 
             if self.callStart <= pos < self.callEnd:
-                c = seq[ pos ]
+                c = seq[pos]
 
                 # On-target A peak
                 if 'H' in self.modsToCall and c == 'A' and score > scoreThresholdHigh:
@@ -114,13 +110,13 @@ class ModificationDecode( MultiSiteCommon ):
                 # On-target C peak
                 if 'J' in self.modsToCall and c == 'C' and score > scoreThresholdHigh:
                     self.alternateBases[pos].add('J')
-                
+
                 if 'K' in self.modsToCall:
                     if c == 'C':
                         self.alternateBases[pos].add('K')
 
                   # peak at -1 or  -2 or -6 of a C -- 5caC
-                   
+
                     if seq[pos - 2] == 'C' and pos - 2 >= self.callStart:
                         self.alternateBases[pos - 2].add('K')
 
@@ -135,8 +131,6 @@ class ModificationDecode( MultiSiteCommon ):
 
                     if seq[pos + 6] == 'C' and pos + 6 < self.callEnd:
                         self.alternateBases[pos + 6].add('K')
-
-
 
     def fwdRecursion(self):
         start = self.lStart
@@ -188,7 +182,6 @@ class ModificationDecode( MultiSiteCommon ):
         self.fwdPrevState = fwdPrevState
         self.scores = scores
 
-
     def traceback(self):
         """
         Traceback the fwd matrix to get the bset scoring configuration of modifications
@@ -201,10 +194,9 @@ class ModificationDecode( MultiSiteCommon ):
         def cogBase(cfg):
             return cfg[self.pre]
 
-
-        pos = end-1
-        currentCol = self.fwdScore[end-1]
-        bestConfig = max(currentCol, key=lambda x:currentCol[x])
+        pos = end - 1
+        currentCol = self.fwdScore[end - 1]
+        bestConfig = max(currentCol, key=lambda x: currentCol[x])
 
         while True:
             if cogBase(bestConfig) != self.sequence[pos]:
@@ -217,30 +209,26 @@ class ModificationDecode( MultiSiteCommon ):
             if bestConfig is None:
                 break
 
-
         # if self.useLDA:
-        #     # allow LDA-predicted sites through to GFF file
+        # allow LDA-predicted sites through to GFF file
         #     for pos in range(start, end):
         #         if self.rawKinetics.has_key(pos):
         #             if self.rawKinetics[pos].has_key('Ca5C'):
         #                 if 'K' in self.modsToCall:
-        #                     # cutoff = min( 0, self.rawKinetics[pos]['coverage']/20.0 - 3.0 )
+        # cutoff = min( 0, self.rawKinetics[pos]['coverage']/20.0 - 3.0 )
         #                     cutoff = 0
         #                     echoSites = [modCalls[pos + i] for i in [-6, -5, -2, -1, 2] if modCalls.has_key(pos + i)]
         #                 else:
         #                     cutoff = -2.25
         #                     echoSites = [modCalls[pos + i] for i in range(-10,11) if modCalls.has_key(pos + i)]
         #                 if self.rawKinetics[pos]['Ca5C'] < cutoff:
-        #                     # so long as those sites are not in the vicinity of a m6A/m4C call
+        # so long as those sites are not in the vicinity of a m6A/m4C call
         #                     if 'H' not in echoSites and 'J' not in echoSites:
         #                         modCalls[pos] = 'K'
-        #                 # else:
-        #                 #     # remove any non-LDA-predicted sites from modCalls dictionary?
-        #                 #     if modCalls.has_key(pos):
-        #                 #         del modCalls[pos]
-
-
-          
+        # else:
+        # remove any non-LDA-predicted sites from modCalls dictionary?
+        # if modCalls.has_key(pos):
+        # del modCalls[pos]
         # correct adjacent calls:
         # if self.useLDA:
         #     for pos in range(start + 2, end - 2, 2 ):
@@ -254,21 +242,16 @@ class ModificationDecode( MultiSiteCommon ):
         #                     if self.rawKinetics[j].has_key('Ca5C'):
         #                         if self.rawKinetics[j]['Ca5C'] > lowest:
         #                             del modCalls[j]
-        #             
-
-
-        #     # if adjacent m5C calls are made by the LDA, select the one that has the lower LDA score (Ca5C)
-        #     # for pos in range(start, end):
-        #     #     if modCalls.has_key(pos) and self.rawKinetics.has_key(pos) and modCalls.has_key(pos+1) and self.rawKinetics.has_key(pos+1):
-        #     #         if self.rawKinetics[pos].has_key('Ca5C') and self.rawKinetics[pos+1].has_key('Ca5C'):
-        #     #             if self.rawKinetics[pos]['Ca5C'] < self.rawKinetics[pos+1]['Ca5C']:
-        #     #                 del modCalls[pos+1] 
-        #     #             else:
-        #     #                 del modCalls[pos] 
-
-            
+        #
+        # if adjacent m5C calls are made by the LDA, select the one that has the lower LDA score (Ca5C)
+        # for pos in range(start, end):
+        # if modCalls.has_key(pos) and self.rawKinetics.has_key(pos) and modCalls.has_key(pos+1) and self.rawKinetics.has_key(pos+1):
+        # if self.rawKinetics[pos].has_key('Ca5C') and self.rawKinetics[pos+1].has_key('Ca5C'):
+        # if self.rawKinetics[pos]['Ca5C'] < self.rawKinetics[pos+1]['Ca5C']:
+        # del modCalls[pos+1]
+        # else:
+        # del modCalls[pos]
         return modCalls
-
 
     def scoreMods(self, modCalls):
         """
@@ -281,11 +264,9 @@ class ModificationDecode( MultiSiteCommon ):
         modSeq = a.array('c')
         modSeq.fromstring(self.sequence)
 
-
         # Apply the found modifications to the raw sequence
         for (pos, call) in modCalls.items():
             modSeq[pos] = call
-
 
         for (pos, call) in modCalls.items():
 
@@ -295,7 +276,7 @@ class ModificationDecode( MultiSiteCommon ):
 
             if self.methylFractionFlag and self.rawKinetics.has_key(pos):
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
-                    modifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)		
+                    modifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
 
             # Switch back to the unmodified base and re-score
             modSeq[pos] = canonicalBaseMap[call]
@@ -304,7 +285,7 @@ class ModificationDecode( MultiSiteCommon ):
 
             if self.methylFractionFlag and self.rawKinetics.has_key(pos):
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
-                    unModifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq) 	
+                    unModifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
 
             # Put back the modified base
             modSeq[pos] = call
@@ -313,13 +294,11 @@ class ModificationDecode( MultiSiteCommon ):
             llr = modScore - noModScore
 
             # Convert from LLR to phred-scaled probability of modification
-            qModScore = 10 * llr * log10e + 10*log1p(exp(-llr))*log10e
-
+            qModScore = 10 * llr * log10e + 10 * log1p(exp(-llr)) * log10e
 
             # Figure out which secondary peaks were likely generated by this modification
             # What is the posterior that the peak was generated by this mod?
             maskPos = self.findMaskPositions(pos, modScores, noModScores)
-
 
             # FIXME:  Without this, currently, the identificationQv score is too low for many Ca5C sites
             # if self.useLDA:
@@ -327,9 +306,6 @@ class ModificationDecode( MultiSiteCommon ):
             #         if self.rawKinetics[pos].has_key('Ca5C'):
             #             llr = -self.rawKinetics[pos]['Ca5C']
             #             qModScore = 100 * llr * log10e + 100*log1p(exp(-llr))*log10e
-
-
-
             if self.methylFractionFlag and self.rawKinetics.has_key(pos):
 
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
@@ -338,39 +314,35 @@ class ModificationDecode( MultiSiteCommon ):
                     mixture = MixtureEstimationMethods(self.gbmModel.post, self.gbmModel.pre, self.rawKinetics, self.methylMinCov)
 
                     # Use modifiedMeanVectors and unmodifiedMeanVectors to calculate mixing proportion, and 95% CI limits.
-                    methylFracEst,methylFracLow,methylFracUpp = mixture.estimateMethylatedFractions(pos, unModifiedMeanVectors, modifiedMeanVectors, ModificationPeakMask[modNames[call]] )
+                    methylFracEst, methylFracLow, methylFracUpp = mixture.estimateMethylatedFractions(pos, unModifiedMeanVectors, modifiedMeanVectors, ModificationPeakMask[modNames[call]])
 
-                    qvModCalls[pos] = { 'modification' : modNames[call], 'QMod' : qModScore, 'LLR' : llr, 'Mask': maskPos, \
-                                    FRAC: methylFracEst, FRAClow: methylFracLow, FRACup: methylFracUpp }
+                    qvModCalls[pos] = {'modification': modNames[call], 'QMod': qModScore, 'LLR': llr, 'Mask': maskPos,
+                                       FRAC: methylFracEst, FRAClow: methylFracLow, FRACup: methylFracUpp}
 
                 else:
-                    qvModCalls[pos] = { 'modification' : modNames[call], 'QMod' : qModScore, 'LLR' : llr, 'Mask': maskPos }
+                    qvModCalls[pos] = {'modification': modNames[call], 'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
 
             else:
                 # Store the full results
-                qvModCalls[pos] = { 'modification' : modNames[call], 'QMod' : qModScore, 'LLR' : llr, 'Mask': maskPos }
+                qvModCalls[pos] = {'modification': modNames[call], 'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
 
         return qvModCalls
-
-
 
     def scoreRegion(self, start, end, sequence):
 
         sc = 0.0
-        for pos in xrange(start, end+1):
-            ctx = sequence[(pos-self.pre):(pos + self.post + 1)].tostring()
+        for pos in xrange(start, end + 1):
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             if self.scores.has_key(pos):
                 sc += self.scores[pos][ctx]
 
         return sc
 
-
-
     def getRegionScores(self, start, end, sequence):
-        scores = np.zeros(end-start+1)
+        scores = np.zeros(end - start + 1)
 
-        for pos in xrange(start, end+1):
-            ctx = sequence[(pos-self.pre):(pos + self.post + 1)].tostring()
+        for pos in xrange(start, end + 1):
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             if self.scores.has_key(pos):
                 scores[pos - start] = self.scores[pos][ctx]
 
@@ -392,8 +364,5 @@ class ModificationDecode( MultiSiteCommon ):
 
         return maskPos
 
-
     def compareStates(self, current, prev):
         return current[0:-1] == prev[1:]
-
-

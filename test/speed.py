@@ -9,6 +9,7 @@ from pbtools.kineticsTools.ipdModel import IpdModel
 
 from test import TestSetup
 
+
 class TestSpeed(TestSetup):
 
     def testSpeed(self):
@@ -17,7 +18,7 @@ class TestSpeed(TestSetup):
         snippetFunc = self.ipdModel.snippetFunc(1, 3, 9)
         ipdFunc = self.ipdModel.predictIpdFunc(1)
 
-        snips = [ snippetFunc(x, 0) for x in xrange(1000) ]
+        snips = [snippetFunc(x, 0) for x in xrange(1000)]
 
         pFast = self.ipdModel.gbmModel.getPredictions(snips)
         #pSlow = self.ipdModel.gbmModel.getPredictionsSlow(snips)

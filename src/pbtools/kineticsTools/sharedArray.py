@@ -32,7 +32,9 @@ from multiprocessing.sharedctypes import RawArray
 import warnings
 import numpy as np
 
+
 class SharedArray:
+
     """
     Very simple wrapper for a chunk of shared memory that can be accessed across processes
     """
@@ -47,4 +49,3 @@ class SharedArray:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             return np.ctypeslib.as_array(self._rawArray)
-

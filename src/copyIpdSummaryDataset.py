@@ -30,7 +30,6 @@
 #################################################################################
 
 
-
 from pbcore.util.ToolRunner import PBToolRunner
 import h5py
 
@@ -41,6 +40,7 @@ revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
 changeNum = int(__p4change__.strip("$").split(":")[-1])
 __version__ = "1.0"
 
+
 class CopyIpdSummaryDatasets(PBToolRunner):
 
     def __init__(self):
@@ -48,12 +48,12 @@ class CopyIpdSummaryDatasets(PBToolRunner):
         super(CopyIpdSummaryDatasets, self).__init__('\n'.join(desc))
 
         self.parser.add_argument('--infile',
-            dest='infile',
-            help='Input cmp.h5 filename')
+                                 dest='infile',
+                                 help='Input cmp.h5 filename')
 
         self.parser.add_argument('--outfile',
-            dest='outfile',
-            help='Output cmp.h5 filename')
+                                 dest='outfile',
+                                 help='Output cmp.h5 filename')
 
     def getVersion(self):
         return __version__
@@ -79,7 +79,6 @@ class CopyIpdSummaryDatasets(PBToolRunner):
                 h5py.h5o.copy(inFile.id, name, kinGroup.id, 'IpdRatio')
 
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
     kt = CopyIpdSummaryDatasets()
     kt.start()

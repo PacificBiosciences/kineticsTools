@@ -35,7 +35,12 @@ import gc
 import itertools
 import argparse
 
-import os, logging, sys, multiprocessing, time, threading
+import os
+import logging
+import sys
+import multiprocessing
+import time
+import threading
 import numpy as np
 import Queue
 
@@ -46,7 +51,8 @@ from pbtools.kineticsTools.KineticWorker import KineticWorker, KineticWorkerThre
 from pbtools.kineticsTools.ResultWriter import KineticsWriter
 from pbtools.kineticsTools.ipdModel import IpdModel
 from pbtools.kineticsTools.ReferenceUtils import ReferenceUtils
-import pdb, traceback
+import pdb
+import traceback
 
 # Version info
 __p4revision__ = "$Revision: #1 $"
@@ -64,184 +70,177 @@ class KineticsToolsRunner():
         description = '\n'.join(desc)
 
         self.parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
-                                               description=description)
+                                              description=description)
 
-        self.parser.add_argument('-v', '--version', action='version', version= '%(prog)s ' + self.getVersion())
+        self.parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + self.getVersion())
 
         self.parser.add_argument('infile',
-            metavar='input.cmp.h5',
-            help='Input cmp.h5 filename')
+                                 metavar='input.cmp.h5',
+                                 help='Input cmp.h5 filename')
 
         self.parser.add_argument('--control',
-            dest='control',
-            default=None,
-            help='cmph.h5 file containing a control sample. Tool will perform a case-control analysis')
+                                 dest='control',
+                                 default=None,
+                                 help='cmph.h5 file containing a control sample. Tool will perform a case-control analysis')
 
         self.parser.add_argument('--identify',
-            dest='identify',
-            default=False,
-            help='Identify modification types. Comma-separated list of know modification types. Current options are: m6A, m4C, m5C_TET. Cannot be used with --control')
+                                 dest='identify',
+                                 default=False,
+                                 help='Identify modification types. Comma-separated list of know modification types. Current options are: m6A, m4C, m5C_TET. Cannot be used with --control')
 
         # Temporary addition to test LDA for Ca5C detection:
         self.parser.add_argument('--useLDA',
-            action="store_true",
-            dest='useLDA',
-            default=False,
-            help='Set this flag to debug LDA for m5C/Ca5C detection')
- 
+                                 action="store_true",
+                                 dest='useLDA',
+                                 default=False,
+                                 help='Set this flag to debug LDA for m5C/Ca5C detection')
+
         self.parser.add_argument("--methylFraction",
-            action="store_true",
-            dest="methylFraction",
-            default=False,
-            help="In the --identify mode, add --methylFraction to command line to estimate the methylated fraction, along with 95%% confidence interval bounds.")
+                                 action="store_true",
+                                 dest="methylFraction",
+                                 default=False,
+                                 help="In the --identify mode, add --methylFraction to command line to estimate the methylated fraction, along with 95%% confidence interval bounds.")
 
         self.parser.add_argument('--outfile',
-            dest='outfile',
-            default=None,
-            help='Use this option to generate all possible output files. Argument here is the root filename of the output files.')
+                                 dest='outfile',
+                                 default=None,
+                                 help='Use this option to generate all possible output files. Argument here is the root filename of the output files.')
 
         self.parser.add_argument('--gff',
-            dest='gff',
-            default=None,
-            help='Name of output GFF file [%(default)s]')
+                                 dest='gff',
+                                 default=None,
+                                 help='Name of output GFF file [%(default)s]')
 
         self.parser.add_argument('--csv',
-            dest='csv',
-            default=None,
-            help='Name of output CSV file [%(default)s]')
+                                 dest='csv',
+                                 default=None,
+                                 help='Name of output CSV file [%(default)s]')
 
         self.parser.add_argument('--ms_csv',
-            dest='ms_csv',
-            default=None,
-            help='Multisite detection CSV file [%(default)s]')
+                                 dest='ms_csv',
+                                 default=None,
+                                 help='Multisite detection CSV file [%(default)s]')
 
         self.parser.add_argument('--pickle',
-            dest='pickle',
-            default=None,
-            help='Name of output pickle file [%(default)s]')
+                                 dest='pickle',
+                                 default=None,
+                                 help='Name of output pickle file [%(default)s]')
 
         self.parser.add_argument('--summary_h5',
-            dest='summary_h5',
-            default=None,
-            help='Name of output summary h5 file [%(default)s]')
+                                 dest='summary_h5',
+                                 default=None,
+                                 help='Name of output summary h5 file [%(default)s]')
 
         # New addition:  a name for the csv_hdf5
         self.parser.add_argument('--csv_h5',
-            dest='csv_h5',
-            default=None,
-            help='Name of csv output to be written in hdf5 format [%(default)s]')
-
+                                 dest='csv_h5',
+                                 default=None,
+                                 help='Name of csv output to be written in hdf5 format [%(default)s]')
 
         self.parser.add_argument('--reference',
-            dest='reference',
-            required=True,
-            help='Path to reference FASTA file or PacBio reference entry directory. (Required)')
+                                 dest='reference',
+                                 required=True,
+                                 help='Path to reference FASTA file or PacBio reference entry directory. (Required)')
 
         self.parser.add_argument('--paramsPath',
-            dest='paramsPath',
-            default=None,
-            help='Directory containing in-silico trained model for each chemistry')
+                                 dest='paramsPath',
+                                 default=None,
+                                 help='Directory containing in-silico trained model for each chemistry')
 
         self.parser.add_argument("--maxLength",
-            default=3e12,
-            type=int,
-            help="Maximum number of bases to process per contig")
+                                 default=3e12,
+                                 type=int,
+                                 help="Maximum number of bases to process per contig")
 
         self.parser.add_argument('--minCoverage',
-            dest='minCoverage',
-            default=3,
-            type=int,
-            help='Minimum coverage required to call a modified base')
+                                 dest='minCoverage',
+                                 default=3,
+                                 type=int,
+                                 help='Minimum coverage required to call a modified base')
 
         self.parser.add_argument('--maxQueueSize',
-            dest='maxQueueSize',
-            default=20,
-            type=int,
-            help='Max Queue Size')
+                                 dest='maxQueueSize',
+                                 default=20,
+                                 type=int,
+                                 help='Max Queue Size')
 
         self.parser.add_argument('--maxCoverage',
-            dest='maxCoverage',
-            type=int, default=-1,
-            help='Maximum coverage to use at each site')
+                                 dest='maxCoverage',
+                                 type=int, default=-1,
+                                 help='Maximum coverage to use at each site')
 
         self.parser.add_argument('--mapQvThreshold',
-            dest='mapQvThreshold',
-            type=float,
-            default=-1.0)
+                                 dest='mapQvThreshold',
+                                 type=float,
+                                 default=-1.0)
 
         self.parser.add_argument('--pvalue',
-            dest='pvalue',
-            default=0.01,
-            type=float,
-            help='p-value required to call a modified base')
+                                 dest='pvalue',
+                                 default=0.01,
+                                 type=float,
+                                 help='p-value required to call a modified base')
 
         self.parser.add_argument('--ipdModel',
-            dest='ipdModel',
-            default=None,
-            help='Alternate synthetic IPD model HDF5 file')
+                                 dest='ipdModel',
+                                 default=None,
+                                 help='Alternate synthetic IPD model HDF5 file')
 
         self.parser.add_argument('--modelIters',
-            dest='modelIters',
-            type=int,
-            default=-1,
-            help='[Internal] Number of GBM model iteration to use')
+                                 dest='modelIters',
+                                 type=int,
+                                 default=-1,
+                                 help='[Internal] Number of GBM model iteration to use')
 
         self.parser.add_argument('--cap_percentile',
-            dest='cap_percentile',
-            type=float,
-            default=99.0,
-            help='Global IPD percentile to cap IPDs at' )
+                                 dest='cap_percentile',
+                                 type=float,
+                                 default=99.0,
+                                 help='Global IPD percentile to cap IPDs at')
 
         self.parser.add_argument('--numWorkers',
-            dest='numWorkers',
-            default=-1, # Defaults to using all logical CPUs
-            type=int,
-            help='Number of thread to use (-1 uses all logical cpus)')
+                                 dest='numWorkers',
+                                 default=-1,  # Defaults to using all logical CPUs
+                                 type=int,
+                                 help='Number of thread to use (-1 uses all logical cpus)')
 
         self.parser.add_argument("--threaded", "-T",
-            action="store_true",
-            dest="threaded",
-            default=False,
-            help="Run threads instead of processes (for debugging purposes only)")
+                                 action="store_true",
+                                 dest="threaded",
+                                 default=False,
+                                 help="Run threads instead of processes (for debugging purposes only)")
 
         self.parser.add_argument("--profile",
-            action="store_true",
-            dest="doProfiling",
-            default=False,
-            help="Enable Python-level profiling (using cProfile).")
-
+                                 action="store_true",
+                                 dest="doProfiling",
+                                 default=False,
+                                 help="Enable Python-level profiling (using cProfile).")
 
         # New addition: option to process one reference at a time
         self.parser.add_argument("--refId",
-            type=int,
-            dest='refId',
-            default=-1,
-            help="Specify a single reference index (beginning with 0) rather than looping through all")
-
+                                 type=int,
+                                 dest='refId',
+                                 default=-1,
+                                 help="Specify a single reference index (beginning with 0) rather than looping through all")
 
         self.parser.add_argument("--methylMinCov",
-            type=int,
-            dest='methylMinCov',
-            default=10,
-            help="Do not try to estimate methylFraction unless coverage is at least this.")
-
+                                 type=int,
+                                 dest='methylMinCov',
+                                 default=10,
+                                 help="Do not try to estimate methylFraction unless coverage is at least this.")
 
         self.parser.add_argument("--identifyMinCov",
-            type=int,
-            dest='identifyMinCov',
-            default=5,
-            help="Do not try to identify the modification type unless coverage is at least this.")
-
+                                 type=int,
+                                 dest='identifyMinCov',
+                                 default=5,
+                                 help="Do not try to identify the modification type unless coverage is at least this.")
 
     def parseArgs(self):
         self.args = self.parser.parse_args()
-
 
     def start(self):
         self.parseArgs()
         self.validateArgs()
         return self.run()
-
 
     def getVersion(self):
         return __version__
@@ -255,7 +254,6 @@ class KineticsToolsRunner():
 
         # if self.args.methylFraction and not self.args.identify:
         #    self.parser.error('Currently, --methylFraction only works when the --identify option is specified.')
-
 
     def run(self):
 
@@ -277,11 +275,9 @@ class KineticsToolsRunner():
             self.args.identify = True
             self.args.modsToCall = modsToCall
 
-
         self.options = self.args
         self.options.cmdLine = " ".join(sys.argv)
         self._workers = []
-
 
         # Log generously
         stdOutHandler = logging.StreamHandler(sys.stdout)
@@ -290,9 +286,9 @@ class KineticsToolsRunner():
 
         if self.args.doProfiling:
             cProfile.runctx("self._mainLoop()",
-                globals=globals(),
-                locals=locals(),
-                filename="profile.out")
+                            globals=globals(),
+                            locals=locals(),
+                            filename="profile.out")
 
         else:
             try:
@@ -305,7 +301,6 @@ class KineticsToolsRunner():
                             w.terminate()
 
             return ret
-
 
     def _initQueues(self):
         if self.options.threaded:
@@ -324,8 +319,6 @@ class KineticsToolsRunner():
             # Completed chunks are put on this queue by KineticWorker threads
             # They are consumed by the KineticsWriter process
             self._resultsQueue = multiprocessing.JoinableQueue(self.options.maxQueueSize)
-
-
 
     def _launchSlaveProcesses(self):
         """
@@ -348,7 +341,7 @@ class KineticsToolsRunner():
         if self.options.numWorkers > availableCpus:
             logging.warn("More worker processes requested (%d) than CPUs available (%d);"
                          " may result in suboptimal performance."
-            % (self.options.numWorkers, availableCpus))
+                         % (self.options.numWorkers, availableCpus))
 
         self._initQueues()
 
@@ -357,7 +350,6 @@ class KineticsToolsRunner():
             WorkerType = KineticWorkerThread
         else:
             WorkerType = KineticWorkerProcess
-
 
         # Launch the worker processes
         self._workers = []
@@ -373,9 +365,8 @@ class KineticsToolsRunner():
         logging.info("Launched result collector process.")
 
         # Spawn a thread that monitors worker threads for crashes
-        self.monitoringThread = threading.Thread(target=monitorChildProcesses,  args=(self._workers +[self._resultCollectorProcess],))
+        self.monitoringThread = threading.Thread(target=monitorChildProcesses, args=(self._workers + [self._resultCollectorProcess],))
         self.monitoringThread.start()
-
 
     def _queueChunksForReference(self, refInfo):
         """
@@ -398,14 +389,13 @@ class KineticsToolsRunner():
         nBases = min(refInfo.Length, self.args.maxLength)
 
         # Adjust numHits if we are only doing part of the contig
-        numHits = (numHits * nBases) / refInfo.Length 
+        numHits = (numHits * nBases) / refInfo.Length
 
         nBlocks = max([numHits / MAX_HITS, nBases / (MAX_BLOCK_SIZE - 1) + 1])
 
         # Including nBases / (MAX_BLOCK_SIZE - 1) + 1 in nBlocks calculation:
         # E. coli genome: this should be ~ 10.
         # Human genome: ought to be largest & is meant to ensure that blockSize < MAX_BLOCK_SIZE.
-
 
         # Block layout
         blockSize = min(nBases, max(nBases / nBlocks + 1, 1000))
@@ -424,7 +414,6 @@ class KineticsToolsRunner():
 
             if self.workChunkCounter % 10 == 0:
                 logging.info("Queued chunk: %d.  Chunks in queue: %d" % (self.workChunkCounter, self._workQueue.qsize()))
-
 
     def loadReferenceAndModel(self, referencePath, cmpH5Path):
 
@@ -459,7 +448,7 @@ class KineticsToolsRunner():
             if 'SequencingChemistry' in movieInfoTable.dtype.fields.keys():
                 # Pick majority chemistry
                 chemistries = movieInfoTable.SequencingChemistry.tolist()
-                chemCounts = dict([ (k, len(list(v))) for (k, v) in itertools.groupby(chemistries)])
+                chemCounts = dict([(k, len(list(v))) for (k, v) in itertools.groupby(chemistries)])
                 majorityChem = max(chemCounts, key=chemCounts.get)
 
                 # Find the appropriate model file:
@@ -505,7 +494,7 @@ class KineticsToolsRunner():
         # WARNING -- cmp.h5 file must be opened AFTER worker processes have been spawned
         # cmp.h5 we're using -- use this to orchestrate the work
         self.cmph5 = CmpH5Reader(self.args.infile)
-        logging.info('Generating kinetics summary for [%s]' %  self.args.infile)
+        logging.info('Generating kinetics summary for [%s]' % self.args.infile)
 
         #self.referenceMap = self.cmph5['/RefGroup'].asDict('RefInfoID', 'ID')
         #self.alnInfo = self.cmph5['/AlnInfo'].asRecArray()
@@ -522,7 +511,7 @@ class KineticsToolsRunner():
             # just the one specified reference.
 
             # ref = x[ self.options.refId ]
-            ref = self.refInfo[ self.options.refId ]
+            ref = self.refInfo[self.options.refId]
             logging.info('Processing reference entry: [%s]' % ref.Name)
             self._queueChunksForReference(ref)
 
@@ -530,9 +519,8 @@ class KineticsToolsRunner():
             # Iterate over references
 
             for ref in self.refInfo:
-                logging.info('Processing reference entry: [%s]' %  ref.Name)
+                logging.info('Processing reference entry: [%s]' % ref.Name)
                 self._queueChunksForReference(ref)
-
 
         # Shutdown worker threads with None sentinels
         for i in xrange(self.args.numWorkers):
@@ -578,7 +566,7 @@ def monitorChildProcesses(children):
         time.sleep(1)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     try:
         kt = KineticsToolsRunner()
         kt.start()
@@ -586,4 +574,3 @@ if __name__=="__main__":
         type, value, tb = sys.exc_info()
         traceback.print_exc()
         pdb.post_mortem(tb)
-

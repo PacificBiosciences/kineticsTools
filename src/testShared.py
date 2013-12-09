@@ -31,10 +31,12 @@
 from multiprocessing.process import Process, current_process
 from src.pbtools.kineticsTools.sharedArray import SharedArray
 
-#Test script for making sure that shared memory backed numpy arrays work properly
+# Test script for making sure that shared memory backed numpy arrays work properly
 # FIXME -- migrate to test dir if possible
 
+
 class Sub(Process):
+
     def __init__(self, sa):
         Process.__init__(self)
         self.sa = sa
@@ -54,6 +56,7 @@ class Sub(Process):
 
 
 class Test:
+
     def __init__(self):
         self.sa = SharedArray(dtype="f", shape=50000000)
 
@@ -67,6 +70,6 @@ class Test:
         proc.join()
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     tester = Test()
     tester.start()

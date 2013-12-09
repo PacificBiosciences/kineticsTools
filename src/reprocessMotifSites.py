@@ -2,14 +2,14 @@
 
 #
 # Purpose:
-# 
+#
 #    Estimates modified fraction at all undetected sites within each identified motif.
 #
 #    This script calls ./pbtools/kineticsTools/kineticForReprocessing.py instead of KineticWorker.py
 #    Otherwise similar to ipdSummary.py, and uses WorkerProcess, ResultWriter
 #
 # Required Inputs:
-# 
+#
 #    motifs GFF file
 #    motif_summary GFF file
 #    reference file
@@ -19,14 +19,14 @@
 #       NOTE:  assume that modifications GFF file has methylFracEst fields filled in.
 #
 # Outputs:
-# 
+#
 #    a GFF file containing modified fraction estimates:
 #      - includes all undetected sites for each identified motif in motifs GFF
 #      - if modifications GFF was provided, then also includes detected sites in each motif
 #
 #
 # Sample Commands:
-# 
+#
 # cd /mnt/secondary/Smrtanalysis/opt/smrtanalysis-1.4.0-ubuntu-117447/common/
 #
 # reprocessMotifSites.py  --reference ./references/SP48_HGAP_v7_Assembly_3contigs/ --motifs ./jobs/055/055789/data/motifs.gff.gz \
@@ -43,7 +43,12 @@ import gc
 
 from pbcore.deprecated import ReferenceEntry
 
-import os, logging, sys, multiprocessing, time, threading
+import os
+import logging
+import sys
+import multiprocessing
+import time
+import threading
 import numpy as np
 import Queue
 
@@ -83,14 +88,14 @@ class ReprocessMotifSites(PBToolRunner):
         super(ReprocessMotifSites, self).__init__('\n'.join(desc))
 
         self.parser.add_argument('--numWorkers',
-            dest='numWorkers',
-            default=-1, # Defaults to using all logical CPUs
-            type=int,
-            help='Number of thread to use (-1 uses all logical cpus)')
+                                 dest='numWorkers',
+                                 default=-1,  # Defaults to using all logical CPUs
+                                 type=int,
+                                 help='Number of thread to use (-1 uses all logical cpus)')
 
         self.parser.add_argument('infile',
-            metavar='input.cmp.h5',
-            help='Input cmp.h5 filename')
+                                 metavar='input.cmp.h5',
+                                 help='Input cmp.h5 filename')
 
         # self.parser.add_argument('--control',
         #     dest='control',
@@ -103,9 +108,9 @@ class ReprocessMotifSites(PBToolRunner):
         #    help='Use this option to generate all possible output files. Argument here is the root filename of the output files.')
 
         self.parser.add_argument('--gff',
-            dest='gff',
-            default=None,
-            help='Name of output GFF file [%(default)s]')
+                                 dest='gff',
+                                 default=None,
+                                 help='Name of output GFF file [%(default)s]')
 
         # self.parser.add_argument('--identify',
         #     dest='identify',
@@ -128,36 +133,36 @@ class ReprocessMotifSites(PBToolRunner):
         #     help='Name of output summary h5 file [%(default)s]')
 
         self.parser.add_argument('--reference',
-            dest='reference',
-            required=True,
-            help='Path to reference FASTA file')
+                                 dest='reference',
+                                 required=True,
+                                 help='Path to reference FASTA file')
 
         self.parser.add_argument("--maxLength",
-            default=3e12,
-            type=int,
-            help="Maximum number of bases to process per contig")
+                                 default=3e12,
+                                 type=int,
+                                 help="Maximum number of bases to process per contig")
 
         self.parser.add_argument('--minCoverage',
-            dest='minCoverage',
-            default=3,
-            type=int,
-            help='Minimum coverage required to call a modified base')
+                                 dest='minCoverage',
+                                 default=3,
+                                 type=int,
+                                 help='Minimum coverage required to call a modified base')
 
         self.parser.add_argument('--maxQueueSize',
-            dest='maxQueueSize',
-            default=1000,
-            type=int,
-            help='Max Queue Size')
+                                 dest='maxQueueSize',
+                                 default=1000,
+                                 type=int,
+                                 help='Max Queue Size')
 
         self.parser.add_argument('--maxCoverage',
-            dest='maxCoverage',
-            type=int, default=None,
-            help='Maximum coverage to use at each site')
+                                 dest='maxCoverage',
+                                 type=int, default=None,
+                                 help='Maximum coverage to use at each site')
 
         self.parser.add_argument('--mapQvThreshold',
-            dest='mapQvThreshold',
-            type=float,
-            default=-1.0)
+                                 dest='mapQvThreshold',
+                                 type=float,
+                                 default=-1.0)
 
         # self.parser.add_argument('--pvalue',
         #     dest='pvalue',
@@ -166,33 +171,33 @@ class ReprocessMotifSites(PBToolRunner):
         #     help='p-value required to call a modified base')
 
         self.parser.add_argument('--subread_norm',
-            dest='subread_norm',
-            default=True,
-            type=lambda x: x!='False',
-            help='Normalized subread ipds')
+                                 dest='subread_norm',
+                                 default=True,
+                                 type=lambda x: x != 'False',
+                                 help='Normalized subread ipds')
 
         self.parser.add_argument('--ipdModel',
-            dest='ipdModel',
-            default=None,
-            help='Alternate synthetic IPD model HDF5 file')
+                                 dest='ipdModel',
+                                 default=None,
+                                 help='Alternate synthetic IPD model HDF5 file')
 
         self.parser.add_argument('--cap_percentile',
-            dest='cap_percentile',
-            type=float,
-            default=99.0,
-            help='Global IPD percentile to cap IPDs at')
+                                 dest='cap_percentile',
+                                 type=float,
+                                 default=99.0,
+                                 help='Global IPD percentile to cap IPDs at')
 
         self.parser.add_argument("--threaded", "-T",
-            action="store_true",
-            dest="threaded",
-            default=False,
-            help="Run threads instead of processes (for debugging purposes only)")
+                                 action="store_true",
+                                 dest="threaded",
+                                 default=False,
+                                 help="Run threads instead of processes (for debugging purposes only)")
 
         self.parser.add_argument("--profile",
-            action="store_true",
-            dest="doProfiling",
-            default=False,
-            help="Enable Python-level profiling (using cProfile).")
+                                 action="store_true",
+                                 dest="doProfiling",
+                                 default=False,
+                                 help="Enable Python-level profiling (using cProfile).")
 
         # self.parser.add_argument("--methylFraction",
         #     action="store_true",
@@ -200,55 +205,49 @@ class ReprocessMotifSites(PBToolRunner):
         #     default=False,
         #     help="In the --identify mode, add --methylFraction to command line to estimate the methylated fraction, along with 95% confidence interval bounds.")
 
-
         # The following are in addition to ipdSummary.py's inputs:
-
         self.parser.add_argument('--motifs',
-            dest="motifs",
-            required=True,
-            help='Name of motifs GFF file [%(default)s]')
+                                 dest="motifs",
+                                 required=True,
+                                 help='Name of motifs GFF file [%(default)s]')
 
         self.parser.add_argument('--motif_summary',
-            dest="motif_summary",
-            required=True,
-            help='Name of motif summary CSV file')
+                                 dest="motif_summary",
+                                 required=True,
+                                 help='Name of motif summary CSV file')
 
         self.parser.add_argument('--undetected',
-            action="store_true",
-            dest="undetected",
-            default=False,
-            help="Setting this flag yields output with only undetected motif sites.")
+                                 action="store_true",
+                                 dest="undetected",
+                                 default=False,
+                                 help="Setting this flag yields output with only undetected motif sites.")
 
         self.parser.add_argument('--modifications',
-            dest="modifications",
-            default=None,
-            help='Name of modifications GFF file [%(default)s]')
+                                 dest="modifications",
+                                 default=None,
+                                 help='Name of modifications GFF file [%(default)s]')
 
         self.parser.add_argument('--oldData',
-            action="store_true",
-            dest="oldData",
-            default=False,
-            help="For datasets prior to 1.3.3 (use this option to increase testing possibilities)")
+                                 action="store_true",
+                                 dest="oldData",
+                                 default=False,
+                                 help="For datasets prior to 1.3.3 (use this option to increase testing possibilities)")
 
         # A new addition to ipdSummary.py
 
         self.parser.add_argument('--paramsPath',
-            dest='paramsPath',
-            default=None,
-            help='Directory containing in-silico trained model for each chemistry')
-
+                                 dest='paramsPath',
+                                 default=None,
+                                 help='Directory containing in-silico trained model for each chemistry')
 
         self.parser.add_argument('--modelIters',
-            dest='modelIters',
-            type=int,
-            default=-1,
-            help='[Internal] Number of GBM model iteration to use')
-
-            
+                                 dest='modelIters',
+                                 type=int,
+                                 default=-1,
+                                 help='[Internal] Number of GBM model iteration to use')
 
     def getVersion(self):
         return __version__
-
 
     def validateArgs(self):
         if not os.path.exists(self.args.infile):
@@ -263,8 +262,6 @@ class ReprocessMotifSites(PBToolRunner):
 
         if not self.args.undetected and not os.path.exists(self.args.modifications):
             self.parser.error('either the --undetected flag must be set, or a valid modifications.gff must be provided')
-
-
 
     def run(self):
 
@@ -291,9 +288,9 @@ class ReprocessMotifSites(PBToolRunner):
 
         if self.args.doProfiling:
             cProfile.runctx("self._mainLoop()",
-                globals=globals(),
-                locals=locals(),
-                filename="profile-main4.out")
+                            globals=globals(),
+                            locals=locals(),
+                            filename="profile-main4.out")
 
         else:
             try:
@@ -306,7 +303,6 @@ class ReprocessMotifSites(PBToolRunner):
                             w.terminate()
 
             return ret
-
 
     def _initQueues(self):
         if self.options.threaded:
@@ -325,8 +321,6 @@ class ReprocessMotifSites(PBToolRunner):
             # Completed chunks are put on this queue by KineticWorker threads
             # They are consumed by the KineticsWriter process
             self._resultsQueue = multiprocessing.JoinableQueue(self.options.maxQueueSize)
-
-
 
     def _launchSlaveProcesses(self):
         """
@@ -349,7 +343,7 @@ class ReprocessMotifSites(PBToolRunner):
         if self.options.numWorkers > availableCpus:
             logging.warn("More worker processes requested (%d) than CPUs available (%d);"
                          " may result in suboptimal performance."
-            % (self.options.numWorkers, availableCpus))
+                         % (self.options.numWorkers, availableCpus))
 
         self._initQueues()
 
@@ -358,7 +352,6 @@ class ReprocessMotifSites(PBToolRunner):
             WorkerType = KineticWorkerThread
         else:
             WorkerType = KineticWorkerProcess
-
 
         # Launch the worker processes
         self._workers = []
@@ -374,45 +367,43 @@ class ReprocessMotifSites(PBToolRunner):
         logging.info("Launched result collector process.")
 
         # Spawn a thread that monitors worker threads for crashes
-        self.monitoringThread = threading.Thread(target=monitorChildProcesses,  args=(self._workers +[self._resultCollectorProcess],))
+        self.monitoringThread = threading.Thread(target=monitorChildProcesses, args=(self._workers + [self._resultCollectorProcess],))
         self.monitoringThread.start()
-
 
     def _queueChunksForReference(self):
 
         # Read in motif_summary.csv
         motifInfo = {}
-        reader = csv.reader( open(self.args.motif_summary, 'r'), delimiter=',')
+        reader = csv.reader(open(self.args.motif_summary, 'r'), delimiter=',')
         reader.next()
         if self.options.oldData:
             col = 1
         else:
             col = 2
         for row in reader:
-            motifInfo[ row[0] ] =  row[col] 
+            motifInfo[row[0]] = row[col]
 
         # Figure out the length of the motifs file:
         motReader = GffReader(self.args.motifs)
         if self.options.undetected:
-            motifDicts = [ { "seqID": x.seqid, "type": x.type, "score": x.score, "pos": x.start, "strand": x.strand, "attributes": x.attributes } \
-                             for x in motReader if x.type == '.']
+            motifDicts = [{"seqID": x.seqid, "type": x.type, "score": x.score, "pos": x.start, "strand": x.strand, "attributes": x.attributes}
+                          for x in motReader if x.type == '.']
         else:
-            motifDicts = [ { "seqID": x.seqid, "type": x.type, "score": x.score, "pos": x.start, "strand": x.strand, "attributes": x.attributes } \
-                             for x in motReader ]
+            motifDicts = [{"seqID": x.seqid, "type": x.type, "score": x.score, "pos": x.start, "strand": x.strand, "attributes": x.attributes}
+                          for x in motReader]
 
-        refLength = len( motifDicts )
+        refLength = len(motifDicts)
 
         # Maximum number of hits per chunk
         MAX_HITS = 500
         nBases = min(refLength, self.args.maxLength)
-        nBlocks = max(self.options.numWorkers*4, nBases / MAX_HITS)
+        nBlocks = max(self.options.numWorkers * 4, nBases / MAX_HITS)
 
         # Block layout
         blockSize = min(nBases, max(nBases / nBlocks + 1, 100))
         blockStarts = np.arange(0, nBases, step=blockSize)
         blockEnds = blockStarts + blockSize
         blocks = zip(blockStarts, blockEnds)
-
 
         if self.options.undetected:
             self.options.modifications = None
@@ -425,8 +416,6 @@ class ReprocessMotifSites(PBToolRunner):
             chunk = (motifDicts[block[0]:block[1]], self.refInfo, motifInfo, self.options.modifications, self.options.undetected, self.options.oldData, block[0], block[1])
             self._workQueue.put((self.workChunkCounter, chunk))
             self.workChunkCounter += 1
-
-
 
     def loadReference(self):
         # FIXME - support a bare fasta file as well?
@@ -442,8 +431,6 @@ class ReprocessMotifSites(PBToolRunner):
             self.lutPath = None
 
         self.ipdModel = IpdModel(self.referenceEntry, self.lutPath)
-
-
 
     def loadReferenceAndModel(self, referencePath, cmpH5Path):
 
@@ -468,7 +455,7 @@ class ReprocessMotifSites(PBToolRunner):
             logging.info("Using passed in ipd model: %s" % self.args.ipdModel)
             if not os.path.exists(self.args.ipdModel):
                 logging.error("Couldn't find model file: %s" % self.args.ipdModel)
- 
+
         elif self.args.paramsPath:
             if not os.path.exists(self.args.paramsPath):
                 logging.error("Params path doesn't exist: %s" % self.args.paramsPath)
@@ -478,7 +465,7 @@ class ReprocessMotifSites(PBToolRunner):
             if 'SequencingChemistry' in movieInfoTable.dtype.fields.keys():
                 # Pick majority chemistry
                 chemistries = movieInfoTable.SequencingChemistry.tolist()
-                chemCounts = dict([ (k, len(list(v))) for (k, v) in itertools.groupby(chemistries)])
+                chemCounts = dict([(k, len(list(v))) for (k, v) in itertools.groupby(chemistries)])
                 majorityChem = max(chemCounts, key=chemCounts.get)
 
                 # Find the appropriate model file:
@@ -496,8 +483,6 @@ class ReprocessMotifSites(PBToolRunner):
 
         self.ipdModel = IpdModel(contigs, ipdModel, self.args.modelIters)
 
-
-
     def _mainLoop(self):
 
         # See comments in ipdSummary.py
@@ -514,12 +499,10 @@ class ReprocessMotifSites(PBToolRunner):
 
         # cmp.h5 we're using -- use this to orchestrate the work
         self.cmph5 = CmpH5Reader(self.args.infile)
-        logging.info('Generating kinetics summary for [%s]' %  self.args.infile)
-
+        logging.info('Generating kinetics summary for [%s]' % self.args.infile)
 
         self.workChunkCounter = 0
         self._queueChunksForReference()
-
 
         # Shutdown worker threads with None sentinels
         for i in xrange(self.args.numWorkers):
@@ -536,8 +519,6 @@ class ReprocessMotifSites(PBToolRunner):
         logging.info("reprocessMotifSites.py finished. Exiting.")
         del self.cmph5
         return 0
-
-
 
 
 def monitorChildProcesses(children):
@@ -567,7 +548,6 @@ def monitorChildProcesses(children):
         time.sleep(1)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     kt = ReprocessMotifSites()
     kt.start()
-

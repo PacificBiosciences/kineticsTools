@@ -28,14 +28,18 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
-import cProfile, logging, os.path
+import cProfile
+import logging
+import os.path
 from multiprocessing import Process
 from multiprocessing.process import current_process
 from threading import Thread, Event
 
 from pbcore.io import CmpH5Reader
 
+
 class Worker(object):
+
     """
     Base class for worker processes that read reference coordinates
     from the task queue, perform variant calling, then push results
@@ -83,7 +87,7 @@ class Worker(object):
                 result = self.onChunk(datum)
 
                 logging.debug("Process %s: putting result." % current_process())
-                self._resultsQueue.put((chunkId,result))
+                self._resultsQueue.put((chunkId, result))
                 self._workQueue.task_done()
 
         self.onFinish()
@@ -97,17 +101,15 @@ class Worker(object):
 
         if self.options.doProfiling:
             cProfile.runctx("self._run()",
-                globals=globals(),
-                locals=locals(),
-                filename="profile-%s.out" % self.name)
+                            globals=globals(),
+                            locals=locals(),
+                            filename="profile-%s.out" % self.name)
         else:
             self._run()
-
 
     #==
     # Begin overridable interface
     #==
-
     def onStart(self):
         pass
 
@@ -124,10 +126,12 @@ class Worker(object):
 
 
 class WorkerProcess(Worker, Process):
+
     """Worker that executes as a process."""
+
     def __init__(self, *args):
         Process.__init__(self)
-        super(WorkerProcess,self).__init__(*args)
+        super(WorkerProcess, self).__init__(*args)
         self.daemon = True
 
     def _lowPriority(self):
@@ -146,7 +150,9 @@ class WorkerProcess(Worker, Process):
             # Based on:
             #   "Recipe 496767: Set Process Priority In Windows" on ActiveState
             #   http://code.activestate.com/recipes/496767/
-            import win32api,win32process,win32con
+            import win32api
+            import win32process
+            import win32con
 
             pid = win32api.GetCurrentProcessId()
             handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
@@ -159,10 +165,12 @@ class WorkerProcess(Worker, Process):
 
 
 class WorkerThread(Worker, Thread):
+
     """Worker that executes as a thread (for debugging purposes only)."""
+
     def __init__(self, *args):
         Thread.__init__(self)
-        super(WorkerThread,self).__init__(*args)
+        super(WorkerThread, self).__init__(*args)
         self._stop = Event()
         self.daemon = True
         self.exitcode = 0

@@ -40,28 +40,29 @@ import re
 
 log10e = log10(e)
 
-canonicalBaseMap = { 'A': 'A', 'C':'C', 'G':'G', 'T':'T', 'H':'A', 'I':'C', 'J':'C', 'K':'C' }
-modNames = { 'H':'m6A', 'I':'m5C', 'J':'m4C', 'K':'m5C' }
+canonicalBaseMap = {'A': 'A', 'C': 'C', 'G': 'G', 'T': 'T', 'H': 'A', 'I': 'C', 'J': 'C', 'K': 'C'}
+modNames = {'H': 'm6A', 'I': 'm5C', 'J': 'm4C', 'K': 'm5C'}
 
 m5CCode = 'I'
 
 iupacMap = {
-        'A' : 'A',
-        'C' : 'C',
-        'G' : 'G',
-        'T' : 'T',
-        'K' : 'GT',
-        'M' : 'AC',
-        'R' : 'AG',
-        'Y' : 'CT',
-        'S' : 'CG',
-        'W' : 'AT',
-        'B' : 'CGT',
-        'D' : 'AGT',
-        'H' : 'ACT',
-        'V' : 'ACG',
-        'N' : 'ACGT'
+    'A': 'A',
+    'C': 'C',
+    'G': 'G',
+    'T': 'T',
+    'K': 'GT',
+    'M': 'AC',
+    'R': 'AG',
+    'Y': 'CT',
+    'S': 'CG',
+    'W': 'AT',
+    'B': 'CGT',
+    'D': 'AGT',
+    'H': 'ACT',
+    'V': 'ACG',
+    'N': 'ACGT'
 }
+
 
 def findMotifPositions(seq, motifs):
     regexs = []
@@ -80,7 +81,7 @@ def findMotifPositions(seq, motifs):
     # Return a list of matching positions in the sequence
     for r in regexs:
         rr = re.compile(r)
-        matches = [ x.start() for x in rr.finditer(seq) ]
+        matches = [x.start() for x in rr.finditer(seq)]
         allMatches.extend(matches)
 
     allMatches.sort()
@@ -88,10 +89,9 @@ def findMotifPositions(seq, motifs):
     return allMatches
 
 
-
 class MultiSiteDetection(object):
 
-    def __init__(self, gbmModel, sequence, rawKinetics, callBounds, methylMinCov, motifs = ['CG']):
+    def __init__(self, gbmModel, sequence, rawKinetics, callBounds, methylMinCov, motifs=['CG']):
         """
 
         """
@@ -122,14 +122,12 @@ class MultiSiteDetection(object):
 
         self.rawKinetics = rawKinetics
 
-
     def getConfigs(self, centerIdx):
         ''' Enumerate all the contexts centered at centerIdx with one
             modification added '''
         start = centerIdx - self.pre
         end = centerIdx + self.post
         return self._possibleConfigs(start, end)
-
 
     def _possibleConfigs(self, start, end):
         ''' Enumerate all the contexts coming from the substring self.sequence[start,end] with one
@@ -139,7 +137,7 @@ class MultiSiteDetection(object):
             return self.alternateBases[start]
         else:
             r = []
-            allSuffixes = self._possibleConfigs(start+1, end)
+            allSuffixes = self._possibleConfigs(start + 1, end)
 
             # The first suffix is alway the one with no modifications
             # Only add the alternate to that one -- that way we only
@@ -165,12 +163,11 @@ class MultiSiteDetection(object):
     def getContexts(self, start, end, sequence):
         contexts = []
 
-        for pos in xrange(start, end+1):
-            ctx = sequence[(pos-self.pre):(pos + self.post + 1)].tostring()
+        for pos in xrange(start, end + 1):
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             contexts.append(ctx)
 
         return contexts
-
 
     def computeContextMeans(self):
         """Generate a hash of the mean ipd for all candidate contexts"""
@@ -185,8 +182,6 @@ class MultiSiteDetection(object):
         predictions = self.gbmModel.getPredictions(allContexts)
         self.contextMeanTable = dict(zip(allContexts, predictions))
 
-
-
     def decode(self):
         """Use this method to do the full modification finding protocol"""
 
@@ -198,7 +193,6 @@ class MultiSiteDetection(object):
 
         # Compute a confidence for each mod and return results
         return self.scorePositions()
-
 
     def findMotifs(self):
         """ Mark all the positions matching the requested motif """
@@ -213,7 +207,6 @@ class MultiSiteDetection(object):
                 self.alternateBases[pos].append('I')
                 self.motifPositions.append(pos)
 
-
     def multiSiteDetection(self, positions, nullPred, modPred, centerPosition):
         ''' kinetics, nullPred, and modifiedPred are parallel arrays 
             containing the observations and predictions surrounding a 
@@ -221,36 +214,35 @@ class MultiSiteDetection(object):
             modification and the modified fraction here'''
 
         # Apply the error model to the predictions
-        nullErr = 0.01 + 0.03*nullPred + 0.06*nullPred**(1.7)
-        modErr  = 0.01 + 0.03* modPred + 0.06* modPred**(1.7)
+        nullErr = 0.01 + 0.03 * nullPred + 0.06 * nullPred ** (1.7)
+        modErr = 0.01 + 0.03 * modPred + 0.06 * modPred ** (1.7)
 
         obsMean = np.zeros(nullPred.shape)
-        obsErr  = np.zeros(nullPred.shape)
+        obsErr = np.zeros(nullPred.shape)
 
         # Get the observations into the same array format
         for i in xrange(len(positions)):
             position = positions[i]
 
             if self.rawKinetics.has_key(position):
-                siteObs = self.rawKinetics[ position ]
+                siteObs = self.rawKinetics[position]
                 obsMean[i] = siteObs['tMean']
-                obsErr[i]  = siteObs['tErr']
+                obsErr[i] = siteObs['tErr']
             else:
-                # Crank up the variance -- we don't have an observation at this 
+                # Crank up the variance -- we don't have an observation at this
                 # position, so we should ignore it.
                 obsMean[i] = 0.0
-                obsErr[i] =  999999999
+                obsErr[i] = 999999999
 
         # Subtract off the background model from the observations and the modified prediction
         dObs = obsMean - nullPred
         # Error of observation and prediction are uncorrelated
-        obsSigma = obsErr**2 + nullErr**2
+        obsSigma = obsErr ** 2 + nullErr ** 2
         invObsSigma = 1.0 / obsSigma
-
 
         # Error of null prediction and mod prediction are probably correlated -- need a better estimate of the error of the difference!!
         dPred = modPred - nullPred
-        dPredSigma = (obsErr**2 + nullErr**2) / 2 # Just stubbing in a factor of 2 here...
+        dPredSigma = (obsErr ** 2 + nullErr ** 2) / 2  # Just stubbing in a factor of 2 here...
 
         weightsNumerator = invObsSigma * dPred
         weights = weightsNumerator / (dPred * weightsNumerator).sum()
@@ -270,7 +262,7 @@ class MultiSiteDetection(object):
 
         pvalue = s.norm._cdf(-signalEstimate / varianceEstimate)
         pvalue = max(sys.float_info.min, pvalue)
-        score = -10.0*log10(pvalue)
+        score = -10.0 * log10(pvalue)
 
         centerPosition['MSscore'] = score
         centerPosition['MSpvalue'] = pvalue
@@ -284,7 +276,6 @@ class MultiSiteDetection(object):
         centerPosition['Mask'] = []
 
         return centerPosition
-
 
     def scorePositions(self):
         """
@@ -309,7 +300,7 @@ class MultiSiteDetection(object):
                 dnaSeq[pos] = originalBase
 
                 # Position that contribute to this call
-                positions = xrange(pos - self.post, pos + self.pre+1)
+                positions = xrange(pos - self.post, pos + self.pre + 1)
 
                 # Run the multi-site detection and save the results
                 centerStats = self.rawKinetics[pos]
@@ -319,13 +310,11 @@ class MultiSiteDetection(object):
 
         return qvModCalls
 
-
     def getRegionPredictions(self, start, end, sequence):
-        predictions = np.zeros(end-start+1)
+        predictions = np.zeros(end - start + 1)
 
-        for pos in xrange(start, end+1):
-            ctx = sequence[(pos-self.pre):(pos + self.post + 1)].tostring()
+        for pos in xrange(start, end + 1):
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             predictions[pos - start] = self.contextMeanTable[ctx]
 
         return predictions
-

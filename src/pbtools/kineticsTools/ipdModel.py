@@ -45,30 +45,30 @@ uint8 = np.dtype('uint8')
 
 # We start everything at 0, so anything will map to 'A' unless it appears in this table
 lutCodeMap = np.zeros(256, dtype=uint8)
-maps = { 'a': 0, 'A':0, 'c':1, 'C':1, 'g':2, 'G':2, 't':3, 'T':3 }
+maps = {'a': 0, 'A': 0, 'c': 1, 'C': 1, 'g': 2, 'G': 2, 't': 3, 'T': 3}
 for k in maps:
     lutCodeMap[ord(k)] = maps[k]
-lutReverseMap = { 0: 'A', 1:'C', 2:'G', 3:'T'}
+lutReverseMap = {0: 'A', 1: 'C', 2: 'G', 3: 'T'}
 
 seqCodeMap = np.ones(256, dtype=uint8) * 4
 for k in maps:
     seqCodeMap[ord(k)] = maps[k]
-seqMap = { 0: 'A', 1:'C', 2:'G', 3:'T', 4:'N'}
+seqMap = {0: 'A', 1: 'C', 2: 'G', 3: 'T', 4: 'N'}
 seqMapNp = np.array(['A', 'C', 'G', 'T', 'N'])
 
-seqMapComplement = { 0: 'T', 1:'G', 2:'C', 3:'A', 4:'N'}
+seqMapComplement = {0: 'T', 1: 'G', 2: 'C', 3: 'A', 4: 'N'}
 seqMapComplementNp = np.array(['T', 'G', 'C', 'A', 'N'])
 
 # Base letters for modification calling
 # 'H' : m6A, 'I' : m5C, 'J' : m4C, 'K' : m5C/TET
-baseToCode = { 'N': 0, 'A' : 0, 'C' : 1, 'G' : 2, 'T' : 3, 'H' : 4, 'I':5, 'J':6, 'K' :7 }
-baseToCanonicalCode =  { 'N':0, 'A' : 0, 'C' : 1, 'G' : 2, 'T' : 3, 'H' : 0, 'I':1, 'J':1, 'K' :1 }
+baseToCode = {'N': 0, 'A': 0, 'C': 1, 'G': 2, 'T': 3, 'H': 4, 'I': 5, 'J': 6, 'K': 7}
+baseToCanonicalCode = {'N': 0, 'A': 0, 'C': 1, 'G': 2, 'T': 3, 'H': 0, 'I': 1, 'J': 1, 'K': 1}
 
-codeToBase = dict([(y,x) for (x,y) in baseToCode.items()])
-
+codeToBase = dict([(y, x) for (x, y) in baseToCode.items()])
 
 
 class GbmContextModel(object):
+
     """
     Class for computing ipd predictions on contexts. Evaluate the GBM tree model for a list of contexts
     Contexts may contain arbitrary combinations of modified bases
@@ -85,8 +85,8 @@ class GbmContextModel(object):
             return modelH5Group[name][:]
 
         self.varNames = ds("VarNames")
-        self.modFeatureIdx = dict( (int(self.varNames[x][1:]), x) for x in range(len(self.varNames)) if self.varNames[x][0] == 'M' )
-        self.canonicalFeatureIdx = dict( (int(self.varNames[x][1:]), x) for x in range(len(self.varNames)) if self.varNames[x][0] == 'R' )
+        self.modFeatureIdx = dict((int(self.varNames[x][1:]), x) for x in range(len(self.varNames)) if self.varNames[x][0] == 'M')
+        self.canonicalFeatureIdx = dict((int(self.varNames[x][1:]), x) for x in range(len(self.varNames)) if self.varNames[x][0] == 'R')
 
         self.pre = 10
         self.post = 4
@@ -99,7 +99,6 @@ class GbmContextModel(object):
 
         self.splitVar16 = self.splitVar.astype(np.int16)
 
-
         self.splitCodes = ds("SplitCodes").astype(np.float32)
 
         self.cSplits = ds("CSplits")
@@ -107,21 +106,19 @@ class GbmContextModel(object):
 
         self.initialValue = ds("InitialValue").astype(np.float32)[0]
 
-        exp = 2**np.arange(self.cSplits.shape[1] - 1, -1, -1)
+        exp = 2 ** np.arange(self.cSplits.shape[1] - 1, -1, -1)
         self.bSplits = ((self.cSplits > 0) * exp).sum(1)
 
         # total number of trees in model
         self.nTrees = self.splitVar.shape[0]
         self.treeSize = self.splitVar.shape[1]
 
-
-        offsets = np.floor(np.arange(0, self.leftNodes.size)/self.treeSize)*self.treeSize
+        offsets = np.floor(np.arange(0, self.leftNodes.size) / self.treeSize) * self.treeSize
         offsets = offsets.astype(np.int32)
 
         self.leftNodesOffset = self.leftNodes.flatten().astype(np.int32) + offsets
         self.rightNodesOffset = self.rightNodes.flatten().astype(np.int32) + offsets
         self.missingNodesOffset = self.missingNodes.flatten().astype(np.int32) + offsets
-
 
         self.splitCodesCtx = self.splitCodes.copy().flatten()
 
@@ -132,23 +129,21 @@ class GbmContextModel(object):
         # using an uin32 view of the splitCode array
         flatSplitVar = self.splitVar.flatten()
 
-        powOfTwo = 2**np.arange(self.maxCSplits)
+        powOfTwo = 2 ** np.arange(self.maxCSplits)
 
         for i in xrange(self.splitCodesCtx.shape[0]):
 
             if flatSplitVar[i] != -1:
                 # This is a pointer to a cSplit row -- pack the csplit into a unit32, then overwirte
                 # this slot of the ctxSplitCodes
-               cs = self.cSplits[int(self.splitCodesCtx[i]),:]
-               v = (powOfTwo * (cs > 0)).sum()
+                cs = self.cSplits[int(self.splitCodesCtx[i]), :]
+                v = (powOfTwo * (cs > 0)).sum()
 
-               splitCodesCtxView[i] = v
+                splitCodesCtxView[i] = v
 
         # If the user has requested fewer iterations, update nTrees
         if modelIterations > 0:
             self.nTrees = modelIterations
-
-
 
     def _initNativeTreePredict(self):
         """
@@ -192,24 +187,22 @@ class GbmContextModel(object):
         sp = C.POINTER(C.c_int16)
         ui64p = C.POINTER(C.c_uint64)
 
-        args = [fp, fpp, C.c_int, ip, ip, ip, fp, ip, ip, ip, C.c_float, C.c_int, C.c_int, C.c_int ]
+        args = [fp, fpp, C.c_int, ip, ip, ip, fp, ip, ip, ip, C.c_float, C.c_int, C.c_int, C.c_int]
         lpb.innerPredict.argtypes = args
         self.nativeInnerPredict = lpb.innerPredict
 
         # Fast version
 
-        #void innerPredictCtx(
-        #    int ctxSize, float radPredF[], uint64_t contextPack[], int cRows, 
-        #    int16 left[], int16 right[], int16 missing[], float splitCode[], int16 splitVar[], 
+        # void innerPredictCtx(
+        #    int ctxSize, float radPredF[], uint64_t contextPack[], int cRows,
+        #    int16 left[], int16 right[], int16 missing[], float splitCode[], int16 splitVar[],
         #    int varTypes[], float initialValue, int treeSize, int numTrees, int maxCSplitSize)
 
-        args = [C.c_int, fp, ui64p, C.c_int, ip, ip, ip, fp, sp, ip, C.c_float, C.c_int, C.c_int, C.c_int ]
+        args = [C.c_int, fp, ui64p, C.c_int, ip, ip, ip, fp, sp, ip, C.c_float, C.c_int, C.c_int, C.c_int]
         lpb.innerPredictCtx.argtypes = args
         self.nativeInnerPredictCtx = lpb.innerPredictCtx
 
-
-
-    def getPredictionsSlow(self, ctxStrings, nTrees = None):
+    def getPredictionsSlow(self, ctxStrings, nTrees=None):
         """Compute IPD predictions for arbitrary methylation-containing contexts."""
         # C prototype that we call:
         # void innerPredict(
@@ -224,7 +217,6 @@ class GbmContextModel(object):
         if self.nativeInnerPredict is None:
             self._initNativeTreePredict()
 
-
         def fp(arr):
             return arr.ctypes.data_as(C.POINTER(C.c_float))
 
@@ -236,8 +228,8 @@ class GbmContextModel(object):
 
         n = len(ctxStrings)
 
-        mCols = [ np.zeros(n, dtype=np.float32) for x in xrange(self.ctxSize) ]
-        rCols = [ np.zeros(n, dtype=np.float32) for x in xrange(self.ctxSize) ]
+        mCols = [np.zeros(n, dtype=np.float32) for x in xrange(self.ctxSize)]
+        rCols = [np.zeros(n, dtype=np.float32) for x in xrange(self.ctxSize)]
 
         for stringIdx in xrange(len(ctxStrings)):
             s = ctxStrings[stringIdx]
@@ -246,10 +238,9 @@ class GbmContextModel(object):
                 mCols[i][stringIdx] = baseToCode[s[i]]
                 rCols[i][stringIdx] = baseToCanonicalCode[s[i]]
 
+        dataPtrs = (C.POINTER(C.c_float) * (2 * self.ctxSize))()
 
-        dataPtrs = (C.POINTER(C.c_float)*(2*self.ctxSize))()
-
-        varTypes = np.zeros(2*self.ctxSize, dtype=np.int32)
+        varTypes = np.zeros(2 * self.ctxSize, dtype=np.int32)
 
         for i in xrange(self.ctxSize):
             dataPtrs[self.modFeatureIdx[i]] = mCols[i].ctypes.data_as(C.POINTER(C.c_float))
@@ -257,7 +248,6 @@ class GbmContextModel(object):
 
             varTypes[self.modFeatureIdx[i]] = 8
             varTypes[self.canonicalFeatureIdx[i]] = 4
-
 
         self.predictions = np.zeros(len(ctxStrings), dtype=np.float32)
 
@@ -269,8 +259,7 @@ class GbmContextModel(object):
 
         return np.exp(self.predictions)
 
-
-    def getPredictions(self, ctxStrings, nTrees = None):
+    def getPredictions(self, ctxStrings, nTrees=None):
         """Compute IPD predictions for arbitrary methylation-containing contexts."""
         # C prototype that we call:
         # void innerPredictCtx(
@@ -285,7 +274,6 @@ class GbmContextModel(object):
         if self.nativeInnerPredictCtx is None:
             self._initNativeTreePredict()
 
-
         def fp(arr):
             return arr.ctypes.data_as(C.POINTER(C.c_float))
 
@@ -297,7 +285,6 @@ class GbmContextModel(object):
 
         def sp(arr):
             return arr.ctypes.data_as(C.POINTER(C.c_int16))
-
 
         n = len(ctxStrings)
 
@@ -315,22 +302,21 @@ class GbmContextModel(object):
 
                 slotForPosition = self.modFeatureIdx[i]
 
-                code = code | (modBits << (4*slotForPosition))
+                code = code | (modBits << (4 * slotForPosition))
 
             packCol[stringIdx] = code
 
         # print packed base codes
-        #for v in packCol.flatten():
+        # for v in packCol.flatten():
         #    print v
         #    for i in np.arange(12):
         #        print "%d: %o" % (i,  (v.item() >> (5*i)) & 0x1f)
 
-        varTypes = np.zeros(2*self.ctxSize, dtype=np.int32)
+        varTypes = np.zeros(2 * self.ctxSize, dtype=np.int32)
 
         for i in xrange(self.ctxSize):
             varTypes[self.modFeatureIdx[i]] = 8
             varTypes[self.canonicalFeatureIdx[i]] = 4
-
 
         self.predictions = np.zeros(len(ctxStrings), dtype=np.float32)
 
@@ -344,14 +330,15 @@ class GbmContextModel(object):
 
 
 class IpdModel:
+
     """
     Predicts the IPD of an any context, possibly containing multiple modifications.
     We use a 4^12 entry LUT to get the predictions for contexts without modifications,
     then we use the GbmModel to get predictions in the presence of arbitrary mods.
-	Note on the coding scheme.  For each contig we store a byte-array that has size = contig.length + 2*self.pad
-	The upper 4 bits contain a lookup into seqReverseMap, which can contains N's. This is used for giving
-	template snippets that may contains N's if the reference sequence does, or if the snippet
-	The lowe 4 bits contain a lookup into lutReverseMap, which
+        Note on the coding scheme.  For each contig we store a byte-array that has size = contig.length + 2*self.pad
+        The upper 4 bits contain a lookup into seqReverseMap, which can contains N's. This is used for giving
+        template snippets that may contains N's if the reference sequence does, or if the snippet
+        The lowe 4 bits contain a lookup into lutReverseMap, which
     """
 
     def __init__(self, fastaRecords, modelFile=None, modelIterations=-1):
@@ -366,7 +353,6 @@ class IpdModel:
 
         self.pad = 30
         self.base4 = 4 ** np.array(range(self.pre + self.post + 1))
-
 
         self.refDict = {}
         self.refLengthDict = {}
@@ -397,7 +383,7 @@ class IpdModel:
             # Padding codes -- the lut array is padded with 0s the sequence array is padded with N's (4)
             outerCodes = np.left_shift(np.ones(self.pad, dtype=uint8) * 4, 4)
             saWrap[0:self.pad] = outerCodes
-            saWrap[(len(rawSeq) + self.pad):(len(rawSeq) + 2*self.pad)] = outerCodes
+            saWrap[(len(rawSeq) + self.pad):(len(rawSeq) + 2 * self.pad)] = outerCodes
 
             self.refDict[contig.id] = sa
 
@@ -417,12 +403,11 @@ class IpdModel:
             gbmModelGroup = h5File["/AllMods_GbmModel"]
             self.gbmModel = GbmContextModel(gbmModelGroup, modelIterations)
 
-            # We always use the model -- no more LUTS 
+            # We always use the model -- no more LUTS
             self.predictIpdFunc = self.predictIpdFuncModel
             self.predictManyIpdFunc = self.predictManyIpdFuncModel
         else:
             logging.info("Couldn't find model file: %s" % self.lutPath)
-
 
     def _loadIpdTable(self, nullModelGroup):
         """
@@ -461,7 +446,7 @@ class IpdModel:
             tplPos += self.pad
 
             # Forward strand
-            if tplStrand==0:
+            if tplStrand == 0:
                 slc = refArray[tplPos]
                 slc = np.right_shift(slc, 4)
                 return seqMap[slc]
@@ -487,19 +472,18 @@ class IpdModel:
             tplPos += self.pad
 
             # Forward strand
-            if tplStrand==0:
-                slc = refArray[(tplPos-pre):(tplPos+1+post)]
+            if tplStrand == 0:
+                slc = refArray[(tplPos - pre):(tplPos + 1 + post)]
                 slc = np.right_shift(slc, 4)
                 return seqMapNp[slc].tostring()
 
             # Reverse strand
             else:
-                slc = refArray[(tplPos+pre):(tplPos-post-1):-1]
+                slc = refArray[(tplPos + pre):(tplPos - post - 1):-1]
                 slc = np.right_shift(slc, 4)
                 return seqMapComplementNp[slc].tostring()
 
         return f
-
 
     def getReferenceWindow(self, refId, tplStrand, start, end):
         """
@@ -513,7 +497,7 @@ class IpdModel:
         end += self.pad
 
         # Forward strand
-        if tplStrand==0:
+        if tplStrand == 0:
             slc = refArray[start:end]
             slc = np.right_shift(slc, 4)
             return "".join(seqMap[x] for x in slc)
@@ -523,8 +507,6 @@ class IpdModel:
             slc = refArray[end:start:-1]
             slc = np.right_shift(slc, 4)
             return "".join(seqMapComplement[x] for x in slc)
-
-
 
     def predictIpdFuncLut(self, refId):
         """
@@ -547,12 +529,12 @@ class IpdModel:
             tplPos += self.pad
 
             # Forward strand
-            if tplStrand==0:
-                slc = np.bitwise_and(refArray[(tplPos+self.pre):(tplPos-self.post-1):-1], 0xf)
+            if tplStrand == 0:
+                slc = np.bitwise_and(refArray[(tplPos + self.pre):(tplPos - self.post - 1):-1], 0xf)
 
             # Reverse strand
             else:
-                slc = 3 - np.bitwise_and(refArray[(tplPos-self.pre):(tplPos+1+self.post)], 0xf)
+                slc = 3 - np.bitwise_and(refArray[(tplPos - self.pre):(tplPos + 1 + self.post)], 0xf)
 
             code = (self.base4 * slc).sum()
             return floatLut[max(1, lutArray[code])]
@@ -581,7 +563,6 @@ class IpdModel:
 
         return f
 
-
     def predictManyIpdFuncModel(self, refId):
         """
         Each (pre+post+1) base context gets mapped to an integer
@@ -596,7 +577,7 @@ class IpdModel:
         snipFunction = self.snippetFunc(refId, self.post, self.pre)
 
         def fMany(sites):
-            contexts = [ snipFunction(x[0], x[1]) for x in sites ]
+            contexts = [snipFunction(x[0], x[1]) for x in sites]
             return self.gbmModel.getPredictions(contexts)
 
         return fMany
@@ -619,12 +600,12 @@ class IpdModel:
             tplPos += self.pad
 
             # Read sequence matches forward strand
-            if readStrand==0:
-                slc = 3 - np.bitwise_and(refArray[(tplPos-self.pre):(tplPos+1+self.post)], 0xf)
+            if readStrand == 0:
+                slc = 3 - np.bitwise_and(refArray[(tplPos - self.pre):(tplPos + 1 + self.post)], 0xf)
 
             # Reverse strand
             else:
-                slc = np.bitwise_and(refArray[(tplPos+self.pre):(tplPos-self.post-1):-1], 0xf)
+                slc = np.bitwise_and(refArray[(tplPos + self.pre):(tplPos - self.post - 1):-1], 0xf)
 
             # Modify the indicated position
             slc[relativeModPos + self.pre] = baseToCode[mod]
@@ -632,9 +613,7 @@ class IpdModel:
             slcString = "".join([codeToBase[x] for x in slc])
 
             # Get the prediction for this context
-            #return self.gbmModel.getPredictions([slcString])[0]
+            # return self.gbmModel.getPredictions([slcString])[0]
             return 0.0
 
         return f
-
-

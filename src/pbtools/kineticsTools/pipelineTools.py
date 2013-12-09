@@ -30,16 +30,18 @@
 
 
 def consumer(func):
-    def start(*args,**kwargs):
-        c = func(*args,**kwargs)
+    def start(*args, **kwargs):
+        c = func(*args, **kwargs)
         c.next()
         return c
     return start
+
 
 def broadcast(source, consumers):
     for item in source:
         for c in consumers:
             c.send(item)
+
 
 def concat(sources):
     for source in sources:

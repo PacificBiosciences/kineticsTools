@@ -32,7 +32,9 @@
 
 import cProfile
 from pbcore.io import GffReader, Gff3Record
-import os, logging, sys
+import os
+import logging
+import sys
 
 from pbcore.util.ToolRunner import PBToolRunner
 
@@ -52,22 +54,22 @@ class IpdRatioSummaryWriter(PBToolRunner):
         super(IpdRatioSummaryWriter, self).__init__('\n'.join(desc))
 
         self.parser.add_argument('--pickle',
-            dest="pickle",
-            help='Name of input GFF file [%(default)s]')
+                                 dest="pickle",
+                                 help='Name of input GFF file [%(default)s]')
 
         self.parser.add_argument('--alignmentSummary',
-            dest="alignmentSummary",
-            help='Name alignment summary file [%(default)s]')
+                                 dest="alignmentSummary",
+                                 help='Name alignment summary file [%(default)s]')
 
         self.parser.add_argument('--outfile',
-            dest="outfile",
-            help='Name of modified alignment summary GFF file [%(default)s]')
+                                 dest="outfile",
+                                 help='Name of modified alignment summary GFF file [%(default)s]')
 
         self.parser.add_argument("--profile",
-            action="store_true",
-            dest="doProfiling",
-            default=False,
-            help="Enable Python-level profiling (using cProfile).")
+                                 action="store_true",
+                                 dest="doProfiling",
+                                 default=False,
+                                 help="Enable Python-level profiling (using cProfile).")
 
     def getVersion(self):
         return __version__
@@ -91,13 +93,12 @@ class IpdRatioSummaryWriter(PBToolRunner):
 
         if self.args.doProfiling:
             cProfile.runctx("self._mainLoop()",
-                globals=globals(),
-                locals=locals(),
-                filename="profile-main4.out")
+                            globals=globals(),
+                            locals=locals(),
+                            filename="profile-main4.out")
 
         else:
             return self._mainLoop()
-
 
     def _mainLoop(self):
 
@@ -113,7 +114,7 @@ class IpdRatioSummaryWriter(PBToolRunner):
         ]
 
         # Get modification calls
-        hits = [ { "pos": x.start, "strand": x.strand} for x in modReader if x.type == 'modified_base' ]
+        hits = [{"pos": x.start, "strand": x.strand} for x in modReader if x.type == 'modified_base']
 
         # Summary reader
         summaryFile = file(self.args.alignmentSummary)
@@ -130,9 +131,9 @@ class IpdRatioSummaryWriter(PBToolRunner):
             if line[0] == "#":
 
                 # Parse headers
-                splitFields  = line.replace('#', '').split(' ')
+                splitFields = line.replace('#', '').split(' ')
                 field = splitFields[0]
-                value = " ".join( splitFields[1:] )
+                value = " ".join(splitFields[1:])
                 if field == 'sequence-header':
                     [internalTag, delim, externalTag] = value.strip().partition(' ')
                     self.seqMap[internalTag] = externalTag
@@ -145,13 +146,12 @@ class IpdRatioSummaryWriter(PBToolRunner):
                     print >>summaryWriter, ("##%s %s" % field)
                 inHeader = False
 
-
             # Parse the line
             rec = Gff3Record.fromString(line)
 
             if rec.type == 'region':
                 # Get the hits in this interval, add them to the gff record
-                intervalHits = [ h for h in hits if rec.start <= h['pos'] <= rec.end ]
+                intervalHits = [h for h in hits if rec.start <= h['pos'] <= rec.end]
                 strand0Hits = len([h for h in intervalHits if h['strand'] == '+'])
                 strand1Hits = len([h for h in intervalHits if h['strand'] == '-'])
 
@@ -160,6 +160,6 @@ class IpdRatioSummaryWriter(PBToolRunner):
 
                 print >>summaryWriter, str(rec)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     kt = ModificationSummary()
     kt.start()

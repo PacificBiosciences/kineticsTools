@@ -44,8 +44,8 @@ class ReferenceUtils():
 
         # Read contigs from FASTA file
         fastaReader = FastaReader(referencePath)
-        contigs = [ x for x in fastaReader ]
-        contigDict = dict([ (x.md5, x) for x in contigs ])
+        contigs = [x for x in fastaReader]
+        contigDict = dict([(x.md5, x) for x in contigs])
 
         # Read reference info table from cmp.h5
         (refInfoTable, movieInfoTable) = ReferenceUtils.loadCmpH5Tables(cmpH5Path)
@@ -71,4 +71,3 @@ class ReferenceUtils():
         del cmph5
 
         return (refInfoTable, movieInfoTable)
-
