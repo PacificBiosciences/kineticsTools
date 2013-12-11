@@ -164,10 +164,10 @@ class KineticWorker(object):
                             siteDict[mod['tpl']][FRAClow] = mod[FRAClow]
                             siteDict[mod['tpl']][FRACup] = mod[FRACup]
 
-                            # Copy any extra properties that were added
-                            newKeys = set.difference(siteDict[mod['tpl']].keys(), mod.keys())
-                            for nk in newKeys:
-                                siteDict[mod['tpl']][nk] = mod[nk]
+                        # Copy any extra properties that were added
+                        newKeys = set(mod.keys()) - set(siteDict[mod['tpl']].keys())
+                        for nk in newKeys:
+                            siteDict[mod['tpl']][nk] = mod[nk]
 
                     if mod.has_key('Mask'):
                         # The decoder should supply the off-target peak mask
