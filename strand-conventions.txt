@@ -1,0 +1,33 @@
+
+    Note on IPD classifier training conventions
+    ===========================================
+
+    Getting the strand and context correct is notoriously confusing.
+    In the output of the basemods package (kineticsTools), strand refers the
+    _template_ strand, because that's where the modification that we're detecting
+    are.  The PacBio basecaller and dye/base mapping always work in the product strand.
+    
+    The IPD model itself is trained to take sequences in the template strand and make predictions about
+    the IPD that will observed when synthesizing the product strand.  In KEC, we will be working entirely 
+    with the product strand sequence. We set up the Kinetic Model code to accept product strand sequences and give
+    product strand predictions.
+
+    Here's a reference for the context windows and strands:
+
+    Case 1: the + strand is the product strand:
+	- The input sequence to pass to the classfier is the - strand sequence, indexed according to the top numbers
+	- The IPD GBM model prediction is for the G incorporation in the product strand synthesis
+
+    Case 2: the - strand is the product strand:
+	- The input sequence to pass to the classfier is the + strand sequence, indexed according to the bottom numbers
+	- The IPD GBM model prediction for the C incorporation in the product strand synthesis
+
+
+    strand                  sequence                 pol motion
+                          14        4   0
+		          |         |   |
+      -       3'-xxxxxxxxxNNNNNNNNNNCNNNNxxxxx-5'      <-
+      +       5'-xxxxxxxxxNNNNNNNNNNGNNNNxxxxx-3'      ->
+                          |         |   |
+                          0         10  14
+
