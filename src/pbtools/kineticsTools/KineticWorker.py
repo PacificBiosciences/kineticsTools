@@ -156,8 +156,8 @@ class KineticWorker(object):
                     if siteDict.has_key(mod['tpl']):
 
                         # Copy mod identification data
-                        #siteDict[mod['tpl']]['modificationScore'] = mod['QMod']
-                        #siteDict[mod['tpl']]['modification'] = mod['modification']
+                        siteDict[mod['tpl']]['modificationScore'] = mod['QMod']
+                        siteDict[mod['tpl']]['modification'] = mod['modification']
 
                         if self.options.methylFraction and mod.has_key(FRAC):
                             siteDict[mod['tpl']][FRAC] = mod[FRAC]
