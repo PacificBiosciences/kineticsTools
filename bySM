@@ -1,0 +1,4 @@
+-base modification detection per single molecule instead of multi-molecule
+-generates a csv file similar to standard base modification job but has new column, moleculeID
+-adds parameter to reject +/-1bp of indel sites
+-new files have prefix, 'sm' to corresponding standard base modification analysis files
