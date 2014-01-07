@@ -21,8 +21,22 @@ clean:
 	find . -name "*.pyc" | xargs rm -rf;\
 	rm -rf dist/
 
-.PHONY: test
-.PHONY: clean
-
 test:
 	nosetests -s -v test/*.py 
+
+pip-uninstall: $(shell which pip > /dev/null)
+	@pip freeze|grep 'pbtools.kineticsTools=='>/dev/null \
+      && pip uninstall -y pbtools.kineticsTools \
+      || echo -n ''
+	@pip freeze|grep 'kineticsTools=='>/dev/null \
+      && pip uninstall -y kineticsTools \
+      || echo -n ''
+
+pip-install: $(shell which pip > /dev/null)
+	@pip install --no-index \
+          --install-option="--install-data=$(DATA)" \
+          --install-option="--install-scripts=$(PREFIX)/bin" \
+          ./
+
+.PHONY: test
+.PHONY: clean
