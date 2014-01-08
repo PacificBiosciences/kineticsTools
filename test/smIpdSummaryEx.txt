@@ -1,0 +1,1 @@
+smIpdSummary.py --reference MNdeI.fasta --csv smMods.csv --ipdModel ~/analysis/etc/algorithm_parameters/2013-09/kineticsTools/C2.h5 --smBaseMod=True --errWin=True --minCoverage=5 MNdeI_case.cmp.h5
