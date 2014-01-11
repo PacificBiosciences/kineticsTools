@@ -31,6 +31,7 @@
 
 
 import cProfile
+import functools
 import gc
 import itertools
 import argparse
@@ -43,44 +44,70 @@ import time
 import threading
 import numpy as np
 import Queue
+import traceback
 
-from pbcore.io import FastaReader
 from pbcore.io import CmpH5Reader
 
-from pbtools.kineticsTools.KineticWorker import KineticWorker, KineticWorkerThread, KineticWorkerProcess
+from pbtools.kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
 from pbtools.kineticsTools.ResultWriter import KineticsWriter
 from pbtools.kineticsTools.ipdModel import IpdModel
 from pbtools.kineticsTools.ReferenceUtils import ReferenceUtils
-import pdb
-import traceback
 
 # Version info
 __p4revision__ = "$Revision: #1 $"
 __p4change__ = "$Change: 100972 $"
 revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
 changeNum = int(__p4change__.strip("$").split(":")[-1])
-__version__ = "2.1"
+__version__ = "2.2"
 
 
-class KineticsToolsRunner():
+def _validateResource(func, p):
+    """Basic func for validating files, dirs, etc..."""
+    if func(p):
+        return os.path.abspath(p)
+    else:
+        raise IOError("Unable to find {p}".format(p=p))
+
+
+def _validateNoneOrResource(func, p):
+    """
+    Handle optional values. If a file or dir is explicitly provided, then
+    it will validated.
+    """
+    if p is None:
+        return p
+    else:
+        return _validateResource(func, p)
+
+
+validateFile = functools.partial(_validateResource, os.path.isfile)
+validateDir = functools.partial(_validateResource, os.path.isdir)
+
+validateNoneOrFile = functools.partial(_validateNoneOrResource, os.path.isfile)
+validateNoneOrDir = functools.partial(_validateNoneOrResource, os.path.isdir)
+
+
+class KineticsToolsRunner(object):
 
     def __init__(self):
         desc = ['Tool for detecting DNA base-modifications from kinetic signatures',
                 'Notes: For all command-line arguments, default values are listed in [].']
         description = '\n'.join(desc)
 
-        self.parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
-                                              description=description)
+        self.parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                              description=description,
+                                              version=__version__)
 
 
         # Positional arguments:
 
-        self.parser.add_argument('reference', help='Path to reference FASTA file')
+        self.parser.add_argument('reference', type=validateFile,
+                                 help='Path to reference FASTA file')
 
-        self.parser.add_argument('infile', metavar='input.cmp.h5', help='Input cmp.h5 filename')
-
-        self.parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + self.getVersion())
-
+        self.parser.add_argument('infile',
+                                 metavar='input.cmp.h5',
+                                 type=validateFile,
+                                 help='Input cmp.h5 filename')
 
         # Optional arguments:
 
@@ -89,39 +116,46 @@ class KineticsToolsRunner():
         self.parser.add_argument('--outfile',
                                  dest='outfile',
                                  default=None,
+                                 type=validateNoneOrFile,
                                  help='Use this option to generate all possible output files. Argument here is the root filename of the output files.')
 
         self.parser.add_argument('--gff',
                                  dest='gff',
                                  default=None,
-                                 help='Name of output GFF file [%(default)s]')
+                                 type=validateNoneOrFile,
+                                 help='Name of output GFF file')
 
         self.parser.add_argument('--csv',
                                  dest='csv',
                                  default=None,
-                                 help='Name of output CSV file [%(default)s]')
+                                 type=validateNoneOrFile,
+                                 help='Name of output CSV file.')
 
 
         self.parser.add_argument('--csv_h5',
                                  dest='csv_h5',
                                  default=None,
-                                 help='Name of csv output to be written in hdf5 format [%(default)s]')
+                                 type=validateNoneOrFile,
+                                 help='Name of csv output to be written in hdf5 format.')
 
         self.parser.add_argument('--pickle',
                                  dest='pickle',
                                  default=None,
-                                 help='Name of output pickle file [%(default)s]')
+                                 type=validateNoneOrFile,
+                                 help='Name of output pickle file.')
 
         self.parser.add_argument('--summary_h5',
                                  dest='summary_h5',
                                  default=None,
-                                 help='Name of output summary h5 file [%(default)s]')
+                                 type=validateNoneOrFile,
+                                 help='Name of output summary h5 file.')
 
 
         self.parser.add_argument('--ms_csv',
                                  dest='ms_csv',
                                  default=None,
-                                 help='Multisite detection CSV file [%(default)s]')
+                                 type=validateNoneOrFile,
+                                 help='Multisite detection CSV file.')
 
 
         # Calculation options:
@@ -130,6 +164,7 @@ class KineticsToolsRunner():
         self.parser.add_argument('--control',
                                  dest='control',
                                  default=None,
+                                 type=validateNoneOrFile,
                                  help='cmph.h5 file containing a control sample. Tool will perform a case-control analysis')
 
         self.parser.add_argument('--identify',
@@ -158,6 +193,7 @@ class KineticsToolsRunner():
         self.parser.add_argument('--paramsPath',
                                  dest='paramsPath',
                                  default=None,
+                                 type=validateNoneOrFile,
                                  help='Directory containing in-silico trained model for each chemistry')
 
         self.parser.add_argument("--maxLength",
@@ -252,6 +288,12 @@ class KineticsToolsRunner():
                                  dest="doProfiling",
                                  default=False,
                                  help="Enable Python-level profiling (using cProfile).")
+
+        self.parser.add_argument('--pdb',
+                                 action='store_true',
+                                 dest="usePdb",
+                                 default=False,
+                                 help="Enable dropping down into pdb debugger if an Exception is raised.")
 
 
 
@@ -588,11 +630,31 @@ def monitorChildProcesses(children):
         time.sleep(1)
 
 
-if __name__ == "__main__":
+def main():
     try:
         kt = KineticsToolsRunner()
-        kt.start()
-    except:
+        kt.parseArgs()
+        rcode = kt.start()
+        return rcode
+    except Exception as e:
         type, value, tb = sys.exc_info()
-        # traceback.print_exc()
-        # pdb.post_mortem(tb)
+        traceback.print_exc(file=sys.stderr)
+        # Note: if kt.args.usePdb
+        # This won't work. If an exception is raised in parseArgs,
+        # then kt.args is not defined yet.
+        if '--pdb' in sys.argv:
+            try:
+                # this has better integration with ipython and is nicer
+                # pip install ipdb
+                import ipdb
+                ipdb.post_mortem(tb)
+            except ImportError:
+                import pdb
+                pdb.post_mortem(tb)
+        else:
+            # exit non-zero
+            raise
+
+
+if __name__ == "__main__":
+    sys.exit(main())
