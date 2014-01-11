@@ -29,16 +29,26 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
+import os
 
 from pbcore.util.ToolRunner import PBToolRunner
 import h5py
 
 # Version info
+import sys
+
 __p4revision__ = "$Revision$"
 __p4change__ = "$Change$"
 revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
 changeNum = int(__p4change__.strip("$").split(":")[-1])
-__version__ = "1.0"
+__version__ = "1.1"
+
+
+def validateFile(p):
+    if os.path.isfile(p):
+        return os.path.abspath(p)
+    else:
+        raise IOError("Unable to find {p}.".format(p=p))
 
 
 class CopyIpdSummaryDatasets(PBToolRunner):
@@ -48,10 +58,14 @@ class CopyIpdSummaryDatasets(PBToolRunner):
         super(CopyIpdSummaryDatasets, self).__init__('\n'.join(desc))
 
         self.parser.add_argument('--infile',
+                                 required=True,
+                                 type=validateFile,
                                  dest='infile',
                                  help='Input cmp.h5 filename')
 
         self.parser.add_argument('--outfile',
+                                 type=validateFile,
+                                 required=True,
                                  dest='outfile',
                                  help='Output cmp.h5 filename')
 
@@ -78,7 +92,14 @@ class CopyIpdSummaryDatasets(PBToolRunner):
 
                 h5py.h5o.copy(inFile.id, name, kinGroup.id, 'IpdRatio')
 
+        return 0
+
+
+def main():
+    kt = CopyIpdSummaryDatasets()
+    rcode = kt.start()
+    return rcode
+
 
 if __name__ == "__main__":
-    kt = CopyIpdSummaryDatasets()
-    kt.start()
+    sys.exit(main())
