@@ -72,34 +72,19 @@ class KineticsToolsRunner():
         self.parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                               description=description)
 
+
+        # Positional arguments:
+
+        self.parser.add_argument('reference', help='Path to reference FASTA file')
+
+        self.parser.add_argument('infile', metavar='input.cmp.h5', help='Input cmp.h5 filename')
+
         self.parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + self.getVersion())
 
-        self.parser.add_argument('infile',
-                                 metavar='input.cmp.h5',
-                                 help='Input cmp.h5 filename')
 
-        self.parser.add_argument('--control',
-                                 dest='control',
-                                 default=None,
-                                 help='cmph.h5 file containing a control sample. Tool will perform a case-control analysis')
+        # Optional arguments:
 
-        self.parser.add_argument('--identify',
-                                 dest='identify',
-                                 default=False,
-                                 help='Identify modification types. Comma-separated list of know modification types. Current options are: m6A, m4C, m5C_TET. Cannot be used with --control')
-
-        # Temporary addition to test LDA for Ca5C detection:
-        self.parser.add_argument('--useLDA',
-                                 action="store_true",
-                                 dest='useLDA',
-                                 default=False,
-                                 help='Set this flag to debug LDA for m5C/Ca5C detection')
-
-        self.parser.add_argument("--methylFraction",
-                                 action="store_true",
-                                 dest="methylFraction",
-                                 default=False,
-                                 help="In the --identify mode, add --methylFraction to command line to estimate the methylated fraction, along with 95%% confidence interval bounds.")
+        # Output options:
 
         self.parser.add_argument('--outfile',
                                  dest='outfile',
@@ -116,10 +101,11 @@ class KineticsToolsRunner():
                                  default=None,
                                  help='Name of output CSV file [%(default)s]')
 
-        self.parser.add_argument('--ms_csv',
-                                 dest='ms_csv',
+
+        self.parser.add_argument('--csv_h5',
+                                 dest='csv_h5',
                                  default=None,
-                                 help='Multisite detection CSV file [%(default)s]')
+                                 help='Name of csv output to be written in hdf5 format [%(default)s]')
 
         self.parser.add_argument('--pickle',
                                  dest='pickle',
@@ -131,16 +117,43 @@ class KineticsToolsRunner():
                                  default=None,
                                  help='Name of output summary h5 file [%(default)s]')
 
-        # New addition:  a name for the csv_hdf5
-        self.parser.add_argument('--csv_h5',
-                                 dest='csv_h5',
-                                 default=None,
-                                 help='Name of csv output to be written in hdf5 format [%(default)s]')
 
-        self.parser.add_argument('--reference',
-                                 dest='reference',
-                                 required=True,
-                                 help='Path to reference FASTA file or PacBio reference entry directory. (Required)')
+        self.parser.add_argument('--ms_csv',
+                                 dest='ms_csv',
+                                 default=None,
+                                 help='Multisite detection CSV file [%(default)s]')
+
+
+        # Calculation options:
+
+
+        self.parser.add_argument('--control',
+                                 dest='control',
+                                 default=None,
+                                 help='cmph.h5 file containing a control sample. Tool will perform a case-control analysis')
+
+        self.parser.add_argument('--identify',
+                                 dest='identify',
+                                 default=False,
+                                 help='Identify modification types. Comma-separated list of know modification types. Current options are: m6A, m4C, m5C_TET. Cannot be used with --control')
+
+
+        self.parser.add_argument("--methylFraction",
+                                 action="store_true",
+                                 dest="methylFraction",
+                                 default=False,
+                                 help="In the --identify mode, add --methylFraction to command line to estimate the methylated fraction, along with 95%% confidence interval bounds.")
+
+        # Temporary addition to test LDA for Ca5C detection:
+        self.parser.add_argument('--useLDA',
+                                 action="store_true",
+                                 dest='useLDA',
+                                 default=False,
+                                 help='Set this flag to debug LDA for m5C/Ca5C detection')
+
+
+
+        # Parameter options:
 
         self.parser.add_argument('--paramsPath',
                                  dest='paramsPath',
@@ -197,11 +210,36 @@ class KineticsToolsRunner():
                                  default=99.0,
                                  help='Global IPD percentile to cap IPDs at')
 
+
+        self.parser.add_argument("--methylMinCov",
+                                 type=int,
+                                 dest='methylMinCov',
+                                 default=10,
+                                 help="Do not try to estimate methylFraction unless coverage is at least this.")
+
+        self.parser.add_argument("--identifyMinCov",
+                                 type=int,
+                                 dest='identifyMinCov',
+                                 default=5,
+                                 help="Do not try to identify the modification type unless coverage is at least this.")
+
+
+        # Computation management options:
+
+        self.parser.add_argument("--refId",
+                                 type=int,
+                                 dest='refId',
+                                 default=-1,
+                                 help="Specify a single reference index (beginning with 0) rather than looping through all")
+
+
         self.parser.add_argument('--numWorkers',
                                  dest='numWorkers',
                                  default=-1,  # Defaults to using all logical CPUs
                                  type=int,
                                  help='Number of thread to use (-1 uses all logical cpus)')
+
+        # Debugging help options:
 
         self.parser.add_argument("--threaded", "-T",
                                  action="store_true",
@@ -215,24 +253,8 @@ class KineticsToolsRunner():
                                  default=False,
                                  help="Enable Python-level profiling (using cProfile).")
 
-        # New addition: option to process one reference at a time
-        self.parser.add_argument("--refId",
-                                 type=int,
-                                 dest='refId',
-                                 default=-1,
-                                 help="Specify a single reference index (beginning with 0) rather than looping through all")
 
-        self.parser.add_argument("--methylMinCov",
-                                 type=int,
-                                 dest='methylMinCov',
-                                 default=10,
-                                 help="Do not try to estimate methylFraction unless coverage is at least this.")
 
-        self.parser.add_argument("--identifyMinCov",
-                                 type=int,
-                                 dest='identifyMinCov',
-                                 default=5,
-                                 help="Do not try to identify the modification type unless coverage is at least this.")
 
     def parseArgs(self):
         self.args = self.parser.parse_args()
@@ -572,5 +594,5 @@ if __name__ == "__main__":
         kt.start()
     except:
         type, value, tb = sys.exc_info()
-        traceback.print_exc()
-        pdb.post_mortem(tb)
+        # traceback.print_exc()
+        # pdb.post_mortem(tb)
