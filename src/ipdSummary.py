@@ -193,7 +193,7 @@ class KineticsToolsRunner(object):
         self.parser.add_argument('--paramsPath',
                                  dest='paramsPath',
                                  default=None,
-                                 type=validateNoneOrFile,
+                                 type=validateNoneOrDir,
                                  help='Directory containing in-silico trained model for each chemistry')
 
         self.parser.add_argument("--maxLength",
