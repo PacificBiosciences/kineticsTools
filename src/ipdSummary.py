@@ -147,7 +147,6 @@ class KineticsToolsRunner(object):
         self.parser.add_argument('--summary_h5',
                                  dest='summary_h5',
                                  default=None,
-                                 type=validateNoneOrFile,
                                  help='Name of output summary h5 file.')
 
 
