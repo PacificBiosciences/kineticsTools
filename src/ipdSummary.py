@@ -101,8 +101,6 @@ class KineticsToolsRunner(object):
 
         # Positional arguments:
 
-        self.parser.add_argument('reference', type=validateFile,
-                                 help='Path to reference FASTA file')
 
         self.parser.add_argument('infile',
                                  metavar='input.cmp.h5',
@@ -112,6 +110,13 @@ class KineticsToolsRunner(object):
         # Optional arguments:
 
         # Output options:
+
+        # Note: reference is actually not optional:
+
+        self.parser.add_argument('--reference', 
+                                 type=validateFile,
+                                 help='Path to reference FASTA file')
+
 
         self.parser.add_argument('--outfile',
                                  dest='outfile',
