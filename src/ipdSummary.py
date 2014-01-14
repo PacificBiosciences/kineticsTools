@@ -116,32 +116,27 @@ class KineticsToolsRunner(object):
         self.parser.add_argument('--outfile',
                                  dest='outfile',
                                  default=None,
-                                 type=validateNoneOrFile,
                                  help='Use this option to generate all possible output files. Argument here is the root filename of the output files.')
 
         self.parser.add_argument('--gff',
                                  dest='gff',
                                  default=None,
-                                 type=validateNoneOrFile,
                                  help='Name of output GFF file')
 
         self.parser.add_argument('--csv',
                                  dest='csv',
                                  default=None,
-                                 type=validateNoneOrFile,
                                  help='Name of output CSV file.')
 
 
         self.parser.add_argument('--csv_h5',
                                  dest='csv_h5',
                                  default=None,
-                                 type=validateNoneOrFile,
                                  help='Name of csv output to be written in hdf5 format.')
 
         self.parser.add_argument('--pickle',
                                  dest='pickle',
                                  default=None,
-                                 type=validateNoneOrFile,
                                  help='Name of output pickle file.')
 
         self.parser.add_argument('--summary_h5',
@@ -153,7 +148,6 @@ class KineticsToolsRunner(object):
         self.parser.add_argument('--ms_csv',
                                  dest='ms_csv',
                                  default=None,
-                                 type=validateNoneOrFile,
                                  help='Multisite detection CSV file.')
 
 
