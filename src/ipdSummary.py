@@ -260,12 +260,13 @@ class KineticsToolsRunner(object):
 
         # Computation management options:
 
-        self.parser.add_argument("--refId",
-                                 type=int,
-                                 dest='refId',
-                                 default=-1,
-                                 help="Specify a single reference index (beginning with 0) rather than looping through all")
-
+        self.parser.add_argument("--refContigs", "-w",
+                                 type=str,
+                                 dest='refContigs',
+                                 default=None,
+                                 help="Specify one reference contig name, or multiple comma-separated " \
+                                      "contig names, to be processed.  By default, processes all "      \
+                                      "contigs with mapped coverage.")
 
         self.parser.add_argument('--numWorkers',
                                  dest='numWorkers',
@@ -568,14 +569,17 @@ class KineticsToolsRunner(object):
 
         self.workChunkCounter = 0
 
-        if self.options.refId > -1:
+        if self.options.refContigs is not None:
             # Under the --refId option, rather than iterating over references, process
-            # just the one specified reference.
+            # just the specified references.
+            for contigName in self.options.refContigs.split(","):
+                if contigName in self.refInfo.FullName:
+                    idx = np.flatnonzero(self.refInfo.FullName==contigName)[0]
+                    ref = self.refInfo[idx]
+                    self._queueChunksForReference(ref)
+                else:
+                    logging.info('Skipping reference entry with no mapped coverage: [%s]' % contigName)
 
-            # ref = x[ self.options.refId ]
-            ref = self.refInfo[self.options.refId]
-            logging.info('Processing reference entry: [%s]' % ref.Name)
-            self._queueChunksForReference(ref)
 
         else:
             # Iterate over references
