@@ -5,7 +5,6 @@
         <file format="text/fasta">./sequence/lambda.fasta</file>
         <index_file type="indexer">./sequence/lambda.fasta.index</index_file>
         <index_file type="sawriter">./sequence/lambda.fasta.sa</index_file>
-        <index_file type="gatk_dict">./sequence/lambda.dict</index_file>
         <index_file type="sam_idx">./sequence/lambda.fasta.fai</index_file>
         <max_contig_length>48502</max_contig_length>
         <num_contigs>1</num_contigs>
