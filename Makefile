@@ -25,7 +25,7 @@ test:
 	nosetests -s -v test/*.py 
 
 pip-install: 
-	@which pip >& /dev/null
+	@which pip > /dev/null
 	@pip freeze|grep 'pbtools.kineticsTools=='>/dev/null \
       && pip uninstall -y pbtools.kineticsTools \
       || echo -n ''
