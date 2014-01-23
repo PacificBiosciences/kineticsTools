@@ -43,6 +43,7 @@ from MultiSiteCommon import MultiSiteCommon, canonicalBaseMap, modNames, Modific
 
 from MultiSiteDetection import *
 
+from MedakaLdaEnricher import MedakaLdaEnricher
 from BasicLdaEnricher import BasicLdaEnricher
 from PositiveControlEnricher import PositiveControlEnricher
 
@@ -125,8 +126,9 @@ class KineticWorker(object):
                 # Below is an example of how to use an alternative, the BasicLdaEnricher, which does not use the positive control model
                 # PositiveControlEnricher currently uses a logistic regression model trained using SMRTportal job 65203 (native E. coli)
 
+                lda = MedakaLdaEnricher( self.ipdModel.gbmModel, self.sequence, perSiteResults )
                 # lda = BasicLdaEnricher( self.ipdModel.gbmModel, self.sequence, perSiteResults, self.options.identify, self.options.modsToCall )
-                lda = PositiveControlEnricher(self.ipdModel.gbmModel, self.sequence, perSiteResults)
+                # lda = PositiveControlEnricher(self.ipdModel.gbmModel, self.sequence, perSiteResults)
                 perSiteResults = lda.callEnricherFunction(perSiteResults)
 
             try:
@@ -196,8 +198,9 @@ class KineticWorker(object):
             if self.options.useLDA and self.controlCmpH5 is None:
 
                 # FIXME: add on a column "Ca5C" containing LDA score for each C-residue site
+                lda = MedakaLdaEnricher( self.ipdModel.gbmModel, self.sequence, result )
                 # lda = BasicLdaEnricher(self.ipdModel.gbmModel, self.sequence, result, self.options.identify)
-                lda = PositiveControlEnricher(self.ipdModel.gbmModel, self.sequence, result)
+                # lda = PositiveControlEnricher(self.ipdModel.gbmModel, self.sequence, result)
                 results = lda.callEnricherFunction(result)
 
             result.sort(key=lambda x: x['tpl'])
