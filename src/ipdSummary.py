@@ -580,20 +580,6 @@ class KineticsToolsRunner(object):
                 else:
                     logging.info('Skipping reference entry with no mapped coverage: [%s]' % contigName)
 
->>>> ORIGINAL //depot/software/bioinformatics/tools/kineticsTools/src/ipdSummary.py#50
-            # ref = x[ self.options.refId ]
-            ref = self.refInfo[self.options.refId]
-            logging.info('Processing reference entry: [%s]' % ref.Name)
-            self._queueChunksForReference(ref)
-==== THEIRS //depot/software/bioinformatics/tools/kineticsTools/src/ipdSummary.py#51
-==== YOURS //obanerjee-unixhome/software/bioinformatics/tools/kineticsTools/src/ipdSummary.py
-            ref = [x for x in self.refInfo if int(x[1]) == (self.options.refId + 1)][0]
-            # ref = self.refInfo[self.options.refId]
-            logging.info('Processing reference entry: [%s]' % ref.Name)
-            logging.info(ref[1])
-            self._queueChunksForReference(ref)
-<<<<
-
         else:
             # Iterate over references
 
