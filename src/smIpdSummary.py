@@ -454,6 +454,15 @@ class KineticsToolsRunner():
             chunk = (refInfo.ID, sm,start,end)
             self._workQueue.put((self.workChunkCounter, chunk))
             self.workChunkCounter += 1
+            npasses = len(self.cmph5[self.cmph5.MoleculeID==sm])
+	    if npasses > 2*self.options.minCoverage-2:
+	    	start = min(self.cmph5.tStart[self.cmph5.MoleculeID==sm])
+	    	end = max(self.cmph5.tEnd[self.cmph5.MoleculeID==sm])
+            	chunk = (refInfo.ID, sm,start,end)
+            	self._workQueue.put((self.workChunkCounter, chunk))
+            	self.workChunkCounter += 1
+	    else:
+                logging.info("Molecule did not have enough CCS passes: %d" % sm)
 
     def loadReferenceAndModel(self, referencePath, cmpH5Path):
 
