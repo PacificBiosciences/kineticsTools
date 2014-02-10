@@ -577,6 +577,10 @@ class KineticsToolsRunner(object):
                     idx = np.flatnonzero(self.refInfo.FullName==contigName)[0]
                     ref = self.refInfo[idx]
                     self._queueChunksForReference(ref)
+                elif contigName in self.refInfo.Name:
+                    idx = np.flatnonzero(self.refInfo.Name==contigName)[0]
+                    ref = self.refInfo[idx]
+                    self._queueChunksForReference(ref)
                 else:
                     logging.info('Skipping reference entry with no mapped coverage: [%s]' % contigName)
 
