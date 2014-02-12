@@ -29,14 +29,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
-import os
+import os, sys
 
 from pbcore.util.ToolRunner import PBToolRunner
+from operator import xor
 import h5py
 
 # Version info
-import sys
-
 __p4revision__ = "$Revision$"
 __p4change__ = "$Change$"
 revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
@@ -52,10 +51,13 @@ def validateFile(p):
 
 
 class CopyIpdSummaryDatasets(PBToolRunner):
+    """
+    Copy IpdRatio datasets from infile:/ref0000x to outfile:/ref000x/Kinetics/IpdRatio
+     or                    from infile:/ref0000x to mergefile:/ref000x (Dataset)
+    """
 
     def __init__(self):
-        desc = ['Copy IpdRatio datasets from infile:/ref0000x to outfile:/ref000x/Kinetics/IpdRatio']
-        super(CopyIpdSummaryDatasets, self).__init__('\n'.join(desc))
+        super(CopyIpdSummaryDatasets, self).__init__(CopyIpdSummaryDatasets.__doc__)
 
         self.parser.add_argument('--infile',
                                  required=True,
@@ -65,14 +67,22 @@ class CopyIpdSummaryDatasets(PBToolRunner):
 
         self.parser.add_argument('--outfile',
                                  type=validateFile,
-                                 required=True,
-                                 dest='outfile',
+                                 required=False,
                                  help='Output cmp.h5 filename')
+
+        self.parser.add_argument('--mergefile',
+                                 type=validateFile,
+                                 required=False,
+                                 help='Filename of output h5 file for merging')
+
+    def validateArgs(self):
+        if not xor(bool(self.args.mergefile), bool(self.args.outfile)):
+            raise Exception("Exactly one of --outfile, --mergefile is required")
 
     def getVersion(self):
         return __version__
 
-    def run(self):
+    def copyToCmpH5(self):
         inFile = h5py.File(self.args.infile, mode='r')
         outFile = h5py.File(self.args.outfile, mode='r+')
 
@@ -92,6 +102,20 @@ class CopyIpdSummaryDatasets(PBToolRunner):
 
                 h5py.h5o.copy(inFile.id, name, kinGroup.id, 'IpdRatio')
 
+
+    def copyToMergeFile(self):
+        inFile = h5py.File(self.args.infile, mode='r')
+        mergeFile = h5py.File(self.args.mergefile, mode='r+')
+
+        for refDataset in inFile.items():
+            (name, ds) = refDataset
+            h5py.h5o.copy(inFile.id, name, mergeFile.id, name)
+
+
+
+    def run(self):
+        if self.args.outfile: self.copyToCmpH5()
+        else:                 self.copyToMergeFile()
         return 0
 
 
