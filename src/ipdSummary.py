@@ -268,6 +268,15 @@ class KineticsToolsRunner(object):
                                       "contig names, to be processed.  By default, processes all "      \
                                       "contigs with mapped coverage.")
 
+        def slurpWindowFile(fname):
+            return ",".join(map(str.strip, open(fname).readlines()))
+
+        self.parser.add_argument("--refContigsFile", "-W",
+                                 type=slurpWindowFile,
+                                 dest='refContigs',
+                                 default=None,
+                                 help="A file containing contig names, one per line")
+
         self.parser.add_argument('--numWorkers',
                                  dest='numWorkers',
                                  default=-1,  # Defaults to using all logical CPUs
