@@ -26,8 +26,15 @@ class MedakaLdaEnricher(MultiSiteCommon):
         # self.fwd_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/fwd_medaka_c2_lda_model_weights.csv", delimiter=',')
         # self.rev_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/rev_medaka_c2_lda_model_weights.csv", delimiter=',')
 
-        self.fwd_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/fwd.csv", delimiter=',')
-        self.rev_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/rev.csv", delimiter=',')
+        # Trained using P4-C2 chemsitry data:
+
+        self.fwd_model = np.genfromtxt("/home/UNIXHOME/obanerjee/p4_c2_medaka_forward_model_weights_half.csv", delimiter=',')
+        self.rev_model = np.genfromtxt("/home/UNIXHOME/obanerjee/p4_c2_medaka_reverse_model_weights_half.csv", delimiter=',')
+
+        # Trained using C2 chemistry data:
+
+        # self.fwd_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/fwd.csv", delimiter=',')
+        # self.rev_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/rev.csv", delimiter=',')
 
         # self.model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/medaka_c2_lda_model_weights.csv", delimiter=',')
 

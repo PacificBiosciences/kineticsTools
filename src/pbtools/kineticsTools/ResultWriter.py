@@ -201,6 +201,9 @@ class KineticsWriter(ResultCollectorProcess):
         tplDataset = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
         strandDataset = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
 
+
+
+
     @consumer
     def csvConsumer(self, filename):
         """
@@ -624,6 +627,8 @@ class KineticsWriter(ResultCollectorProcess):
             f.close()
             return
 
+
+
     def makeGffRecord(self, siteObs):
         """
         Convert the internal site observation object into a GFF entry
@@ -753,11 +758,63 @@ class KineticsWriter(ResultCollectorProcess):
             f.close()
             return
 
+
+    def makeM5CgffRecord(self, siteObs):
+
+
+        start = siteObs['tpl'] + 1
+        end = siteObs['tpl'] + 1
+
+        recordType = 'CG'
+        refName = siteObs['refName']
+        score = siteObs['Ca5C']
+        strand = '+' if siteObs['strand'] == 0 else '-'
+
+        return Gff3Record(refName, start, end,
+                          type=recordType,
+                          score=score,
+                          strand=strand,
+                          source='kinModCall')
+
+
+    @consumer
+    def m5CgffConsumer( self, filename ):
+    
+        f = self.openWriteHandle( filename )        
+        gff = GffWriter( f )
+
+              
+        # write headers describing the program that generated the data        
+        gff.writeHeader('##source ipdSummary.py v2.0')        
+        gff.writeHeader('##source-commandline %s' % self.options.cmdLine)
+        
+        # Write the reference renaming info into the gff headers ala evicons        
+        # for entry in self.refInfo:        
+        #     gff.writeHeader("##sequence-region %s 1 %d"
+        #                     % (entry.Name, entry.Length))
+                
+        try:
+            while True:
+                # Pull in a single record?
+                siteObsList = (yield)
+
+                for siteObs in siteObsList:
+                    if siteObs.has_key('Ca5C') and siteObs['strand'] == 0:
+                        gff.writeRecord( self.makeM5CgffRecord( siteObs ) )
+
+        except GeneratorExit:
+            f.close()
+            return
+
+
+
+
     def onStart(self):
 
         # Spec for what kinds of output files we can generate.
         # Entry format is (<option field name>, <extension>, <writer consumer function>)
         fileSpec = [
+            ('m5Cgff', 'gff', self.m5CgffConsumer),
             ('gff', 'gff', self.gffConsumer),
             ('csv', 'csv', self.csvConsumer),
             ('ms_csv', 'csv', self.msCsvConsumer),

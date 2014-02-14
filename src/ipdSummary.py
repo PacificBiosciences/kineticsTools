@@ -128,6 +128,12 @@ class KineticsToolsRunner(object):
                                  default=None,
                                  help='Name of output GFF file')
 
+        # FIXME: Need to add an extra check for this; it can only be used if --useLDA flag is set.
+        self.parser.add_argument('--m5Cgff',
+                                 dest='m5Cgff',
+                                 default=None,
+                                 help='Name of output GFF file containing m5C scores')
+
         self.parser.add_argument('--csv',
                                  dest='csv',
                                  default=None,
@@ -270,6 +276,9 @@ class KineticsToolsRunner(object):
 
         def slurpWindowFile(fname):
             return ",".join(map(str.strip, open(fname).readlines()))
+
+
+        self.parser.add_argument("--refContigIndex", type=int, dest='refContigIndex', default=-1, help="For debugging purposes only - rather than enter a reference contig name, simply enter an index" ) 
 
         self.parser.add_argument("--refContigsFile", "-W",
                                  type=slurpWindowFile,
@@ -592,6 +601,12 @@ class KineticsToolsRunner(object):
                     self._queueChunksForReference(ref)
                 else:
                     logging.info('Skipping reference entry with no mapped coverage: [%s]' % contigName)
+
+        elif self.options.refContigIndex is not -1:
+            ref = [x for x in self.refInfo if int(x[1]) == (self.options.refContigIndex + 1)][0]
+            logging.info('Processing reference entry: [%s]' % ref.Name)
+            logging.info(ref[1])
+            self._queueChunksForReference(ref)
 
         else:
             # Iterate over references
