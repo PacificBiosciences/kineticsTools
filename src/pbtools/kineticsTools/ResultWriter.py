@@ -765,16 +765,19 @@ class KineticsWriter(ResultCollectorProcess):
         start = siteObs['tpl'] + 1
         end = siteObs['tpl'] + 1
 
+        attributes = [('coverage', siteObs['coverage']),
+                      ('IPDRatio', siteObs['ipdRatio'])]
+
         recordType = 'CG'
-        refName = siteObs['refName']
-        score = siteObs['Ca5C']
+        refName = siteObs['refId']
+        score = "%.3f" % siteObs['Ca5C']
         strand = '+' if siteObs['strand'] == 0 else '-'
 
         return Gff3Record(refName, start, end,
                           type=recordType,
                           score=score,
                           strand=strand,
-                          source='kinModCall')
+                          source='kinModCall',attributes=attributes)
 
 
     @consumer
