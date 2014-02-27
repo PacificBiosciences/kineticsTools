@@ -503,7 +503,19 @@ class KineticsToolsRunner(object):
 
         # Read reference info table from cmp.h5
         (refInfoTable, movieInfoTable) = ReferenceUtils.loadCmpH5Tables(cmpH5Path)
-        self.refInfo = refInfoTable
+
+        if (self.options.refContigs is not None or
+            self.options.refContigIndex != -1):
+
+            requestedIds = set(self.options.refContigs).union([self.options.refContigIndex])
+            relevantContigs = [ i for (i, rec) in enumerate(refInfoTable)
+                                if (rec.FullName  in requestedIds or
+                                    rec.Name      in requestedIds or
+                                    rec.RefInfoID in requestedIds) ]
+            self.refInfo = refInfoTable[relevantContigs]
+
+        else:
+            self.refInfo = refInfoTable
 
         # There are three different ways the ipdModel can be loaded.
         # In order of precedence they are:
@@ -587,33 +599,10 @@ class KineticsToolsRunner(object):
 
         self.workChunkCounter = 0
 
-        if self.options.refContigs is not None:
-            # Under the --refId option, rather than iterating over references, process
-            # just the specified references.
-            for contigName in self.options.refContigs.split(","):
-                if contigName in self.refInfo.FullName:
-                    idx = np.flatnonzero(self.refInfo.FullName==contigName)[0]
-                    ref = self.refInfo[idx]
-                    self._queueChunksForReference(ref)
-                elif contigName in self.refInfo.Name:
-                    idx = np.flatnonzero(self.refInfo.Name==contigName)[0]
-                    ref = self.refInfo[idx]
-                    self._queueChunksForReference(ref)
-                else:
-                    logging.info('Skipping reference entry with no mapped coverage: [%s]' % contigName)
-
-        elif self.options.refContigIndex is not -1:
-            ref = [x for x in self.refInfo if int(x[1]) == (self.options.refContigIndex + 1)][0]
-            logging.info('Processing reference entry: [%s]' % ref.Name)
-            logging.info(ref[1])
+        # Iterate over references
+        for ref in self.refInfo:
+            logging.info('Processing reference entry: [%s]' % ref.ID)
             self._queueChunksForReference(ref)
-
-        else:
-            # Iterate over references
-
-            for ref in self.refInfo:
-                logging.info('Processing reference entry: [%s]' % ref.ID)
-                self._queueChunksForReference(ref)
 
         # Shutdown worker threads with None sentinels
         for i in xrange(self.args.numWorkers):
