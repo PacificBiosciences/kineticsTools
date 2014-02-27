@@ -507,7 +507,7 @@ class KineticsToolsRunner(object):
         if (self.options.refContigs is not None or
             self.options.refContigIndex != -1):
 
-            requestedIds = set(self.options.refContigs).union([self.options.refContigIndex])
+            requestedIds = set(self.options.refContigs.split(',')).union([self.options.refContigIndex])
             relevantContigs = [ i for (i, rec) in enumerate(refInfoTable)
                                 if (rec.FullName  in requestedIds or
                                     rec.Name      in requestedIds or
