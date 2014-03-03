@@ -18,7 +18,7 @@ To run the analysis, the command is analogous to running ipdSummary.py.
 
 smIpdSummary.py --reference MNdeI.fasta --csv smMods.csv --ipdModel ~/analysis/etc/algorithm_parameters/2013-09/kineticsTools/C2.h5 --smBaseMod=True --errWin=True --minCoverage=5 MNdeI_case.cmp.h5
 
-The output file is currently a csv file simimlar to the standard multi-molecule approach except this mode will generate an extra column named moleculeID. Hence, each molecule will have it's own set of base modification information at every position and strand that meets the user specified minCoverage.
+The output file is currently a csv file similar to the standard multi-molecule approach except this mode will generate an extra column named moleculeID. Hence, each molecule will have it's own set of base modification information at every position and strand that meets the user specified minCoverage.
 
 The standard multi-molecule approach still functions as before with the ipdSummary.py command or via SMRTPortal.
 
