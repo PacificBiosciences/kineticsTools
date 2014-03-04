@@ -26,12 +26,10 @@ test:
 
 pip-install: 
 	@which pip > /dev/null
-	@pip freeze|grep 'pbtools.kineticsTools=='>/dev/null \
-      && pip uninstall -y pbtools.kineticsTools \
-      || echo -n ''
 	@pip freeze|grep 'kineticsTools=='>/dev/null \
-      && pip uninstall -y kineticsTools \
-      || echo -n ''
+      && pip uninstall -y pbtools.kineticsTools \
+      || pip uninstall -y kineticsTools \
+      || true
 	@pip install --no-index \
           --install-option="--install-data=$(DATA)" \
           --install-option="--install-scripts=$(PREFIX)/bin" \
