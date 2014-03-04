@@ -36,10 +36,6 @@ from operator import xor
 import h5py
 
 # Version info
-__p4revision__ = "$Revision$"
-__p4change__ = "$Change$"
-revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
-changeNum = int(__p4change__.strip("$").split(":")[-1])
 __version__ = "1.1"
 
 

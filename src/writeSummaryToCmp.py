@@ -38,11 +38,6 @@ import sys
 
 from pbcore.util.ToolRunner import PBToolRunner
 
-
-__p4revision__ = "$Revision: #1 $"
-__p4change__ = "$Change: 100972 $"
-revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
-changeNum = int(__p4change__.strip("$").split(":")[-1])
 __version__ = "1.0"
 
 
