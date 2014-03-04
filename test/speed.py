@@ -4,8 +4,8 @@ import platform
 import unittest
 from pbcore.io import CmpH5Reader
 from pbcore.deprecated import ReferenceEntry
-from pbtools.kineticsTools.KineticWorker import KineticWorker
-from pbtools.kineticsTools.ipdModel import IpdModel
+from kineticsTools.KineticWorker import KineticWorker
+from kineticsTools.ipdModel import IpdModel
 
 from test import TestSetup
 

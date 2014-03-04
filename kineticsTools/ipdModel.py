@@ -34,7 +34,8 @@ import re
 import h5py
 import numpy as np
 import ctypes as C
-from pbtools.kineticsTools.sharedArray import SharedArray
+from kineticsTools.sharedArray import SharedArray
+from pkg_resources import Requirement, resource_filename
 
 byte = np.dtype('byte')
 float32 = np.dtype('float32')
@@ -66,6 +67,8 @@ baseToCanonicalCode = {'N': 0, 'A': 0, 'C': 1, 'G': 2, 'T': 3, 'H': 0, 'I': 1, '
 
 codeToBase = dict([(y, x) for (x, y) in baseToCode.items()])
 
+def _getAbsPath(fname):
+    return resource_filename(Requirement.parse('kineticsTools'),'kineticsTools/%s' % fname)
 
 class GbmContextModel(object):
 
@@ -164,16 +167,10 @@ class GbmContextModel(object):
             else:
                 raise Exception("can't find tree_predict.dll")
         else:
-            curPath = os.path.dirname(os.path.abspath(__file__))
-            srcPath = os.path.dirname(os.path.dirname(curPath))
+            DLL_PATH = _getAbsPath("tree_predict.so")
 
-            DLL_PATH1 = curPath + os.path.sep + "tree_predict.so"
-            DLL_PATH2 = srcPath + os.path.sep + "tree_predict.so"
-
-            if os.path.exists(DLL_PATH1):
-                self._lib = np.ctypeslib.load_library("tree_predict.so", curPath)
-            elif os.path.exists(DLL_PATH2):
-                self._lib = np.ctypeslib.load_library("tree_predict.so", srcPath)
+            if os.path.exists(DLL_PATH):
+                self._lib = np.ctypeslib.load_library("tree_predict.so", DLL_PATH)
             else:
                 raise Exception("can't find tree_predict.so")
 

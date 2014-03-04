@@ -47,7 +47,7 @@ from MedakaLdaEnricher import MedakaLdaEnricher
 from BasicLdaEnricher import BasicLdaEnricher
 from PositiveControlEnricher import PositiveControlEnricher
 
-from pbtools.kineticsTools.ModificationDecode import ModificationDecode, ModificationPeakMask
+from kineticsTools.ModificationDecode import ModificationDecode, ModificationPeakMask
 
 from WorkerProcess import WorkerProcess, WorkerThread
 import pdb

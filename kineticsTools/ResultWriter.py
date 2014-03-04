@@ -38,7 +38,7 @@ import h5py
 import numpy as np
 from pbcore.io import GffWriter, Gff3Record
 import sys
-from pbtools.kineticsTools.pipelineTools import consumer
+from kineticsTools.pipelineTools import consumer
 import math
 
 

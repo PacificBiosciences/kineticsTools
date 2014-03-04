@@ -5,7 +5,7 @@
 #
 #    Estimates modified fraction at all undetected sites within each identified motif.
 #
-#    This script calls ./pbtools/kineticsTools/kineticForReprocessing.py instead of KineticWorker.py
+#    This script calls ./kineticsTools/kineticForReprocessing.py instead of KineticWorker.py
 #    Otherwise similar to ipdSummary.py, and uses WorkerProcess, ResultWriter
 #
 # Required Inputs:
@@ -57,11 +57,11 @@ from pbcore.io import CmpH5Reader
 from pbcore.util.ToolRunner import PBToolRunner
 
 # Replace:
-# from pbtools.kineticsTools.KineticWorker import KineticWorker, KineticWorkerThread, KineticWorkerProcess
-from pbtools.kineticsTools.kineticForReprocessing import KineticReprocessWorker, KineticWorkerThread, KineticWorkerProcess
+# from kineticsTools.KineticWorker import KineticWorker, KineticWorkerThread, KineticWorkerProcess
+from kineticsTools.kineticForReprocessing import KineticReprocessWorker, KineticWorkerThread, KineticWorkerProcess
 
-from pbtools.kineticsTools.ResultWriter import KineticsWriter
-from pbtools.kineticsTools.ipdModel import IpdModel
+from kineticsTools.ResultWriter import KineticsWriter
+from kineticsTools.ipdModel import IpdModel
 
 # New:
 from pbcore.io import GffReader
@@ -69,7 +69,7 @@ import csv
 
 
 # Addition to ipdSummary.py since reprocessMotifSites.py was first written:
-from pbtools.kineticsTools.ReferenceUtils import ReferenceUtils
+from kineticsTools.ReferenceUtils import ReferenceUtils
 
 
 # Version info
