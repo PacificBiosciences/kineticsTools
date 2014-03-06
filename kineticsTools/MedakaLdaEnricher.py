@@ -2,6 +2,7 @@
 
 from collections import defaultdict, Counter
 
+import os
 from math import sqrt
 import math
 import scipy.stats as s
@@ -17,31 +18,21 @@ from MultiSiteCommon import MultiSiteCommon
 
 class MedakaLdaEnricher(MultiSiteCommon):
 
-    def __init__(self, gbmModel, sequence, rawKinetics):
+    def __init__(self, gbmModel, sequence, rawKinetics, m5Cclassifier):
 
         MultiSiteCommon.__init__(self, gbmModel, sequence, rawKinetics)
 
-        # FIXME: For debugging LDA, load in parameters for forward and reverse strands:
+        models = np.genfromtxt(m5Cclassifier, delimiter=',' )
+        self.fwd_model = models[:,0]
+        self.rev_model = models[:,1]
 
-        # self.fwd_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/fwd_medaka_c2_lda_model_weights.csv", delimiter=',')
-        # self.rev_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/rev_medaka_c2_lda_model_weights.csv", delimiter=',')
-
-        # Trained using P4-C2 chemsitry data:
-
-        self.fwd_model = np.genfromtxt("p4_c2_medaka_forward_model_weights_half.csv", delimiter=',')
-        self.rev_model = np.genfromtxt("p4_c2_medaka_reverse_model_weights_half.csv", delimiter=',')
-
-        # Trained using C2 chemistry data:
-
-        # self.fwd_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/fwd.csv", delimiter=',')
-        # self.rev_model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/rev.csv", delimiter=',')
-
-        # self.model = np.genfromtxt("/home/UNIXHOME/obanerjee/new_test/medaka_c2_lda_model_weights.csv", delimiter=',')
 
 
     # write a method to take perSiteResults dictionary in and add a column Ca5C
     def useLDAmodel(self, kinetics, pos, model, up, down ):
         """ Test out LDA model """
+
+        print "From use LDA model.\n"
 
         res = np.zeros((up + down + 1, 6))
         ind = 0
@@ -66,6 +57,8 @@ class MedakaLdaEnricher(MultiSiteCommon):
 
     def callLDAstrand(self, kinetics, strand, model, up, down):
 
+        print "From callLDAstrand.\n"
+      
         tmp = [d for d in kinetics if d["strand"] == strand]
         tmp.sort(key=lambda x: x["tpl"])
 
@@ -82,6 +75,7 @@ class MedakaLdaEnricher(MultiSiteCommon):
 
     def aggregate(self, dataset, group_by_key, sum_value_key):
 
+        print "From aggregate.\n"
         emp = {}
         for item in dataset:
             if item.has_key( sum_value_key ):
@@ -100,6 +94,8 @@ class MedakaLdaEnricher(MultiSiteCommon):
 
 
     def callEnricherFunction(self, kinetics, up=10, down=10):
+
+        print "From callEnricher function.\n"
 
         fwd = self.callLDAstrand(kinetics, 0, self.fwd_model, up, down) 
         rev = self.callLDAstrand(kinetics, 1, self.rev_model, up, down)
