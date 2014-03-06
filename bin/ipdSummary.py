@@ -48,10 +48,10 @@ import traceback
 
 from pbcore.io import CmpH5Reader
 
-from kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
-from kineticsTools.ResultWriter import KineticsWriter
-from kineticsTools.ipdModel import IpdModel
-from kineticsTools.ReferenceUtils import ReferenceUtils
+from pbtools.kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
+from pbtools.kineticsTools.ResultWriter import KineticsWriter
+from pbtools.kineticsTools.ipdModel import IpdModel
+from pbtools.kineticsTools.ReferenceUtils import ReferenceUtils
 
 # Version info
 __p4revision__ = "$Revision: #1 $"
@@ -133,6 +133,12 @@ class KineticsToolsRunner(object):
                                  dest='m5Cgff',
                                  default=None,
                                  help='Name of output GFF file containing m5C scores')
+
+        # FIXME: Make sure that this is specified if --useLDA flag is set.
+        self.parser.add_argument('--m5Cclassifer',
+                                 dest='m5Cclassifier',
+                                 default=None,
+                                 help='Specify csv file containing a 127 x 2 matrix')
 
         self.parser.add_argument('--csv',
                                  dest='csv',
@@ -333,6 +339,14 @@ class KineticsToolsRunner(object):
         if self.args.identify and self.args.control:
             self.parser.error('--control and --identify are mutally exclusive. Please choose one or the other')
 
+        if self.args.useLDA:
+            if self.args.m5Cclassifier is None:
+                self.parser.error('Please specify a folder containing forward.csv and reverse.csv classifiers in --m5Cclassifier.')
+
+        if self.args.m5Cgff:
+            if not self.args.useLDA:
+                self.parser.error('m5Cgff file can only be generated in --useLDA mode.')
+
         # if self.args.methylFraction and not self.args.identify:
         #    self.parser.error('Currently, --methylFraction only works when the --identify option is specified.')
 
@@ -507,12 +521,28 @@ class KineticsToolsRunner(object):
         if (self.options.refContigs is not None or
             self.options.refContigIndex != -1):
 
-            requestedIds = set(self.options.refContigs.split(',')).union([self.options.refContigIndex])
+            if (self.options.refContigs is not None and 
+                self.options.refContigIndex != -1):
+
+                requestedIds = set(self.options.refContigs.split(',')).union([self.options.refContigIndex])
+
+            elif (self.options.refContigs is None and 
+                self.options.refContigIndex != -1):
+       
+                requestedIds = set([self.options.refContigIndex])
+
+            elif (self.options.refContigs is not None and 
+                self.options.refContigIndex == -1):
+       
+                requestedIds = set(self.options.refContigs.split(','))
+      
+
             relevantContigs = [ i for (i, rec) in enumerate(refInfoTable)
                                 if (rec.FullName  in requestedIds or
                                     rec.Name      in requestedIds or
                                     rec.RefInfoID in requestedIds) ]
             self.refInfo = refInfoTable[relevantContigs]
+
 
         else:
             self.refInfo = refInfoTable
