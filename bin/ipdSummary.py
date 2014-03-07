@@ -48,10 +48,10 @@ import traceback
 
 from pbcore.io import CmpH5Reader
 
-from pbtools.kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
-from pbtools.kineticsTools.ResultWriter import KineticsWriter
-from pbtools.kineticsTools.ipdModel import IpdModel
-from pbtools.kineticsTools.ReferenceUtils import ReferenceUtils
+from kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
+from kineticsTools.ResultWriter import KineticsWriter
+from kineticsTools.ipdModel import IpdModel
+from kineticsTools.ReferenceUtils import ReferenceUtils
 
 # Version info
 __p4revision__ = "$Revision: #1 $"
