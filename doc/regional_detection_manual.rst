@@ -27,7 +27,7 @@ The workflow is currently two steps.  The first step requires running ipdSummary
 
 The scripts listed above have no additional dependencies beyond those required for kineticsTools.
 
-An additional requirement relates to the chemistry used to collect data to which this workflow can be applied.  Since kinetics generally vary from chemistry to chemistry, models must be applied to data collected using the same chemistry as the training data.  Both models provided were trained using P4-C2 data.
+An additional requirement relates to the chemistry used to collect data to which this workflow can be applied.  Since kinetics generally vary from chemistry to chemistry, models must be applied to data collected using the same chemistry as the training data.  Both models provided were trained using P4-C2 data.   **These P4-C2 models are not expected to work on P5-C3 chemistry data.**
 
 
 
@@ -37,10 +37,14 @@ Step 1. Application of LDA classifier
 
 The first step involves running ipdSummary.py from the command line with the following arguments::
 
-    ipdSummary.py  --useLDA  --refContigIndex <reference index> --m5Cclassifier <csv file containing m5C binary classifier weights> --m5Cgff  <m5C scores gff>  --reference <FASTA file>   <cmp.h5 file>
+    ipdSummary.py  --useLDA
+                   --refContigIndex <reference index>
+                   --m5Cclassifier <csv file containing m5C binary classifier weights>
+                   --m5Cgff  <m5C scores gff>
+                   --reference <FASTA file>
+                   <cmp.h5 file>
 
-
-The current scheme is best suited to be run on one contig of the reference at a time: <reference index> specifies a contig number indexed from 1.
+The current scheme is best suited to be run on one contig of the reference at a time: <reference index> specifies a contig number indexed from 1.   This is due to a limitation on the regional detection script, runMaxScoringSubsequences.py, which assumes that the input GFF file contains scores corresponding to only one reference.
 
 The score is computed using a weights from an LDA classifier.  The classifier should have two columns stored in a csv format.  Each column should contain 127 values:  126 weights and one offset.  The first column contains weights for data mapped to the forward strand, and the second column contains weights for the reverse strand.  There are two classifiers provided.
 
@@ -94,7 +98,8 @@ Step 2.  Estimation of hypo-methylated regions
 
 The second step involves taking the output of step 1 as the input to the additional scripts provided::
 
-    runMaxScoringSubsequences.py 	--infile <m5C scores gff>	--outfile <m5C regions output gff>
+    runMaxScoringSubsequences.py   --infile <m5C scores gff>	
+                                   --outfile <m5C regions output gff>
 
 We apply the general method of [2] to the individual CG site scores obtained in Step 1 to estimate regions of hypo-methylation.  
 
