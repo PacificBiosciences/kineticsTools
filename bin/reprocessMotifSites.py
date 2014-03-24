@@ -434,13 +434,13 @@ class ReprocessMotifSites(PBToolRunner):
         contigs = ReferenceUtils.loadReferenceContigs(referencePath, cmpH5Path)
 
         # Read reference info table from cmp.h5
-        (refInfoTable, movieInfoTable) = ReferenceUtils.loadCmpH5Tables(cmpH5Path)
+        (refInfoTable, _) = ReferenceUtils.loadCmpH5Tables(cmpH5Path)
         self.refInfo = refInfoTable
 
         # There are three different ways the ipdModel can be loaded.
         # In order of precedence they are:
         # 1. Explicit path passed to --ipdModel
-        # 2. Path to parameter bundle, model selected using the /MovieInfo/SequencingChemistry tags
+        # 2. Path to parameter bundle, model selected using the cmp.h5's chemistry info
         # 3. Fall back to built-in model.
 
         # By default, use built-in model
@@ -457,25 +457,18 @@ class ReprocessMotifSites(PBToolRunner):
                 logging.error("Params path doesn't exist: %s" % self.args.paramsPath)
                 sys.exit(1)
 
-            # Use the SequencingChemistry data to select an ipd model
-            if 'SequencingChemistry' in movieInfoTable.dtype.fields.keys():
-                # Pick majority chemistry
-                chemistries = movieInfoTable.SequencingChemistry.tolist()
-                chemCounts = dict([(k, len(list(v))) for (k, v) in itertools.groupby(chemistries)])
-                majorityChem = max(chemCounts, key=chemCounts.get)
+            majorityChem = ReferenceUtils.loadCmpH5Chemistry(cmpH5Path)
+            ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
 
-                # Find the appropriate model file:
-                ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
-
-                if majorityChem == 'unknown':
-                    logging.warning("Chemistry is unknown. Falling back to built-in model")
-                    ipdModel = None
-                elif not os.path.exists(ipdModel):
-                    logging.warning("Model not found: %s" % ipdModel)
-                    logging.warning("Falling back to built-in model")
-                    ipdModel = None
-                else:
-                    logging.info("Using Chemistry matched IPD model: %s" % ipdModel)
+            if majorityChem == 'unknown':
+                logging.warning("Chemistry is unknown. Falling back to built-in model")
+                ipdModel = None
+            elif not os.path.exists(ipdModel):
+                logging.warning("Model not found: %s" % ipdModel)
+                logging.warning("Falling back to built-in model")
+                ipdModel = None
+            else:
+                logging.info("Using Chemistry matched IPD model: %s" % ipdModel)
 
         self.ipdModel = IpdModel(contigs, ipdModel, self.args.modelIters)
 

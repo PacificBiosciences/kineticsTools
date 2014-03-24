@@ -31,7 +31,7 @@
 
 #!/usr/bin/env python
 
-import os
+import os, itertools
 from pbcore.io import FastaReader
 from pbcore.io import CmpH5Reader
 
@@ -71,3 +71,11 @@ class ReferenceUtils():
         del cmph5
 
         return (refInfoTable, movieInfoTable)
+
+    @staticmethod
+    def loadCmpH5Chemistry(cmpH5File):
+        with CmpH5Reader(cmpH5File) as f:
+            chems = f.sequencingChemistry
+            chemCounts = dict([(k, len(list(v))) for (k, v) in itertools.groupby(chemistries)])
+            majorityChem = max(chemCounts, key=chemCounts.get)
+            return majorityChem
