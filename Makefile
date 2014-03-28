@@ -23,6 +23,7 @@ clean:
 
 test:
 	nosetests -s -v test/*.py 
+	cram test/cram/*.t
 
 pip-install: 
 	@which pip > /dev/null
