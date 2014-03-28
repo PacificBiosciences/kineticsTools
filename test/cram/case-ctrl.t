@@ -1,5 +1,7 @@
 Test basic mode of ipdSummary.py.
 
+  $ . $TESTDIR/portability.sh
+
 Load in data:
 
   $ DATA=$TESTDIR/../data
@@ -17,29 +19,6 @@ Can we find the input and reference files?
 Run basic ipdSummary.py:
 
   $ ipdSummary.py --numWorkers 1 --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --control $INPUT --reference $REFERENCE $INPUT
-  * [INFO] Available CPUs: * (glob)
-  * [INFO] Requested worker processes: 1 (glob)
-  * [INFO] Launched worker processes. (glob)
-  * [INFO] Worker KineticWorkerProcess-? (PID=*) started running (glob)
-  * [INFO] Launched result collector process. (glob)
-  * [INFO] Process KineticsWriter-? (PID=*) started running (glob)
-  * [INFO] Creating IpdRatio dataset w/ name: *, Size: * (glob)
-  * [INFO] Generating kinetics summary for [*] (glob)
-  * [INFO] Processing reference entry: [?] (glob)
-  * [INFO] Queueing chunks for ref: ?.  NumReads: *, Block Size: * (glob)
-  * [INFO] Got chunk: (*, (*, *, *)) -- Process: <KineticWorkerProcess(KineticWorkerProcess-?, started daemon)> (glob)
-  * [INFO] Making summary: * to * (glob)
-  * (glob)
-  * (glob)
-  * (glob)
-  * (glob)
-  * (glob)
-  * (glob)
-  * [INFO] Got chunk: (*, (*, *, *)) -- Process: <KineticWorkerProcess(KineticWorkerProcess-?, started daemon)> (glob)
-  * [INFO] Making summary: * to * (glob)
-  * [INFO] Process KineticWorkerProcess-? (PID=*) done; exiting. (glob)
-  * [INFO] Result thread shutting down... (glob)
-  * [INFO] ipdSummary.py finished. Exiting. (glob)
 
 Look at output csv file:
 
@@ -64,13 +43,14 @@ Look at output gff file:
   $ tail -1 tmp.gff
   ??sequence-region * * * (glob)
 
-  $  wc -l tmp.gff
-  4 tmp.gff
+  $  linecount tmp.gff
+  4
 
 What about the H5 file?
 
   $ [ -f tmp.h5 ] && echo "IPD ratio H5 file found" || echo "IPD ratio H5 file not found"
   IPD ratio H5 file found
 
-  $ wc -l tmp.h5
-  3 tmp.h5
+  $ h5ls -r tmp.h5
+  /                        Group
+  /ref000001               Dataset {48502}

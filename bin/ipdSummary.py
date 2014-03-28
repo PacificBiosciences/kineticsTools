@@ -95,8 +95,7 @@ class KineticsToolsRunner(object):
         description = '\n'.join(desc)
 
         self.parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                              description=description,
-                                              version=__version__)
+                                              description=description)
 
 
         # Positional arguments:
@@ -318,6 +317,19 @@ class KineticsToolsRunner(object):
                                  default=False,
                                  help="Enable dropping down into pdb debugger if an Exception is raised.")
 
+        # Verbosity
+        self.parser.add_argument("--verbose", "-v",
+                                 action="store_true",
+                                 default=False)
+
+        # Version
+        class PrintVersionAction(argparse.Action):
+            def __call__(self, parser, namespace, values, option_string=None):
+                print __version__
+                sys.exit(0)
+        self.parser.add_argument("--version",
+                                 nargs=0,
+                                 action=PrintVersionAction)
 
 
 
@@ -377,7 +389,10 @@ class KineticsToolsRunner(object):
         # Log generously
         stdOutHandler = logging.StreamHandler(sys.stdout)
         logFormat = '%(asctime)s [%(levelname)s] %(message)s'
-        logging.basicConfig(level=logging.INFO, format=logFormat)
+        if self.args.verbose:
+            logging.basicConfig(level=logging.INFO, format=logFormat)
+        else:
+            logging.basicConfig(level=logging.WARN, format=logFormat)
 
         if self.args.doProfiling:
             cProfile.runctx("self._mainLoop()",

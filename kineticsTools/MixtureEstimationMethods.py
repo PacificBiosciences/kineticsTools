@@ -123,12 +123,15 @@ class MixtureEstimationMethods(object):
     def estimateSingleFraction(self, mu1, data, mu0, L):
         a0 = self.replaceScipyNormPdf(data, mu0)
         a1 = self.replaceScipyNormPdf(data, mu1)
-        # if f'(0) < 0 (equ. a1/a0 < L), then f'(1) < 0 as well and solution p-hat <= 0
-        if np.divide(a1, a0).sum() <= L:
-            return 0.0
-        # if f'(1) > 0 (equ. a0/a1 < L), then f'(0) > 0 as well and solution p-hat >= 1
-        if np.divide(a0, a1).sum() <= L:
-            return 1.0
+        # NOTE: ignoring the warnings here is sloppy, should be looked
+        # at later.
+        with np.errstate(all="ignore"):
+            # if f'(0) < 0 (equ. a1/a0 < L), then f'(1) < 0 as well and solution p-hat <= 0
+            if np.divide(a1, a0).sum() <= L:
+                return 0.0
+            # if f'(1) > 0 (equ. a0/a1 < L), then f'(0) > 0 as well and solution p-hat >= 1
+            if np.divide(a0, a1).sum() <= L:
+                return 1.0
         # unconstrained minimization of convex, single-variable function
         res = fminbound(self.mixModelFn, 0.01, 0.99, args=(a0, a1), xtol=1e-02)
         return res
