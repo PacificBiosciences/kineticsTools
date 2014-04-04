@@ -8,15 +8,17 @@ The current fork has an additional feature to analyze the base modifications for
 The only files needed if you already have PacificBiosciences/kineticsTools installed are all files named sm*.py. Place them in the same directories as the analogous standard modules...eg place smIpdSummary.py 
 in the same location as ipdSummary.py These are the files you'll need
 
-smIpdSummary.py
-smKineticWorker.py
-smResultWorker.py
+smIpdSummary.py, smKineticWorker.py, and smResultWorker.py
+
 
 Typically, the standard base modification files are in these locations
 
 <path-to-smrtanalysis>/analysis/bin/ipdSummary.py
+
 <path-to-smrtanalysis>/analysis/lib/python2.7/kineticsTools/KineticWorker.py
+
 <path-to-smrtanalysis>/analysis/lib/python2.7/kineticsTools/ResultWriter.py
+
 
 Then source the SMRT Analysis build with the new smIpdSummary.py
 
