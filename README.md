@@ -12,6 +12,12 @@ smIpdSummary.py
 smKineticWorker.py
 smResultWorker.py
 
+Typically, the standard base modification files are in these locations
+
+<path-to-smrtanalysis>/analysis/bin/ipdSummary.py
+<path-to-smrtanalysis>/analysis/lib/python2.7/kineticsTools/KineticWorker.py
+<path-to-smrtanalysis>/analysis/lib/python2.7/kineticsTools/ResultWriter.py
+
 Then source the SMRT Analysis build with the new smIpdSummary.py
 
 . <path-to-smrtanalysis>/etc/setup.sh && smIpdSummary.py
