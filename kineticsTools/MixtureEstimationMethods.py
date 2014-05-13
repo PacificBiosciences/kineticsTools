@@ -114,9 +114,9 @@ class MixtureEstimationMethods(object):
 
     # Try to speed up calculation by avoiding a call to scipy.stats.norm.pdf()
     def replaceScipyNormPdf(self, data, mu):
-        # return np.exp( -np.divide( data, mu) ) / mu
-        tmp = np.divide(data, mu)
-        return np.exp(np.subtract(tmp, np.power(tmp, 2) / 2.0)) / mu
+        return np.exp( -np.divide( data, mu) ) / mu
+        # tmp = np.divide(data, mu)
+        # return np.exp(np.subtract(tmp, np.power(tmp, 2) / 2.0)) / mu
         # pdf for normal distribution: res = res / sqrt( 2 * pi ) (can factor out sqrt(2 * pi))
 
     # Return optimum argument (mixing proportion) of mixture model log likelihood function.
