@@ -380,7 +380,7 @@ class KineticWorker(object):
 
         if ver == '1.2':
             factor = 1.0
-        elif ver == '1.3' or ver == '1.4':
+        elif ver in ('1.3', '1.4', '2.0'):
             # NOTE -- assuming that all movies have the same frame rate!
             fr = cmpH5File.movieInfoTable[0].FrameRate
             factor = 1.0 / fr
