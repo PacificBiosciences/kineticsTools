@@ -28,8 +28,8 @@ test:
 pip-install: 
 	@which pip > /dev/null
 	@pip freeze|grep 'kineticsTools=='>/dev/null \
-      && pip uninstall -y pbtools.kineticsTools \
-      || pip uninstall -y kineticsTools \
+      && ( pip uninstall -y kineticsTools \
+        || pip uninstall -y pbtools.kineticsTools ) \
       || true
 	@pip install --no-index \
           --install-option="--install-data=$(DATA)" \
