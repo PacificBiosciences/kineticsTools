@@ -108,13 +108,21 @@ class MixtureEstimationMethods(object):
 
     # Return value of mixture model log likelihood function
     def mixModelFn(self, p, a0, a1):
-        tmp = (1 - p) * a0 + p * a1
+        try:
+            tmp = np.add( (1 - p) * a0, p * a1 )
+        except:
+            return np.nan
+        if sum( tmp != 0 ) == 0:
+            return np.nan
         return -np.log(tmp[np.nonzero(tmp)]).sum()
         # return -np.ma.log( tmp ).sum()
 
     # Try to speed up calculation by avoiding a call to scipy.stats.norm.pdf()
-    def replaceScipyNormPdf(self, data, mu):
-        return np.exp( -np.divide( data, mu) ) / mu
+    def replaceScipyNormPdf(self, data, mu, threshold = 1e-15):
+        tmp = np.exp( -np.divide( data, mu) ) / mu
+        tmp[ tmp < threshold ] = 0
+        return tmp
+
         # tmp = np.divide(data, mu)
         # return np.exp(np.subtract(tmp, np.power(tmp, 2) / 2.0)) / mu
         # pdf for normal distribution: res = res / sqrt( 2 * pi ) (can factor out sqrt(2 * pi))
@@ -123,6 +131,7 @@ class MixtureEstimationMethods(object):
     def estimateSingleFraction(self, mu1, data, mu0, L):
         a0 = self.replaceScipyNormPdf(data, mu0)
         a1 = self.replaceScipyNormPdf(data, mu1)
+
         # NOTE: ignoring the warnings here is sloppy, should be looked
         # at later.
         with np.errstate(all="ignore"):
@@ -238,6 +247,7 @@ class MixtureEstimationMethods(object):
     # Bootstraps mix prop estimates to return estimate and simple bounds for 95% confidence interval
     def detectionMixModelBootstrap(self, modelPrediction, data, nSamples=100):
 
+        # print data
         # Case-resampled bootstrapped estimates:
         L = len(data)
         res = np.zeros(4)

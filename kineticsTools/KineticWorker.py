@@ -239,7 +239,7 @@ class KineticWorker(object):
             if contigName in controlRefTable.FullName:
 
                 controlRefRow = controlRefTable[controlRefTable['FullName'] == contigName][0]
-                (controlChunks, _) = self._fetchChunks(controlRefRow.ID, targetBounds, self.controlCmpH5)
+                (controlChunks, controlCapValue) = self._fetchChunks(controlRefRow.ID, targetBounds, self.controlCmpH5)
                 controlSites = {(x['strand'], x['tpl']): x for x in controlChunks}
 
                 for caseChunk in caseChunks:
@@ -251,7 +251,7 @@ class KineticWorker(object):
                         if controlChunk and \
                                 caseChunk['data']['ipd'].size > 2 and \
                                 controlChunk['data']['ipd'].size > 2:
-                            result.append(self._computePositionTraditionalControl(caseChunk, controlChunk, methylFractionFlag, identifyFlag))
+                            result.append(self._computePositionTraditionalControl(caseChunk, controlChunk, capValue, controlCapValue, methylFractionFlag, identifyFlag))
                     # except:
                     #    pass
 
@@ -370,7 +370,7 @@ class KineticWorker(object):
         selV = (cmpH5File.RefGroupID == refGroupId) & \
                (np.logical_not((cmpH5File.tStart > end) | (cmpH5File.tEnd < start))) & \
                (cmpH5File.MapQV > self.options.mapQvThreshold) & \
-               (HitSelection.readFilter(cmpH5File, minAcc=0.82))
+               (HitSelection.readFilter(cmpH5File, minAcc = 0.82) )
 
         hits = cmpH5File[selV]
 
@@ -730,11 +730,23 @@ class KineticWorker(object):
 
         return {'testStatistic': stat, 'pvalue': pval}
 
-    def _computePositionTraditionalControl(self, caseObservations, controlObservations, methylFractionFlag, identifyFlag, testProcedure=_tTest):
+    def _computePositionTraditionalControl(self, caseObservations, controlObservations, capValue, controlCapValue, methylFractionFlag, identifyFlag, testProcedure=_tTest):
         """Summarize the observed ipds at one template position/strand, using a case-control analysis"""
         # Compute stats on the observed ipds
         caseData = caseObservations['data']['ipd']
         controlData = controlObservations['data']['ipd']
+
+        # cap both the native and control data, more or less as it is done in computePositionSyntheticControl:
+        percentile = min( 90, ( 1.0 - 1.0 / ( caseData.size - 1 ) ) * 100 )
+        localPercentile = np.percentile( caseData, percentile )
+        capValue = max( capValue, 4.0 * np.median(caseData).item(), localPercentile )
+        caseData = np.minimum( caseData, capValue )
+
+        percentile = min( 90, ( 1.0 - 1.0 / ( controlData.size - 1 ) ) * 100 )
+        localPercentile = np.percentile( controlData, percentile )
+        controlCapValue = max( controlCapValue, 4.0 * np.median(controlData).item(), localPercentile )
+        controlData = np.minimum( controlData, controlCapValue )
+
 
         res = dict()
         res['refId'] = self.refId
@@ -770,8 +782,13 @@ class KineticWorker(object):
         res['testStatistic'] = testResults['testStatistic']
         res['pvalue'] = testResults['pvalue']
 
+        # res['testStatistic'] = ( res['caseMedian'] -  res['controlMedian'] ) / sqrt( res['caseStd']**2 + res['controlStd']**2 )
+        # res['pvalue'] =  0.5 * erfc(res['testStatistic'] / sqrt(2))
+
         pvalue = max(sys.float_info.min, res['pvalue'])
         res['score'] = round(-10.0 * math.log10(pvalue))
+
+        # print res
 
         # If the methylFractionFlag is set, then estimate fraction using just modelPrediction in the detection case.
         if methylFractionFlag and pvalue < self.options.pvalue and not identifyFlag:
