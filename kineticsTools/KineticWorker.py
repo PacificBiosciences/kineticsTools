@@ -731,6 +731,10 @@ class KineticWorker(object):
         return {'testStatistic': stat, 'pvalue': pval}
 
     def _computePositionTraditionalControl(self, caseObservations, controlObservations, capValue, controlCapValue, methylFractionFlag, identifyFlag, testProcedure=_tTest):
+        
+        oCapValue = capValue
+        oControlCapValue = controlCapValue
+
         """Summarize the observed ipds at one template position/strand, using a case-control analysis"""
         # Compute stats on the observed ipds
         caseData = caseObservations['data']['ipd']
@@ -793,11 +797,9 @@ class KineticWorker(object):
         # If the methylFractionFlag is set, then estimate fraction using just modelPrediction in the detection case.
         if methylFractionFlag and pvalue < self.options.pvalue and not identifyFlag:
             if res['controlCoverage'] > self.options.methylMinCov and res['caseCoverage'] > self.options.methylMinCov:
-
                 # Instantiate mixture estimation methods:
                 mixture = MixtureEstimationMethods(self.ipdModel.gbmModel.post, self.ipdModel.gbmModel.pre, res, self.options.methylMinCov)
                 x = mixture.detectionMixModelBootstrap(res['controlMean'], caseData)
-
                 res[FRAC] = x[0]
                 res[FRAClow] = x[1]
                 res[FRACup] = x[2]
