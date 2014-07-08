@@ -702,7 +702,7 @@ class KineticWorker(object):
 ##
     def _tTest(x, y, exclude=95):
         """Compute a one-sided Welsh t-statistic."""
-        with np.errstate(all="warn"):
+        with np.errstate(all="ignore"):
             def cappedSlog(v):
                 q = np.percentile(v, exclude)
                 v2 = v.copy()

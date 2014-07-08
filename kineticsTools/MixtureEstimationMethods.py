@@ -124,7 +124,7 @@ class MixtureEstimationMethods(object):
     def estimateSingleFraction(self, mu1, data, mu0, L, optProp = True ):
         # NOTE: ignoring the warnings here is sloppy, should be looked
         # at later.
-        with np.errstate(under="warn"):
+        with np.errstate(under="ignore"):
             a0 = self.replaceScipyNormPdf(data, mu0)
             a1 = self.replaceScipyNormPdf(data, mu1)
 
