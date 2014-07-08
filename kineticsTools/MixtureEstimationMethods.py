@@ -122,32 +122,28 @@ class MixtureEstimationMethods(object):
 
     # Return optimum argument (mixing proportion) of mixture model log likelihood function.
     def estimateSingleFraction(self, mu1, data, mu0, L, optProp = True ):
-        a0 = self.replaceScipyNormPdf(data, mu0)
-        a1 = self.replaceScipyNormPdf(data, mu1)
-
         # NOTE: ignoring the warnings here is sloppy, should be looked
         # at later.
+        with np.errstate(under="warn"):
+            a0 = self.replaceScipyNormPdf(data, mu0)
+            a1 = self.replaceScipyNormPdf(data, mu1)
 
-        # To override in np.seterr(all="raise") in _tTest in KineticWorker, replace:
-        # with np.errstate(all="ignore"):
-        np.seterr(under="ignore")
-        
-        # if f'(0) < 0 (equ. a1/a0 < L), then f'(1) < 0 as well and solution p-hat <= 0
-        if np.divide(a1, a0).sum() <= L:
-            res = 0.0
-        # if f'(1) > 0 (equ. a0/a1 < L), then f'(0) > 0 as well and solution p-hat >= 1
-        elif np.divide(a0, a1).sum() <= L:
-            res = 1.0
-        else:
-            # unconstrained minimization of convex, single-variable function
-            res = fminbound(self.mixModelFn, 0.01, 0.99, args=(a0, a1), xtol=1e-02)
+            # if f'(0) < 0 (equ. a1/a0 < L), then f'(1) < 0 as well and solution p-hat <= 0
+            if np.divide(a1, a0).sum() <= L:
+                res = 0.0
+            # if f'(1) > 0 (equ. a0/a1 < L), then f'(0) > 0 as well and solution p-hat >= 1
+            elif np.divide(a0, a1).sum() <= L:
+                res = 1.0
+            else:
+                # unconstrained minimization of convex, single-variable function
+                res = fminbound(self.mixModelFn, 0.01, 0.99, args=(a0, a1), xtol=1e-02)
 
-        if optProp:
-            # return the optimal proportion
-            return res
-        else:
-            # return the corresponding log likelihood function value
-            return self.mixModelFn( res, a0, a1 )
+            if optProp:
+                # return the optimal proportion
+                return res
+            else:
+                # return the corresponding log likelihood function value
+                return self.mixModelFn( res, a0, a1 )
 
 
     # Try bias-corrected, accelerated quantiles for bootstrap confidence intervals

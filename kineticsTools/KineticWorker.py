@@ -702,33 +702,33 @@ class KineticWorker(object):
 ##
     def _tTest(x, y, exclude=95):
         """Compute a one-sided Welsh t-statistic."""
-        np.seterr(all="raise")
-        def cappedSlog(v):
-            q = np.percentile(v, exclude)
-            v2 = v.copy()
-            v2 = v2[~np.isnan(v2)]
-            v2[v2 > q] = q
-            v2[v2 <= 0] = 1. / (75 + 1)
-            return np.log(v2)
-        x1 = cappedSlog(x)
-        x2 = cappedSlog(y)
-        sx1 = np.var(x1) / len(x1)
-        sx2 = np.var(x2) / len(x2)
-        totalSE = np.sqrt(sx1 + sx2)
-        if totalSE == 0:
-            stat = 0
-        else:
-            stat = (np.mean(x1) - np.mean(x2)) / totalSE
+        with np.errstate(all="warn"):
+            def cappedSlog(v):
+                q = np.percentile(v, exclude)
+                v2 = v.copy()
+                v2 = v2[~np.isnan(v2)]
+                v2[v2 > q] = q
+                v2[v2 <= 0] = 1. / (75 + 1)
+                return np.log(v2)
+            x1 = cappedSlog(x)
+            x2 = cappedSlog(y)
+            sx1 = np.var(x1) / len(x1)
+            sx2 = np.var(x2) / len(x2)
+            totalSE = np.sqrt(sx1 + sx2)
+            if totalSE == 0:
+                stat = 0
+            else:
+                stat = (np.mean(x1) - np.mean(x2)) / totalSE
 
-        #df   = (sx1 + sx2)**2 / (sx1**2/(len(x1)-1) + sx2**2/(len(x2) - 1))
-        #pval = 1 - scidist.t.cdf(stat, df)
+            #df   = (sx1 + sx2)**2 / (sx1**2/(len(x1)-1) + sx2**2/(len(x2) - 1))
+            #pval = 1 - scidist.t.cdf(stat, df)
 
-        # Scipy's t distribution CDF implementaton has inadequate
-        # precision.  We have switched to the normal distribution for
-        # better behaved p values.
-        pval = 0.5 * erfc(stat / sqrt(2))
+            # Scipy's t distribution CDF implementaton has inadequate
+            # precision.  We have switched to the normal distribution for
+            # better behaved p values.
+            pval = 0.5 * erfc(stat / sqrt(2))
 
-        return {'testStatistic': stat, 'pvalue': pval}
+            return {'testStatistic': stat, 'pvalue': pval}
 
     def _computePositionTraditionalControl(self, caseObservations, controlObservations, capValue, controlCapValue, methylFractionFlag, identifyFlag, testProcedure=_tTest):
         
