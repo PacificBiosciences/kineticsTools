@@ -88,8 +88,8 @@ class KineticWorker(object):
         self.refId = reference
 
         # Each chunk is from a single reference -- fire up meanIpd func on the current reference
-        self.meanIpdFunc = self.ipdModel.predictIpdFunc(reference)
-        self.manyManyIpdFunc = self.ipdModel.predictManyIpdFunc(reference)
+        self.meanIpdFunc = self.ipdModel.predictIpdFuncModel(reference)
+        self.manyManyIpdFunc = self.ipdModel.predictManyIpdFuncModel(reference)
 
         # Get the cognate base at a given position
         self.cognateBaseFunc = self.ipdModel.cognateBaseFunc(reference)
@@ -380,12 +380,12 @@ class KineticWorker(object):
 
         if ver == '1.2':
             factor = 1.0
-        elif ver == '1.3' or ver == '1.4':
+        elif ver == '1.3' or ver == '1.4' or ver == '2.0':
             # NOTE -- assuming that all movies have the same frame rate!
             fr = cmpH5File.movieInfoTable[0].FrameRate
             factor = 1.0 / fr
         else:
-            raise Exception('Unrecognized cmp.h5 version')
+            raise Exception('Unrecognized cmp.h5 version, your version is : %s' % ver)
 
         rawIpds = self._loadRawIpds(hits, start, end, factor)
         ipdVect = rawIpds['ipd']
