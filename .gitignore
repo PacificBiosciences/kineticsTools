@@ -1,0 +1,5 @@
+build/
+dist/
+src/pbtools.kineticsTools.egg-info/
+*.pyc
+kineticsTools.egg-info/

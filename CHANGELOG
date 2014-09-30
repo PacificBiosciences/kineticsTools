@@ -1,0 +1,8 @@
+
+Version 0.5.0 (9/29/2014)
+
+    * Migrate algorithm parameters (hdf5 files containing the GBM
+      trees) into kineticsTools, out of SMRTpipe
+    * Will now FAIL with an informative message if the chemistry is
+      "unknown" or is not one of the chemistries we have trained for.
+    * Add CHANGELOG
