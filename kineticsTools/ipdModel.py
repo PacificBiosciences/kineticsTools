@@ -355,7 +355,7 @@ class IpdModel:
         self.refLengthDict = {}
 
         for contig in fastaRecords:
-            if contig.id is None:
+            if contig.cmph5ID is None:
                 # This contig has no mapped reads -- skip it
                 continue
 
@@ -363,7 +363,7 @@ class IpdModel:
             refSeq = np.fromstring(rawSeq, dtype=byte)
 
             # Store the reference length
-            self.refLengthDict[contig.id] = len(rawSeq)
+            self.refLengthDict[contig.cmph5ID] = len(rawSeq)
 
             # Make a shared array
             sa = SharedArray(dtype='B', shape=len(rawSeq) + self.pad * 2)
@@ -382,7 +382,7 @@ class IpdModel:
             saWrap[0:self.pad] = outerCodes
             saWrap[(len(rawSeq) + self.pad):(len(rawSeq) + 2 * self.pad)] = outerCodes
 
-            self.refDict[contig.id] = sa
+            self.refDict[contig.cmph5ID] = sa
 
         # No correction factor for IPDs everything is normalized to 1
         self.meanIpd = 1

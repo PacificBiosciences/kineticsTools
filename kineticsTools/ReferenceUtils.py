@@ -40,7 +40,7 @@ class ReferenceUtils():
 
     @staticmethod
     def loadReferenceContigs(referencePath, cmpH5Path):
-        """Load the reference contigs, and tag each one with the ref.ID it was assigned in the cmp.h5 file.  Return a list of contigs, which are used to set up IpdModel"""
+        """Load the reference contigs, and tag each one with the ref.cmpH5ID it was assigned in the cmp.h5 file.  Return a list of contigs, which are used to set up IpdModel"""
 
         # Read contigs from FASTA file
         fastaReader = FastaReader(referencePath)
@@ -53,11 +53,11 @@ class ReferenceUtils():
         # initially each contig has an id of None -- this will be overwritten with the id from the cmp.h5, if there are any
         # reads mapped to it.
         for x in contigs:
-            x.id = None
+            x.cmph5ID = None
 
         # Mark each contig with it's ID from the cmp.h5 - match them up using MD5s
         for x in refInfoTable:
-            contigDict[x.MD5].id = x.ID
+            contigDict[x.MD5].cmph5ID = x.ID
 
         return contigs
 
