@@ -43,7 +43,7 @@ Look at output gff file:
   lambda_NEB3011\tkinModCall\tmodified_base\t*\t*\t*\t?\t.\tcoverage=*;context=*;IPDRatio=* (glob)
 
   $  linecount tmp.gff
-  207
+  205
 
 What about the H5 file?
 

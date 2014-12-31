@@ -48,6 +48,7 @@ from BasicLdaEnricher import BasicLdaEnricher
 from PositiveControlEnricher import PositiveControlEnricher
 
 from kineticsTools.ModificationDecode import ModificationDecode, ModificationPeakMask
+from kineticsTools._downsampling import downsampleFrames
 
 from WorkerProcess import WorkerProcess, WorkerThread
 import pdb
@@ -418,7 +419,7 @@ class KineticWorker(object):
             matched = np.logical_and(np.array([x != '-' for x in aln.read()]), np.array([x != '-' for x in aln.reference()]))
 
             # Normalize kinetics of the entire subread
-            rawIpd = aln.IPD() * factor
+            rawIpd = downsampleFrames(aln.IPD()) * factor
 
             np.logical_and(np.logical_not(np.isnan(rawIpd)), matched, out=matched)
 
