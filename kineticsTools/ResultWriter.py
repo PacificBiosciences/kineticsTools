@@ -587,7 +587,16 @@ class KineticsWriter(ResultCollectorProcess):
                     idx = x['tpl'] - start
 
                     # convert to a 16 bit uint with a conversion factor of 100
-                    val = min(2 ** 16 - 1, int(x['ipdRatio'] * 100))
+                    #
+                    # Note (Bug 26065): the upstream code sometimes
+                    # gives a NaN for ipdRatio (?).  We are not attempting
+                    # to investigate this in the 2.3 timeframe, we are just aiming
+                    # to 1) not crash and 2) not call a modification here.
+                    #
+                    if np.isnan(x['ipdRatio']):
+                        val = 100 # ipdRatio of 1
+                    else:
+                        val = min(2 ** 16 - 1, int(x['ipdRatio'] * 100))                        
 
                     # strand 0 is the lower 16 bits, strand 1 is the upper 16 bits
                     val = val if x['strand'] == 0 else val << 16
