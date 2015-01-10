@@ -640,7 +640,7 @@ class KineticWorker(object):
         res['tErr'] = np.std(d).item() / sqrt(d.size)
 
         ipdRatio = res['tMean'] / res['modelPrediction']
-        if np.isnan(ipdRatio):
+        if not np.isnan(ipdRatio):
             res['ipdRatio'] = ipdRatio
         else:
             res['ipdRatio'] = 1.0
