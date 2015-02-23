@@ -463,11 +463,12 @@ class KineticsToolsRunner(object):
             WorkerType = KineticWorkerThread
         else:
             WorkerType = KineticWorkerProcess
-
+        
         # Launch the worker processes
         self._workers = []
         for i in xrange(self.options.numWorkers):
-            p = WorkerType(self.options, self._workQueue, self._resultsQueue, self.ipdModel)
+            p = WorkerType(self.options, self._workQueue, self._resultsQueue, self.ipdModel,
+                           self._sharedAlignmentIndex)
             self._workers.append(p)
             p.start()
         logging.info("Launched worker processes.")
@@ -597,6 +598,15 @@ class KineticsToolsRunner(object):
                 logging.info("Using Chemistry matched IPD model: %s" % ipdModel)
 
         self.ipdModel = IpdModel(contigs, ipdModel, self.args.modelIters)
+    
+    def loadSharedAlignmentIndex(self, cmpH5Filename):
+        """
+        Read the alignmet index for the case cmph5 so we don't have to have the slaves
+        keeps their own copies.
+        """
+        cmph5Reader = CmpH5Reader(cmpH5Filename)
+        self._sharedAlignmentIndex = cmph5Reader.alignmentIndex
+        cmph5Reader.close()
 
     def _mainLoop(self):
         """
@@ -619,13 +629,16 @@ class KineticsToolsRunner(object):
 
         # Load reference and IpdModel
         self.loadReferenceAndModel(self.args.reference, self.args.infile)
+        
+        # Load a copy of the cmpH5 alignment index to share with the slaves
+        self.loadSharedAlignmentIndex(self.args.infile)
 
         # Spawn workers
         self._launchSlaveProcesses()
 
         # WARNING -- cmp.h5 file must be opened AFTER worker processes have been spawned
         # cmp.h5 we're using -- use this to orchestrate the work
-        self.cmph5 = CmpH5Reader(self.args.infile)
+        self.cmph5 = CmpH5Reader(self.args.infile, self._sharedAlignmentIndex)
         logging.info('Generating kinetics summary for [%s]' % self.args.infile)
 
         #self.referenceMap = self.cmph5['/RefGroup'].asDict('RefInfoID', 'ID')
