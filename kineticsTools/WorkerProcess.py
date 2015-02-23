@@ -51,16 +51,17 @@ class Worker(object):
     process only O(genome length) work to do.
     """
 
-    def __init__(self, options, workQueue, resultsQueue):
+    def __init__(self, options, workQueue, resultsQueue, sharedAlignmentIndex=None):
         self.options = options
         self.daemon = True
         self._workQueue = workQueue
         self._resultsQueue = resultsQueue
+        self._sharedAlignmentIndex = sharedAlignmentIndex
 
     def _run(self):
         logging.info("Worker %s (PID=%d) started running" % (self.name, self.pid))
 
-        self.caseCmpH5 = CmpH5Reader(self.options.infile)
+        self.caseCmpH5 = CmpH5Reader(self.options.infile, self._sharedAlignmentIndex)
 
         if not self.options.control is None:
             # We have a cmp.h5 with control vales -- load that cmp.h5

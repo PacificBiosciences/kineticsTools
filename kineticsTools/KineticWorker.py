@@ -372,6 +372,18 @@ class KineticWorker(object):
                (np.logical_not((cmpH5File.tStart > end) | (cmpH5File.tEnd < start))) & \
                (cmpH5File.MapQV > self.options.mapQvThreshold) & \
                (HitSelection.readFilter(cmpH5File, minAcc = 0.82) )
+        
+        # Sometimes alignments pile up in a window, and this causes the window
+        # to take a very long time to complete, potentially causing a crash due
+        # to OOM - see bug 25987. Prevent that by capping the number of
+        # alignments at some high but not absurd value.
+        MAX_ALIGNMENTS = 1500
+        sel_indices = np.flatnonzero(selV)
+        if sel_indices.shape[0] > MAX_ALIGNMENTS:
+            selV = np.random.choice(sel_indices, size=MAX_ALIGNMENTS, replace=False)
+            logging.info("Capping coverage in region {i} ({s}, {e}), from {x} to {y}."
+                         .format(i=refGroupId, s=start, e=end, x=len(sel_indices),
+                                 y=MAX_ALIGNMENTS))
 
         hits = cmpH5File[selV]
 
@@ -820,8 +832,8 @@ class KineticWorkerProcess(KineticWorker, WorkerProcess):
 
     """Worker that executes as a process."""
 
-    def __init__(self, options, workQueue, resultsQueue, ipdModel):
-        WorkerProcess.__init__(self, options, workQueue, resultsQueue)
+    def __init__(self, options, workQueue, resultsQueue, ipdModel, sharedAlignmentIndex=None):
+        WorkerProcess.__init__(self, options, workQueue, resultsQueue, sharedAlignmentIndex)
         KineticWorker.__init__(self, ipdModel)
 
 
@@ -829,6 +841,6 @@ class KineticWorkerThread(KineticWorker, WorkerThread):
 
     """Worker that executes as a thread (for debugging purposes only)."""
 
-    def __init__(self, options, workQueue, resultsQueue, ipdModel):
-        WorkerThread.__init__(self, options, workQueue, resultsQueue)
+    def __init__(self, options, workQueue, resultsQueue, ipdModel, sharedAlignmentIndex=None):
+        WorkerThread.__init__(self, options, workQueue, resultsQueue, sharedAlignmentIndex)
         KineticWorker.__init__(self, ipdModel)
