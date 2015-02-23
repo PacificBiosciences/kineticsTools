@@ -81,6 +81,12 @@ class ResultCollectorProcess(Process):
                 (chunkId, datum) = result
                 chunkCache[chunkId] = datum
 
+                # The rawData field is large and unused. Delete it to mitigate
+                # risk of OOM problems
+                for column in datum:
+                    if 'rawData' in column:
+                        del column['rawData']
+
                 # Write out all the chunks that we can
                 while chunkCache.has_key(nextChunkId):
                     nextChunk = chunkCache.pop(nextChunkId)
