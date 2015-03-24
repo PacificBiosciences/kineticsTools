@@ -3,7 +3,6 @@ import os
 import platform
 import unittest
 from pbcore.io import CmpH5Reader
-from pbcore.deprecated import ReferenceEntry
 from kineticsTools.KineticWorker import KineticWorker
 from kineticsTools.ipdModel import IpdModel
 
