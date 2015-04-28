@@ -410,11 +410,11 @@ class KineticWorker(object):
 	ipdVect = rawIpds['ipd']
         if ipdVect.size < 10:
             # Default is there is no coverage
-                capValue = 10
+                capValue = 100
 		rawIpds['ipd'] = np.minimum(rawIpds['ipd'],capValue)
         else:
            # Compute IPD quantiles on the current block -- will be used for trimming extreme IPDs
-                capValue = min(10,np.percentile(ipdVect, self.options.cap_percentile))
+                capValue = min(100,np.percentile(ipdVect, self.options.cap_percentile))
 		rawIpds['ipd'] = np.minimum(rawIpds['ipd'],capValue)
 
         chunks = self._chunkRawIpds(rawIpds)
@@ -548,7 +548,7 @@ class KineticWorker(object):
             print "got small: %s" % str(rawIpds)
 
         if self.options.smBaseMod:
-		capValue = min(10, np.percentile(rawIpds, 99))
+		capValue = min(100, np.percentile(rawIpds, 99))
 		capIpds = rawIpds[-(rawIpds>capValue)]
 	else:
 		capValue = min(10, np.percentile(rawIpds, 99))
