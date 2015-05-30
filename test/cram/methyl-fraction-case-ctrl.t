@@ -8,48 +8,27 @@ Load in data:
   $ INPUT=$DATA/p4-c2-lambda-mod-decode.cmp.h5
   $ REFERENCE=$DATA/lambda/sequence/lambda.fasta
 
-Can we find the input and reference files?
-
-  $ [ -f $INPUT ] && echo "cmpH5 file exists" || echo "cmpH5 file not found"
-  cmpH5 file exists
-
-  $ [ -f $REFERENCE ] && echo "fasta file exists" || echo "fasta file not found"
-  fasta file exists
-
 Run basic ipdSummary.py:
 
   $ ipdSummary.py --numWorkers 1 --methylFraction --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --control $INPUT --reference $REFERENCE $INPUT
 
 Look at output csv file:
 
-  $ [ -f tmp.csv ] && echo "CSV file found" || echo "CSV file not found"
-  CSV file found
-
   $ head -3 tmp.csv
   refName,tpl,strand,base,score,pvalue,caseMean,controlMean,caseStd,controlStd,ipdRatio,testStatistic,coverage,controlCoverage,caseCoverage,frac,fracLow,fracUp
   "lambda_NEB3011",*,?,?,*,*,*,*,*,*,1.000,0.0,*,*,*,,, (glob)
   "lambda_NEB3011",*,?,?,*,*,*,*,*,*,1.000,0.0,*,*,*,,, (glob)
 
-
 Look at output gff file:
 
-  $ [ -f tmp.gff ] && echo "GFF file found" || echo "GFF file not found"
-  GFF file found
+  $ sed 's/\t/ /g' tmp.gff
+  ##gff-version 3
+  ##source ipdSummary.py v2.0
+  ##source-commandline /home/UNIXHOME/dalexander/.virtualenvs/VE/bin/ipdSummary.py --numWorkers 1 --methylFraction --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --control /home/UNIXHOME/dalexander/Projects/software/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/p4-c2-lambda-mod-decode.cmp.h5 --reference /home/UNIXHOME/dalexander/Projects/software/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/lambda/sequence/lambda.fasta /home/UNIXHOME/dalexander/Projects/software/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/p4-c2-lambda-mod-decode.cmp.h5
+  ##sequence-region ref000001 1 48502
 
-  $ head -2 tmp.gff
-  ??gff-version * (glob)
-  ??source ipdSummary.py v* (glob)
-
-  $ tail -1 tmp.gff
-  ??sequence-region * * * (glob)
-
-  $  linecount tmp.gff
-  4
 
 What about the H5 file?
-
-  $ [ -f tmp.h5 ] && echo "IPD ratio H5 file found" || echo "IPD ratio H5 file not found"
-  IPD ratio H5 file found
 
   $ h5ls -r tmp.h5
   /                        Group

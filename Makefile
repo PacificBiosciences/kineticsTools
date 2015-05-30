@@ -21,11 +21,17 @@ clean:
 	find . -name "*.pyc" | xargs rm -rf;\
 	rm -rf dist/
 
-test:
-	nosetests -s -v test/*.py 
+test: tests
+check: tests
+tests: cram-tests unit-tests
+
+cram-tests:
 	cram test/cram/*.t
 
-pip-install: 
+unit-tests:
+	nosetests -s -v test/*.py
+
+pip-install:
 	@which pip > /dev/null
 	@pip freeze|grep 'kineticsTools=='>/dev/null \
       && ( pip uninstall -y kineticsTools \
@@ -36,5 +42,5 @@ pip-install:
           --install-option="--install-scripts=$(PREFIX)/bin" \
           ./
 
-.PHONY: test
+.PHONY: tests test clean cram-tests unit-tests
 .PHONY: clean
