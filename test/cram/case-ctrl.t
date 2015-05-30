@@ -24,16 +24,13 @@ Look at output csv file:
 
 Look at output gff file:
 
-  $ sed 's/\t/ /g' tmp.gff
+  $ cat tmp.gff
   ##gff-version 3
-  ##source ipdSummary.py v2.0
-  ##source-commandline /home/UNIXHOME/dalexander/.virtualenvs/VE/bin/ipdSummary.py --numWorkers 1 --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --control /home/UNIXHOME/dalexander/Projects/software/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/p4-c2-lambda-mod-decode.cmp.h5 --reference /home/UNIXHOME/dalexander/Projects/software/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/lambda/sequence/lambda.fasta /home/UNIXHOME/dalexander/Projects/software/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/p4-c2-lambda-mod-decode.cmp.h5
+  ##source ipdSummary.py * (glob)
+  ##source-commandline * (glob)
   ##sequence-region ref000001 1 48502
 
 What about the IPD ratio H5 file?
-
-  $ [ -f tmp.h5 ] && echo "IPD ratio H5 file found" || echo "IPD ratio H5 file not found"
-  IPD ratio H5 file found
 
   $ h5ls -r tmp.h5
   /                        Group

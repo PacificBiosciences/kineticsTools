@@ -25,51 +25,51 @@ Look at output csv file:
 
 Look at output gff file:
 
-  $ sed 's/\t/ /g' tmp.gff
+  $ cat tmp.gff
   ##gff-version 3
-  ##source ipdSummary.py v2.0
-  ##source-commandline /home/UNIXHOME/dalexander/.virtualenvs/VE/bin/ipdSummary.py --numWorkers 1 --pvalue 0.001 --identify m6A,m4C --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --reference /home/UNIXHOME/dalexander/Projects/software/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/lambda/sequence/lambda.fasta /home/UNIXHOME/dalexander/Projects/software/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/p4-c2-lambda-mod-decode.cmp.h5
+  ##source ipdSummary.py * (glob)
+  ##source-commandline * (glob)
   ##sequence-region ref000001 1 48502
-  lambda_NEB3011 kinModCall modified_base 14060 14060 31 - . coverage=49;context=ACGTTATTGCGGAACTTACAACCGCTCAGGCATTTGCTGCA;IPDRatio=2.15
-  lambda_NEB3011 kinModCall modified_base 14657 14657 34 + . coverage=155;context=CGGCACAGCCGGGCGATGTGCTGCTGTGCTGTTTTGGTTCA;IPDRatio=1.55
-  lambda_NEB3011 kinModCall modified_base 14743 14743 34 - . coverage=173;context=TACCTCTCTCGTTTGCTCAGTTGTTCAGGAATATGGTGCAG;IPDRatio=1.54
-  lambda_NEB3011 kinModCall m4C 14756 14756 21 - . coverage=165;context=CCATTTGTCGGTGTACCTCTCTCGTTTGCTCAGTTGTTCAG;IPDRatio=1.32;identificationQv=23
-  lambda_NEB3011 kinModCall modified_base 14769 14769 32 - . coverage=168;context=GTGTGCGTCGCTGCCATTTGTCGGTGTACCTCTCTCGTTTG;IPDRatio=1.56
-  lambda_NEB3011 kinModCall modified_base 14800 14800 32 - . coverage=173;context=GCGCGCCATGCCCGGTGACGCCAGAGGGAGTGTGTGCGTCG;IPDRatio=1.66
-  lambda_NEB3011 kinModCall modified_base 14805 14805 31 - . coverage=167;context=CAGATGCGCGCCATGCCCGGTGACGCCAGAGGGAGTGTGTG;IPDRatio=1.64
-  lambda_NEB3011 kinModCall modified_base 14834 14834 32 + . coverage=166;context=GGCGCGCATCTGCCTTTACGGGGATTTACAACGATTTGGTC;IPDRatio=1.71
-  lambda_NEB3011 kinModCall modified_base 14841 14841 32 + . coverage=162;context=ATCTGCCTTTACGGGGATTTACAACGATTTGGTCGCCGCAT;IPDRatio=1.58
-  lambda_NEB3011 kinModCall modified_base 14847 14847 36 - . coverage=172;context=AGGTCGATGCGGCGACCAAATCGTTGTAAATCCCCGTAAAG;IPDRatio=1.85
-  lambda_NEB3011 kinModCall modified_base 14864 14864 45 - . coverage=166;context=CCCCCGTTTTCACACGAAGGTCGATGCGGCGACCAAATCGT;IPDRatio=1.70
-  lambda_NEB3011 kinModCall m4C 14884 14884 30 - . coverage=173;context=CAGTGCCCGGATGGCTTCAGCCCCCGTTTTCACACGAAGGT;IPDRatio=2.11;identificationQv=19
-  lambda_NEB3011 kinModCall modified_base 14885 14885 33 - . coverage=166;context=CCAGTGCCCGGATGGCTTCAGCCCCCGTTTTCACACGAAGG;IPDRatio=2.52
-  lambda_NEB3011 kinModCall modified_base 14909 14909 35 + . coverage=162;context=AGCCATCCGGGCACTGGCCACACAGCTCCCGGCGTTTCGTC;IPDRatio=1.76
-  lambda_NEB3011 kinModCall m6A 14983 14983 208 + . coverage=160;context=TTGCCGGGCGGGACGTCAGCACGTCCGGGTTAACGGCGCAG;IPDRatio=6.72;identificationQv=192
-  lambda_NEB3011 kinModCall m6A 14992 14992 206 - . coverage=162;context=CTCATGTAACTGCGCCGTTAACCCGGACGTGCTGACGTCCC;IPDRatio=6.58;identificationQv=186
-  lambda_NEB3011 kinModCall m4C 14997 14997 62 - . coverage=140;context=AGAGTCTCATGTAACTGCGCCGTTAACCCGGACGTGCTGAC;IPDRatio=2.32;identificationQv=11
-  lambda_NEB3011 kinModCall m4C 14998 14998 22 - . coverage=172;context=CAGAGTCTCATGTAACTGCGCCGTTAACCCGGACGTGCTGA;IPDRatio=1.51;identificationQv=40
-  lambda_NEB3011 kinModCall modified_base 15006 15006 40 - . coverage=170;context=CCATCAGGCAGAGTCTCATGTAACTGCGCCGTTAACCCGGA;IPDRatio=1.75
-  lambda_NEB3011 kinModCall modified_base 15008 15008 47 + . coverage=162;context=CGGGTTAACGGCGCAGTTACATGAGACTCTGCCTGATGGCG;IPDRatio=1.73
-  lambda_NEB3011 kinModCall modified_base 15039 15039 51 - . coverage=169;context=CCGGCGACTCTGGGAACAATATGAATTACAGCGCCATCAGG;IPDRatio=1.83
-  lambda_NEB3011 kinModCall m6A 15041 15041 29 - . coverage=161;context=CCCCGGCGACTCTGGGAACAATATGAATTACAGCGCCATCA;IPDRatio=1.54;identificationQv=3
-  lambda_NEB3011 kinModCall modified_base 15066 15066 37 + . coverage=161;context=CCCAGAGTCGCCGGGGCCAAGTCAGGTGGCGTATTCCAGAT;IPDRatio=1.70
-  lambda_NEB3011 kinModCall modified_base 15074 15074 33 - . coverage=171;context=CCAGGACAATCTGGAATACGCCACCTGACTTGGCCCCGGCG;IPDRatio=1.81
-  lambda_NEB3011 kinModCall modified_base 15078 15078 33 - . coverage=168;context=GCCCCCAGGACAATCTGGAATACGCCACCTGACTTGGCCCC;IPDRatio=1.62
-  lambda_NEB3011 kinModCall modified_base 15089 15089 32 - . coverage=167;context=CAATGGCGGCAGCCCCCAGGACAATCTGGAATACGCCACCT;IPDRatio=1.57
-  lambda_NEB3011 kinModCall modified_base 15095 15095 31 - . coverage=167;context=ATCCGGCAATGGCGGCAGCCCCCAGGACAATCTGGAATACG;IPDRatio=1.57
-  lambda_NEB3011 kinModCall modified_base 15118 15118 32 - . coverage=163;context=GGTGGCTCCGGCGGTAAAGAATGATCCGGCAATGGCGGCAG;IPDRatio=1.55
-  lambda_NEB3011 kinModCall modified_base 15124 15124 34 - . coverage=170;context=TGCAAGGGTGGCTCCGGCGGTAAAGAATGATCCGGCAATGG;IPDRatio=1.57
-  lambda_NEB3011 kinModCall modified_base 15195 15195 32 - . coverage=164;context=AGCACCATACTGGCACCGAGAGAAAACAGGATGCCGGTCAT;IPDRatio=1.59
-  lambda_NEB3011 kinModCall modified_base 15239 15239 33 + . coverage=157;context=TGGTGTGGCGCAGATGCTGGCACCGAAAGCCAGAACTCCCC;IPDRatio=1.65
-  lambda_NEB3011 kinModCall modified_base 15261 15261 39 - . coverage=167;context=CCGTTATCCGTTGTCTGTATACGGGGAGTTCTGGCTTTCGG;IPDRatio=1.73
-  lambda_NEB3011 kinModCall modified_base 15292 15292 39 - . coverage=166;context=ATCCAGTGAGGAGAAATAGGTGTTCTGCTTACCGTTATCCG;IPDRatio=1.57
-  lambda_NEB3011 kinModCall m6A 15381 15381 20 - . coverage=169;context=GCCGTGCTGATCTCCTGAGAAACCACGCGTGACCCCACGCG;IPDRatio=1.40;identificationQv=13
-  lambda_NEB3011 kinModCall modified_base 15402 15402 32 - . coverage=169;context=TGACCACCGTCCCCTTCGTCTGCCGTGCTGATCTCCTGAGA;IPDRatio=1.46
-  lambda_NEB3011 kinModCall modified_base 15566 15566 31 + . coverage=118;context=GAAGGACAACCTGAAGTCCACGCAGTTGCTGAGTGTGATCG;IPDRatio=1.79
-  lambda_NEB3011 kinModCall m6A 15704 15704 21 - . coverage=84;context=CCTGCTCACCAGCCCGGAACACCACCGTGACACCGGATATG;IPDRatio=1.48;identificationQv=3
-  lambda_NEB3011 kinModCall modified_base 16035 16035 31 - . coverage=38;context=ATCCTGCGCATCCGGATATTAAACGGGCGCGGCGGCAGGTT;IPDRatio=1.94
-  lambda_NEB3011 kinModCall m6A 16380 16380 21 - . coverage=10;context=CATTTATCCACATCCGCCGCACCAAGACGTTTCCCCATGCC;IPDRatio=6.02;identificationQv=5
-  lambda_NEB3011 kinModCall m6A 16658 16658 21 - . coverage=6;context=GGGCGCTGAAGCTGTAGCGGAACGGCGCGCCATCATCCGGC;IPDRatio=2.78;identificationQv=20
+  lambda_NEB3011\tkinModCall\tmodified_base\t14060\t14060\t31\t-\t.\tcoverage=49;context=ACGTTATTGCGGAACTTACAACCGCTCAGGCATTTGCTGCA;IPDRatio=2.15 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14657\t14657\t34\t+\t.\tcoverage=155;context=CGGCACAGCCGGGCGATGTGCTGCTGTGCTGTTTTGGTTCA;IPDRatio=1.55 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14743\t14743\t34\t-\t.\tcoverage=173;context=TACCTCTCTCGTTTGCTCAGTTGTTCAGGAATATGGTGCAG;IPDRatio=1.54 (esc)
+  lambda_NEB3011\tkinModCall\tm4C\t14756\t14756\t21\t-\t.\tcoverage=165;context=CCATTTGTCGGTGTACCTCTCTCGTTTGCTCAGTTGTTCAG;IPDRatio=1.32;identificationQv=23 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14769\t14769\t32\t-\t.\tcoverage=168;context=GTGTGCGTCGCTGCCATTTGTCGGTGTACCTCTCTCGTTTG;IPDRatio=1.56 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14800\t14800\t32\t-\t.\tcoverage=173;context=GCGCGCCATGCCCGGTGACGCCAGAGGGAGTGTGTGCGTCG;IPDRatio=1.66 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14805\t14805\t31\t-\t.\tcoverage=167;context=CAGATGCGCGCCATGCCCGGTGACGCCAGAGGGAGTGTGTG;IPDRatio=1.64 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14834\t14834\t32\t+\t.\tcoverage=166;context=GGCGCGCATCTGCCTTTACGGGGATTTACAACGATTTGGTC;IPDRatio=1.71 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14841\t14841\t32\t+\t.\tcoverage=162;context=ATCTGCCTTTACGGGGATTTACAACGATTTGGTCGCCGCAT;IPDRatio=1.58 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14847\t14847\t36\t-\t.\tcoverage=172;context=AGGTCGATGCGGCGACCAAATCGTTGTAAATCCCCGTAAAG;IPDRatio=1.85 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14864\t14864\t45\t-\t.\tcoverage=166;context=CCCCCGTTTTCACACGAAGGTCGATGCGGCGACCAAATCGT;IPDRatio=1.70 (esc)
+  lambda_NEB3011\tkinModCall\tm4C\t14884\t14884\t30\t-\t.\tcoverage=173;context=CAGTGCCCGGATGGCTTCAGCCCCCGTTTTCACACGAAGGT;IPDRatio=2.11;identificationQv=19 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14885\t14885\t33\t-\t.\tcoverage=166;context=CCAGTGCCCGGATGGCTTCAGCCCCCGTTTTCACACGAAGG;IPDRatio=2.52 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14909\t14909\t35\t+\t.\tcoverage=162;context=AGCCATCCGGGCACTGGCCACACAGCTCCCGGCGTTTCGTC;IPDRatio=1.76 (esc)
+  lambda_NEB3011\tkinModCall\tm6A\t14983\t14983\t208\t+\t.\tcoverage=160;context=TTGCCGGGCGGGACGTCAGCACGTCCGGGTTAACGGCGCAG;IPDRatio=6.72;identificationQv=192 (esc)
+  lambda_NEB3011\tkinModCall\tm6A\t14992\t14992\t206\t-\t.\tcoverage=162;context=CTCATGTAACTGCGCCGTTAACCCGGACGTGCTGACGTCCC;IPDRatio=6.58;identificationQv=186 (esc)
+  lambda_NEB3011\tkinModCall\tm4C\t14997\t14997\t62\t-\t.\tcoverage=140;context=AGAGTCTCATGTAACTGCGCCGTTAACCCGGACGTGCTGAC;IPDRatio=2.32;identificationQv=11 (esc)
+  lambda_NEB3011\tkinModCall\tm4C\t14998\t14998\t22\t-\t.\tcoverage=172;context=CAGAGTCTCATGTAACTGCGCCGTTAACCCGGACGTGCTGA;IPDRatio=1.51;identificationQv=40 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15006\t15006\t40\t-\t.\tcoverage=170;context=CCATCAGGCAGAGTCTCATGTAACTGCGCCGTTAACCCGGA;IPDRatio=1.75 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15008\t15008\t47\t+\t.\tcoverage=162;context=CGGGTTAACGGCGCAGTTACATGAGACTCTGCCTGATGGCG;IPDRatio=1.73 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15039\t15039\t51\t-\t.\tcoverage=169;context=CCGGCGACTCTGGGAACAATATGAATTACAGCGCCATCAGG;IPDRatio=1.83 (esc)
+  lambda_NEB3011\tkinModCall\tm6A\t15041\t15041\t29\t-\t.\tcoverage=161;context=CCCCGGCGACTCTGGGAACAATATGAATTACAGCGCCATCA;IPDRatio=1.54;identificationQv=3 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15066\t15066\t37\t+\t.\tcoverage=161;context=CCCAGAGTCGCCGGGGCCAAGTCAGGTGGCGTATTCCAGAT;IPDRatio=1.70 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15074\t15074\t33\t-\t.\tcoverage=171;context=CCAGGACAATCTGGAATACGCCACCTGACTTGGCCCCGGCG;IPDRatio=1.81 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15078\t15078\t33\t-\t.\tcoverage=168;context=GCCCCCAGGACAATCTGGAATACGCCACCTGACTTGGCCCC;IPDRatio=1.62 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15089\t15089\t32\t-\t.\tcoverage=167;context=CAATGGCGGCAGCCCCCAGGACAATCTGGAATACGCCACCT;IPDRatio=1.57 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15095\t15095\t31\t-\t.\tcoverage=167;context=ATCCGGCAATGGCGGCAGCCCCCAGGACAATCTGGAATACG;IPDRatio=1.57 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15118\t15118\t32\t-\t.\tcoverage=163;context=GGTGGCTCCGGCGGTAAAGAATGATCCGGCAATGGCGGCAG;IPDRatio=1.55 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15124\t15124\t34\t-\t.\tcoverage=170;context=TGCAAGGGTGGCTCCGGCGGTAAAGAATGATCCGGCAATGG;IPDRatio=1.57 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15195\t15195\t32\t-\t.\tcoverage=164;context=AGCACCATACTGGCACCGAGAGAAAACAGGATGCCGGTCAT;IPDRatio=1.59 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15239\t15239\t33\t+\t.\tcoverage=157;context=TGGTGTGGCGCAGATGCTGGCACCGAAAGCCAGAACTCCCC;IPDRatio=1.65 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15261\t15261\t39\t-\t.\tcoverage=167;context=CCGTTATCCGTTGTCTGTATACGGGGAGTTCTGGCTTTCGG;IPDRatio=1.73 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15292\t15292\t39\t-\t.\tcoverage=166;context=ATCCAGTGAGGAGAAATAGGTGTTCTGCTTACCGTTATCCG;IPDRatio=1.57 (esc)
+  lambda_NEB3011\tkinModCall\tm6A\t15381\t15381\t20\t-\t.\tcoverage=169;context=GCCGTGCTGATCTCCTGAGAAACCACGCGTGACCCCACGCG;IPDRatio=1.40;identificationQv=13 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15402\t15402\t32\t-\t.\tcoverage=169;context=TGACCACCGTCCCCTTCGTCTGCCGTGCTGATCTCCTGAGA;IPDRatio=1.46 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15566\t15566\t31\t+\t.\tcoverage=118;context=GAAGGACAACCTGAAGTCCACGCAGTTGCTGAGTGTGATCG;IPDRatio=1.79 (esc)
+  lambda_NEB3011\tkinModCall\tm6A\t15704\t15704\t21\t-\t.\tcoverage=84;context=CCTGCTCACCAGCCCGGAACACCACCGTGACACCGGATATG;IPDRatio=1.48;identificationQv=3 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t16035\t16035\t31\t-\t.\tcoverage=38;context=ATCCTGCGCATCCGGATATTAAACGGGCGCGGCGGCAGGTT;IPDRatio=1.94 (esc)
+  lambda_NEB3011\tkinModCall\tm6A\t16380\t16380\t21\t-\t.\tcoverage=10;context=CATTTATCCACATCCGCCGCACCAAGACGTTTCCCCATGCC;IPDRatio=6.02;identificationQv=5 (esc)
+  lambda_NEB3011\tkinModCall\tm6A\t16658\t16658\t21\t-\t.\tcoverage=6;context=GGGCGCTGAAGCTGTAGCGGAACGGCGCGCCATCATCCGGC;IPDRatio=2.78;identificationQv=20 (esc)
 
 
 What about the H5 file?
