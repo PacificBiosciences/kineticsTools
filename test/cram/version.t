@@ -18,10 +18,12 @@ A simple test of the version and help options:
                        [--cap_percentile CAP_PERCENTILE]
                        [--methylMinCov METHYLMINCOV]
                        [--identifyMinCov IDENTIFYMINCOV]
-                       [--refContigs REFCONTIGS]
+                       [-w REFERENCEWINDOWSASSTRING]
                        [--refContigIndex REFCONTIGINDEX]
-                       [--refContigsFile REFCONTIGS] [--numWorkers NUMWORKERS]
-                       [--threaded] [--profile] [--pdb] [--verbose] [--version]
+                       [-W REFERENCEWINDOWSASSTRING]
+                       [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
+                       [--numWorkers NUMWORKERS] [--threaded] [--profile]
+                       [--pdb] [--verbose] [--version]
                        input.cmp.h5
   ipdSummary.py: error: too few arguments
   [2]

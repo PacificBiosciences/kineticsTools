@@ -274,27 +274,35 @@ class KineticsToolsRunner(object):
 
         # Computation management options:
 
-        self.parser.add_argument("--refContigs", "-w",
+        self.parser.add_argument("-w", "--referenceWindow", "--referenceWindows",
+                                 "--refContigs", # backwards compatibility
                                  type=str,
-                                 dest='refContigs',
+                                 dest='referenceWindowsAsString',
                                  default=None,
-                                 help="Specify one reference contig name, or multiple comma-separated " \
-                                      "contig names, to be processed.  By default, processes all "      \
-                                      "contigs with mapped coverage.")
+                                 help="The window (or multiple comma-delimited windows) of the reference to " + \
+                                      "be processed, in the format refGroup[:refStart-refEnd] "               + \
+                                      "(default: entire reference).")
 
         def slurpWindowFile(fname):
             return ",".join(map(str.strip, open(fname).readlines()))
 
 
-        self.parser.add_argument("--refContigIndex", type=int, dest='refContigIndex', default=-1, help="For debugging purposes only - rather than enter a reference contig name, simply enter an index" ) 
+        self.parser.add_argument("--refContigIndex", type=int, dest='refContigIndex', default=-1,
+                                 help="For debugging purposes only - rather than enter a reference contig name, simply enter an index" ) 
 
-        self.parser.add_argument("--refContigsFile", "-W",
+        self.parser.add_argument("-W", "--referenceWindowsFile",
+                                  "--refContigsFile", # backwards compatibility
                                  type=slurpWindowFile,
-                                 dest='refContigs',
+                                 dest='referenceWindowsAsString',
                                  default=None,
-                                 help="A file containing contig names, one per line")
+                                 help="A file containing reference window designations, one per line")
 
-        self.parser.add_argument('--numWorkers',
+        self.parser.add_argument("--skipUnrecognizedContigs",
+                                 type=bool,
+                                 default=False,
+                                 help="Whether to skip, or abort, unrecognized contigs in the -w/-W flags")
+        
+        self.parser.add_argument('--numWorkers', '-j',
                                  dest='numWorkers',
                                  default=-1,  # Defaults to using all logical CPUs
                                  type=int,
@@ -482,89 +490,21 @@ class KineticsToolsRunner(object):
         self.monitoringThread = threading.Thread(target=monitorChildProcesses, args=(self._workers + [self._resultCollectorProcess],))
         self.monitoringThread.start()
 
-    def _queueChunksForReference(self, refInfo):
+    def _queueChunksForWindow(self, refWindow):
         """
         Compute the chunk extents and queue up the work for a single reference
         """
-
-        # Number of hits on current reference
-        refGroupId = refInfo.ID
-        numHits = (self.cmph5.RefGroupID == refGroupId).sum()
-
-        # Don't process reference groups with 0 hits.  They may not exist?
-        if numHits == 0:
-            return
-
-        # Maximum chunk size (set no larger than 1Mb for now)
-        MAX_BLOCK_SIZE = 25000
-
-        # Maximum number of hits per chunk
-        MAX_HITS = 5000
-        nBases = min(refInfo.Length, self.args.maxLength)
-
-        # Adjust numHits if we are only doing part of the contig
-        numHits = (numHits * nBases) / refInfo.Length
-
-        nBlocks = max([numHits / MAX_HITS, nBases / (MAX_BLOCK_SIZE - 1) + 1])
-
-        # Including nBases / (MAX_BLOCK_SIZE - 1) + 1 in nBlocks calculation:
-        # E. coli genome: this should be ~ 10.
-        # Human genome: ought to be largest & is meant to ensure that blockSize < MAX_BLOCK_SIZE.
-
-        # Block layout
-        blockSize = min(nBases, max(nBases / nBlocks + 1, 1000))
-        blockStarts = np.arange(0, nBases, step=blockSize)
-        blockEnds = blockStarts + blockSize
-        blocks = zip(blockStarts, blockEnds)
-
-        logging.info("Queueing chunks for ref: %d.  NumReads: %d, Block Size: %d " % (refGroupId, numHits, blockSize))
-
-        # Queue up work blocks
-        for block in blocks:
-            # NOTE! The format of a work chunk is (refId <int>, refStartBase <int>, refEndBase <int>)
-            chunk = (refInfo.ID, block[0], block[1])
-            self._workQueue.put((self.workChunkCounter, chunk))
-            self.workChunkCounter += 1
-
-            if self.workChunkCounter % 10 == 0:
-                logging.info("Queued chunk: %d.  Chunks in queue: %d" % (self.workChunkCounter, self._workQueue.qsize()))
+        winId, winStart, winEnd = refWindow
+        pass
 
     def loadReferenceAndModel(self, referencePath, cmpH5Path):
-
         # Load the reference contigs - annotated with their refID from the cmp.h5
         contigs = ReferenceUtils.loadReferenceContigs(referencePath, cmpH5Path)
 
         # Read reference info table from cmp.h5
         (refInfoTable, _) = ReferenceUtils.loadCmpH5Tables(cmpH5Path)
 
-        if (self.options.refContigs is not None or
-            self.options.refContigIndex != -1):
-
-            if (self.options.refContigs is not None and 
-                self.options.refContigIndex != -1):
-
-                requestedIds = set(self.options.refContigs.split(',')).union([self.options.refContigIndex])
-
-            elif (self.options.refContigs is None and 
-                self.options.refContigIndex != -1):
-       
-                requestedIds = set([self.options.refContigIndex])
-
-            elif (self.options.refContigs is not None and 
-                self.options.refContigIndex == -1):
-       
-                requestedIds = set(self.options.refContigs.split(','))
-      
-
-            relevantContigs = [ i for (i, rec) in enumerate(refInfoTable)
-                                if (rec.FullName  in requestedIds or
-                                    rec.Name      in requestedIds or
-                                    rec.RefInfoID in requestedIds) ]
-            self.refInfo = refInfoTable[relevantContigs]
-
-
-        else:
-            self.refInfo = refInfoTable
+        self.refInfo = refInfoTable
 
         # There are three different ways the ipdModel can be loaded.
         # In order of precedence they are:
@@ -598,7 +538,7 @@ class KineticsToolsRunner(object):
                 logging.info("Using Chemistry matched IPD model: %s" % ipdModel)
 
         self.ipdModel = IpdModel(contigs, ipdModel, self.args.modelIters)
-    
+
     def loadSharedAlignmentIndex(self, cmpH5Filename):
         """
         Read the alignmet index for the case cmph5 so we don't have to have the slaves
@@ -644,6 +584,21 @@ class KineticsToolsRunner(object):
         #self.referenceMap = self.cmph5['/RefGroup'].asDict('RefInfoID', 'ID')
         #self.alnInfo = self.cmph5['/AlnInfo'].asRecArray()
 
+        # Resolve the windows that will be visited.
+        if self.args.referenceWindowsAsString is not None:
+            self.referenceWindows = []
+            for s in self.args.referenceWindowsAsString.split(","):
+                try:
+                    win = ReferenceUtils.parseReferenceWindow(s, self.cmph5.referenceInfo)
+                    self.referenceWindows.append(win)
+                except:
+                    if self.args.skipUnrecognizedContigs:
+                        continue
+                    else:
+                        raise Exception, "Unrecognized contig!"
+        else:
+            self.referenceWindows = [(r.ID, 0, r.Length) for r in self.refInfo]
+
         # Main loop -- we loop over ReferenceGroups in the cmp.h5.  For each contig we will:
         # 1. Load the sequence into the main memory of the parent process
         # 2. Fork the workers
@@ -652,9 +607,11 @@ class KineticsToolsRunner(object):
         self.workChunkCounter = 0
 
         # Iterate over references
-        for ref in self.refInfo:
-            logging.info('Processing reference entry: [%s]' % ref.ID)
-            self._queueChunksForReference(ref)
+        for window in self.referenceWindows:
+            logging.info('Processing window/contig: %s' % (window,))
+            for chunk in ReferenceUtils.enumerateChunks(1000, window):
+                self._workQueue.put((self.workChunkCounter, chunk))
+                self.workChunkCounter += 1
 
         # Shutdown worker threads with None sentinels
         for i in xrange(self.args.numWorkers):

@@ -31,7 +31,7 @@
 
 #!/usr/bin/env python
 
-import os, itertools
+import os, itertools, re, math
 from pbcore.io import FastaReader
 from pbcore.io import CmpH5Reader
 
@@ -60,6 +60,62 @@ class ReferenceUtils():
             contigDict[x.MD5].cmph5ID = x.ID
 
         return contigs
+
+    @staticmethod
+    def parseReferenceWindow(s, refInfoLookup):
+        if s is None:
+            return None
+        m = re.match("(.*):(.*)-(.*)", s)
+        if m:
+            refContigInfo = refInfoLookup(m.group(1))
+            refId    = refContigInfo.ID
+            refStart = int(m.group(2))
+            refEnd   = min(int(m.group(3)), refContigInfo.Length)
+        else:
+            refContigInfo = refInfoLookup(s)
+            refId    = refContigInfo.ID
+            refStart = 0
+            refEnd   = refContigInfo.Length
+        return (refId, refStart, refEnd)
+
+
+    @staticmethod
+    def enumerateChunks(referenceStride, referenceWindow):
+        """
+        Enumerate all work chunks on this reference contig (restricted to
+        the windows, if provided).
+        """
+        def intersection(int1, int2):
+            s1, e1 = int1
+            s2, e2 = int2
+            si, ei = max(s1, s2), min(e1, e2)
+            if si < ei:
+                return (si, ei)
+            else:
+                return None
+
+        def enumerateIntervals(bounds, stride):
+            """
+            Enumerate windows of size "stride", attempting to align window
+            boundaries on multiple of stride.
+            """
+            def alignDown(chunk, x):
+                return (x/chunk)*chunk
+            def alignUp(chunk, x):
+                return int(math.ceil(float(x)/chunk)*chunk)
+
+            start, end = bounds
+            roundStart = alignDown(stride, start)
+            roundEnd   = alignUp  (stride, end)
+
+            for s in xrange(roundStart, roundEnd, stride):
+                roundWin = (s, s + stride)
+                yield intersection(bounds, roundWin)
+
+        winId, winStart, winEnd = referenceWindow
+        for (s, e) in enumerateIntervals((winStart, winEnd), referenceStride):
+            yield (winId, s, e)
+
 
     @staticmethod
     def loadCmpH5Tables(cmpH5File):
