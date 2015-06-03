@@ -31,6 +31,7 @@
 import cProfile
 import logging
 import os.path
+import numpy as np
 from multiprocessing import Process
 from multiprocessing.process import current_process
 from threading import Thread, Event
@@ -72,6 +73,7 @@ class Worker(object):
         else:
             self.controlCmpH5 = None
 
+        np.random.seed(42)
         self.onStart()
 
         while True:
