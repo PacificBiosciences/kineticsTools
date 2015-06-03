@@ -304,7 +304,7 @@ class KineticsToolsRunner(object):
         
         self.parser.add_argument('--numWorkers', '-j',
                                  dest='numWorkers',
-                                 default=-1,  # Defaults to using all logical CPUs
+                                 default=1,
                                  type=int,
                                  help='Number of thread to use (-1 uses all logical cpus)')
 
