@@ -115,7 +115,7 @@ class KineticsToolsRunner(object):
 
         # Note: reference is actually not optional:
 
-        self.parser.add_argument('--reference', 
+        self.parser.add_argument('--reference', '-r',
                                  type=validateFile,
                                  help='Path to reference FASTA file')
 
@@ -322,7 +322,7 @@ class KineticsToolsRunner(object):
                                  default=False,
                                  help="Enable Python-level profiling (using cProfile).")
 
-        self.parser.add_argument('--pdb',
+        self.parser.add_argument('--debug',
                                  action='store_true',
                                  dest="usePdb",
                                  default=False,

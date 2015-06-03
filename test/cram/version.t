@@ -23,7 +23,7 @@ A simple test of the version and help options:
                        [-W REFERENCEWINDOWSASSTRING]
                        [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
                        [--numWorkers NUMWORKERS] [--threaded] [--profile]
-                       [--pdb] [--verbose] [--version]
+                       [--debug] [--verbose] [--version]
                        input.cmp.h5
   ipdSummary.py: error: too few arguments
   [2]
