@@ -33,7 +33,7 @@
 
 import os, itertools, re, math
 from pbcore.io import FastaReader
-from pbcore.io import CmpH5Reader
+from pbcore.io import openAlignmentFile
 
 
 class ReferenceUtils():
@@ -120,17 +120,17 @@ class ReferenceUtils():
     @staticmethod
     def loadCmpH5Tables(cmpH5File):
         """Load the cmp.h5, get the ReferenceInfo table, in order to correctly number the contigs, then close the cmp.h5"""
-        cmph5 = CmpH5Reader(cmpH5File)
+        cmph5 = openAlignmentFile(cmpH5File)
         refInfoTable = cmph5.referenceInfoTable
-        movieInfoTable = cmph5.movieInfoTable
+        readGroupTable = cmph5.readGroupTable
         cmph5.close()
         del cmph5
 
-        return (refInfoTable, movieInfoTable)
+        return (refInfoTable, readGroupTable)
 
     @staticmethod
     def loadCmpH5Chemistry(cmpH5File):
-        with CmpH5Reader(cmpH5File) as f:
+        with openAlignmentFile(cmpH5File) as f:
             chems = f.sequencingChemistry
 
         chemCounts = {k: len(list(v)) for k, v in itertools.groupby(chems)}

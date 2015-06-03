@@ -57,21 +57,6 @@ import traceback
 # Raw ipd record
 ipdRec = [('tpl', '<u4'), ('strand', '<i8'), ('ipd', '<f4')]
 
-
-class HitSelection:
-
-    """
-    Static methods for selecting sets of reads to use
-    """
-
-    @staticmethod
-    def readFilter(alnInfo, minAcc=0.8, minLength=50):
-        """Map the alnInfo recArray to bools indicating whether the hit passes a quality filter"""
-        rl = np.abs(alnInfo.tEnd - alnInfo.tStart)
-        acc = 1.0 - (alnInfo.nIns + alnInfo.nDel + alnInfo.nMM) / rl
-        return np.logical_and(acc > minAcc, rl > minLength)
-
-
 class KineticWorker(object):
 
     """
@@ -368,24 +353,22 @@ class KineticWorker(object):
         """Get the IPDs for each position/strand on the given reference in the given window, from the given cmpH5 file"""
         (start, end) = targetBounds
 
-        selV = (cmpH5File.RefGroupID == refGroupId) & \
-               (np.logical_not((cmpH5File.tStart > end) | (cmpH5File.tEnd < start))) & \
-               (cmpH5File.MapQV > self.options.mapQvThreshold) & \
-               (HitSelection.readFilter(cmpH5File, minAcc = 0.82) )
-        
-        # Sometimes alignments pile up in a window, and this causes the window
-        # to take a very long time to complete, potentially causing a crash due
-        # to OOM - see bug 25987. Prevent that by capping the number of
-        # alignments at some high but not absurd value.
+        # Take <= 1500 alignments overlapping window with
+        #   - mapQV    >= threshold,
+        #   - identity >= 0.82
+        # (the 1500 are randomly chosen if there are more)
         MAX_ALIGNMENTS = 1500
-        sel_indices = np.flatnonzero(selV)
-        if sel_indices.shape[0] > MAX_ALIGNMENTS:
-            selV = np.random.choice(sel_indices, size=MAX_ALIGNMENTS, replace=False)
-            logging.info("Capping coverage in region {i} ({s}, {e}), from {x} to {y}."
-                         .format(i=refGroupId, s=start, e=end, x=len(sel_indices),
-                                 y=MAX_ALIGNMENTS))
+        MIN_IDENTITY   = 0.0  # identity filter was broken
+                              # previously. leaving "off" for now for
+                              # bw compat
+        MIN_READLENGTH = 50
 
-        hits = cmpH5File[selV]
+        hits = [ hit for hit in cmpH5File.readsInRange(refGroupId, start, end)
+                 if ((hit.mapQV >= self.options.mapQvThreshold) and
+                     (hit.identity >= MIN_IDENTITY) and
+                     (hit.readLength >= MIN_READLENGTH)) ]
+        if len(hits) > MAX_ALIGNMENTS:
+            hits = np.random.choice(sel_indices, size=MAX_ALIGNMENTS, replace=False)
 
         # FIXME -- we are dealing with the IPD format change from seconds to frames here
         # Should be handled in pbcore
@@ -393,12 +376,10 @@ class KineticWorker(object):
 
         if ver == '1.2':
             factor = 1.0
-        elif ver in ('1.3', '1.4', '2.0'):
-            # NOTE -- assuming that all movies have the same frame rate!
-            fr = cmpH5File.movieInfoTable[0].FrameRate
-            factor = 1.0 / fr
         else:
-            raise Exception('Unrecognized cmp.h5 version')
+            # NOTE -- assuming that all movies have the same frame rate!
+            fr = cmpH5File.readGroupTable[0].FrameRate
+            factor = 1.0 / fr
 
         rawIpds = self._loadRawIpds(hits, start, end, factor)
         ipdVect = rawIpds['ipd']
@@ -454,9 +435,9 @@ class KineticWorker(object):
             dfTemp = np.zeros(nm, dtype=ipdRec)
             dfTemp['ipd'] = ipd
             dfTemp['tpl'] = tpl
-            dfTemp['strand'] = aln.RCRefStrand
+            dfTemp['strand'] = aln.isReverseStrand
 
-            if aln.RCRefStrand == 0:
+            if aln.isForwardStrand:
                 s0list.append(dfTemp)
             else:
                 s1list.append(dfTemp)

@@ -47,7 +47,7 @@ import Queue
 import traceback
 from pkg_resources import Requirement, resource_filename
 
-from pbcore.io import CmpH5Reader
+from pbcore.io import openAlignmentFile
 
 from kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
 from kineticsTools.ResultWriter import KineticsWriter
@@ -544,8 +544,8 @@ class KineticsToolsRunner(object):
         Read the alignmet index for the case cmph5 so we don't have to have the slaves
         keeps their own copies.
         """
-        cmph5Reader = CmpH5Reader(cmpH5Filename)
-        self._sharedAlignmentIndex = cmph5Reader.alignmentIndex
+        cmph5Reader = openAlignmentFile(cmpH5Filename)
+        self._sharedAlignmentIndex = cmph5Reader.index
         cmph5Reader.close()
 
     def _mainLoop(self):
@@ -578,7 +578,7 @@ class KineticsToolsRunner(object):
 
         # WARNING -- cmp.h5 file must be opened AFTER worker processes have been spawned
         # cmp.h5 we're using -- use this to orchestrate the work
-        self.cmph5 = CmpH5Reader(self.args.infile, self._sharedAlignmentIndex)
+        self.cmph5 = openAlignmentFile(self.args.infile, self.args.reference, self._sharedAlignmentIndex)
         logging.info('Generating kinetics summary for [%s]' % self.args.infile)
 
         #self.referenceMap = self.cmph5['/RefGroup'].asDict('RefInfoID', 'ID')

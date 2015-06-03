@@ -35,7 +35,7 @@ from multiprocessing import Process
 from multiprocessing.process import current_process
 from threading import Thread, Event
 
-from pbcore.io import CmpH5Reader
+from pbcore.io import openAlignmentFile
 
 
 class Worker(object):
@@ -61,11 +61,14 @@ class Worker(object):
     def _run(self):
         logging.info("Worker %s (PID=%d) started running" % (self.name, self.pid))
 
-        self.caseCmpH5 = CmpH5Reader(self.options.infile, self._sharedAlignmentIndex)
+        self.caseCmpH5 = openAlignmentFile(self.options.infile,
+                                           self.options.reference,
+                                           self._sharedAlignmentIndex)
 
         if not self.options.control is None:
             # We have a cmp.h5 with control vales -- load that cmp.h5
-            self.controlCmpH5 = CmpH5Reader(self.options.control)
+            self.controlCmpH5 = openAlignmentFile(self.options.control,
+                                                  self.options.reference)
         else:
             self.controlCmpH5 = None
 
