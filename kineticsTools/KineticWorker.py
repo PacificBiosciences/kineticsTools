@@ -368,7 +368,7 @@ class KineticWorker(object):
                      (hit.identity >= MIN_IDENTITY) and
                      (hit.readLength >= MIN_READLENGTH)) ]
         if len(hits) > MAX_ALIGNMENTS:
-            hits = np.random.choice(sel_indices, size=MAX_ALIGNMENTS, replace=False)
+            hits = np.random.choice(hits, size=MAX_ALIGNMENTS, replace=False)
 
         # FIXME -- we are dealing with the IPD format change from seconds to frames here
         # Should be handled in pbcore
