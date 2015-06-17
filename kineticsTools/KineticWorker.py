@@ -363,7 +363,8 @@ class KineticWorker(object):
                               # bw compat
         MIN_READLENGTH = 50
 
-        hits = [ hit for hit in cmpH5File.readsInRange(refGroupId, start, end)
+        hits = [ hit for hit in cmpH5File.readsInRange(refGroupId,
+                    max(start, 0), end)
                  if ((hit.mapQV >= self.options.mapQvThreshold) and
                      (hit.identity >= MIN_IDENTITY) and
                      (hit.readLength >= MIN_READLENGTH)) ]
