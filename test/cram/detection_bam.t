@@ -4,7 +4,7 @@ Test detection and identification modes of ipdSummary.py using .bam file as inpu
 
 Load in data:
 
-  $ DATA=$TESTDIR/../data
+  $ DATA=/mnt/secondary-siv/testdata/kineticsTools
   $ INPUT=$DATA/Hpyl_1_5000.bam
   $ REFERENCE=/mnt/secondary/Smrtanalysis/current/common/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta
 
