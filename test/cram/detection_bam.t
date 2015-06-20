@@ -48,3 +48,9 @@ Look at output gff file:
   gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t277\t277\t200\t+\t.\tcoverage=188;context=AGTCTTTTAAATGCGGTTCGATGAGAGCGTCAATCTCATTG;IPDRatio=12.27;identificationQv=166 (esc)
   gi|12057207|gb|AE001439.1|\tkinModCall\tmodified_base\t278\t278\t34\t+\t.\tcoverage=188;context=GTCTTTTAAATGCGGTTCGATGAGAGCGTCAATCTCATTGA;IPDRatio=1.87 (esc)
 
+Now try limiting the number of alignments:
+
+  $ ipdSummary.py --gff tmp2.gff --csv tmp2.csv --numWorkers 4 --pvalue 0.001 --identify m6A,m4C --maxAlignments 100 --reference $REFERENCE $INPUT
+
+  $ N_DIFF=`diff tmp1.gff tmp2.gff | wc --lines`
+  $ python -c "assert 100 < ${N_DIFF}, ${N_DIFF}"

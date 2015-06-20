@@ -353,11 +353,11 @@ class KineticWorker(object):
         """Get the IPDs for each position/strand on the given reference in the given window, from the given cmpH5 file"""
         (start, end) = targetBounds
 
-        # Take <= 1500 alignments overlapping window with
+        # Take <= N alignments overlapping window with
         #   - mapQV    >= threshold,
         #   - identity >= 0.82
-        # (the 1500 are randomly chosen if there are more)
-        MAX_ALIGNMENTS = 1500
+        # (the N are randomly chosen if there are more)
+        # N = self.options.maxAlignments, default=1500
         MIN_IDENTITY   = 0.0  # identity filter was broken
                               # previously. leaving "off" for now for
                               # bw compat
@@ -368,8 +368,8 @@ class KineticWorker(object):
                  if ((hit.mapQV >= self.options.mapQvThreshold) and
                      (hit.identity >= MIN_IDENTITY) and
                      (hit.readLength >= MIN_READLENGTH)) ]
-        if len(hits) > MAX_ALIGNMENTS:
-            hits = np.random.choice(hits, size=MAX_ALIGNMENTS, replace=False)
+        if len(hits) > self.options.maxAlignments:
+            hits = np.random.choice(hits, size=self.options.maxAlignments, replace=False)
 
         # FIXME -- we are dealing with the IPD format change from seconds to frames here
         # Should be handled in pbcore

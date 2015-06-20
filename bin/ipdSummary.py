@@ -271,6 +271,12 @@ class KineticsToolsRunner(object):
                                  default=5,
                                  help="Do not try to identify the modification type unless coverage is at least this.")
 
+        self.parser.add_argument("--maxAlignments",
+                                 type=int,
+                                 dest="maxAlignments",
+                                 default=1500,
+                                 help="Maximum number of alignments to use for a given window")
+
 
         # Computation management options:
 
@@ -327,6 +333,13 @@ class KineticsToolsRunner(object):
                                  dest="usePdb",
                                  default=False,
                                  help="Enable dropping down into pdb debugger if an Exception is raised.")
+
+        self.parser.add_argument("--seed",
+                                 action="store",
+                                 dest="random_seed",
+                                 type=int,
+                                 default=None,
+                                 help="Random seed")
 
         # Verbosity
         self.parser.add_argument("--verbose", "-v",
@@ -396,6 +409,10 @@ class KineticsToolsRunner(object):
         self.options = self.args
         self.options.cmdLine = " ".join(sys.argv)
         self._workers = []
+
+        # set random seed
+        if self.options.random_seed is not None:
+            np.random.seed(self.options.random_seed)
 
         # Log generously
         stdOutHandler = logging.StreamHandler(sys.stdout)
