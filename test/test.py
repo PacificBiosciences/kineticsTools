@@ -32,6 +32,8 @@ class TestSetup(unittest.TestCase):
                 self.identifyMinCov = 5
                 self.methylMinCov = 10
                 self.useLDA = False
+                self.maxAlignments = 1500
+                self.randomSeed = None
 
         return opts()
 
