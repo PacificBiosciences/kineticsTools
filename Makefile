@@ -28,6 +28,9 @@ tests: cram-tests unit-tests
 cram-tests:
 	cram test/cram/*.t
 
+long-tests:
+	cram test/cram/long_running/*.t
+
 unit-tests:
 	nosetests -s -v test/*.py
 
