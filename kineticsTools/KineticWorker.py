@@ -369,6 +369,10 @@ class KineticWorker(object):
                      (hit.identity >= MIN_IDENTITY) and
                      (hit.readLength >= MIN_READLENGTH)) ]
         if len(hits) > self.options.maxAlignments:
+            # XXX a bit of a hack - to ensure deterministic behavior when
+            # running in parallel, re-seed the RNG before each call
+            if self.options.randomSeed is None:
+                np.random.seed(len(hits))
             hits = np.random.choice(hits, size=self.options.maxAlignments, replace=False)
 
         # FIXME -- we are dealing with the IPD format change from seconds to frames here

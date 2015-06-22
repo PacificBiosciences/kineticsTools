@@ -10,7 +10,7 @@ Load in data:
 
 Run basic ipdSummary.py:
 
-  $ ipdSummary.py --gff tmp1.gff --csv tmp1.csv --numWorkers 4 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE $INPUT
+  $ ipdSummary.py --gff tmp1.gff --csv tmp1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE $INPUT
 
 Look at output csv file:
 
@@ -25,7 +25,7 @@ Look at output csv file:
 Look at output gff file:
 
   $ linecount tmp1.gff
-  364
+  361
   $ cat tmp1.gff | head -20
   ##gff-version 3
   ##source ipdSummary.py * (glob)

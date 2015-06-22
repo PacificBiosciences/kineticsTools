@@ -73,7 +73,8 @@ class Worker(object):
         else:
             self.controlCmpH5 = None
 
-        np.random.seed(42)
+        if self.options.randomSeed is None:
+            np.random.seed(42)
         self.onStart()
 
         while True:

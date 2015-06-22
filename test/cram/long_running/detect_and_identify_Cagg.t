@@ -9,7 +9,7 @@ Run base modification detection on C. aggregans P6 chemistry validation data
   $ export REF_DIR=/mnt/secondary/Smrtanalysis/current/common/references
   $ export REF_SEQ=${REF_DIR}/Chloroflexus_aggregans_DSM9485/sequence/Chloroflexus_aggregans_DSM9485.fasta
 
-  $ ipdSummary.py ${BAMFILE} --reference ${REF_SEQ} --gff tst_Cagg.gff --csv tst_Cagg.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --seed 12345
+  $ ipdSummary.py ${BAMFILE} --reference ${REF_SEQ} --gff tst_Cagg.gff --csv tst_Cagg.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C
 
   $ linecount tst_Cagg.csv
   9369863

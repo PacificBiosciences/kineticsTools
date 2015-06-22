@@ -336,10 +336,10 @@ class KineticsToolsRunner(object):
 
         self.parser.add_argument("--seed",
                                  action="store",
-                                 dest="random_seed",
+                                 dest="randomSeed",
                                  type=int,
                                  default=None,
-                                 help="Random seed")
+                                 help="Random seed (for development and debugging purposes only)")
 
         # Verbosity
         self.parser.add_argument("--verbose", "-v",
@@ -411,8 +411,10 @@ class KineticsToolsRunner(object):
         self._workers = []
 
         # set random seed
-        if self.options.random_seed is not None:
-            np.random.seed(self.options.random_seed)
+        # XXX note that this is *not* guaranteed to yield reproducible results
+        # indepenently of the number of processing cores used!
+        if self.options.randomSeed is not None:
+            np.random.seed(self.options.randomSeed)
 
         # Log generously
         stdOutHandler = logging.StreamHandler(sys.stdout)
