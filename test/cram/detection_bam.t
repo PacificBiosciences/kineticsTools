@@ -6,7 +6,7 @@ Load in data:
 
   $ DATA=/mnt/secondary-siv/testdata/kineticsTools
   $ INPUT=$DATA/Hpyl_1_5000.bam
-  $ REFERENCE=/mnt/secondary/Smrtanalysis/current/common/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta
+  $ REFERENCE=/mnt/secondary-siv/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta
 
 Run basic ipdSummary.py:
 
