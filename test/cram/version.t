@@ -18,12 +18,13 @@ A simple test of the version and help options:
                        [--cap_percentile CAP_PERCENTILE]
                        [--methylMinCov METHYLMINCOV]
                        [--identifyMinCov IDENTIFYMINCOV]
+                       [--maxAlignments MAXALIGNMENTS]
                        [-w REFERENCEWINDOWSASSTRING]
                        [--refContigIndex REFCONTIGINDEX]
                        [-W REFERENCEWINDOWSASSTRING]
                        [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
                        [--numWorkers NUMWORKERS] [--threaded] [--profile]
-                       [--debug] [--verbose] [--version]
+                       [--debug] [--seed RANDOMSEED] [--verbose] [--version]
                        input.cmp.h5
   ipdSummary.py: error: too few arguments
   [2]
