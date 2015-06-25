@@ -16,8 +16,8 @@ Look at output csv file:
 
   $ head -3 tmp.csv
   refName,tpl,strand,base,score,tMean,tErr,modelPrediction,ipdRatio,coverage
-  "lambda_NEB3011",13190,1,T,1,0.908,0.251,1.126,0.807,3
-  "lambda_NEB3011",13190,0,A,3,1.119,0.096,1.125,0.995,3
+  "lambda_NEB3011",13190,1,T,1,0.909,0.252,1.126,0.808,3
+  "lambda_NEB3011",13190,0,A,3,1.120,0.096,1.125,0.996,3
 
   $ linecount tmp.csv
   7603
@@ -42,9 +42,9 @@ Look at output gff file:
   lambda_NEB3011\tkinModCall\tmodified_base\t14884\t14884\t31\t-\t.\tcoverage=173;context=CAGTGCCCGGATGGCTTCAGCCCCCGTTTTCACACGAAGGT;IPDRatio=2.12 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t14885\t14885\t33\t-\t.\tcoverage=166;context=CCAGTGCCCGGATGGCTTCAGCCCCCGTTTTCACACGAAGG;IPDRatio=2.51 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t14909\t14909\t36\t+\t.\tcoverage=162;context=AGCCATCCGGGCACTGGCCACACAGCTCCCGGCGTTTCGTC;IPDRatio=1.76 (esc)
-  lambda_NEB3011\tkinModCall\tmodified_base\t14983\t14983\t211\t+\t.\tcoverage=160;context=TTGCCGGGCGGGACGTCAGCACGTCCGGGTTAACGGCGCAG;IPDRatio=6.77 (esc)
-  lambda_NEB3011\tkinModCall\tmodified_base\t14991\t14991\t32\t-\t.\tcoverage=172;context=TCATGTAACTGCGCCGTTAACCCGGACGTGCTGACGTCCCG;IPDRatio=1.60 (esc)
-  lambda_NEB3011\tkinModCall\tmodified_base\t14992\t14992\t208\t-\t.\tcoverage=162;context=CTCATGTAACTGCGCCGTTAACCCGGACGTGCTGACGTCCC;IPDRatio=6.67 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14983\t14983\t210\t+\t.\tcoverage=160;context=TTGCCGGGCGGGACGTCAGCACGTCCGGGTTAACGGCGCAG;IPDRatio=6.76 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14991\t14991\t32\t-\t.\tcoverage=172;context=TCATGTAACTGCGCCGTTAACCCGGACGTGCTGACGTCCCG;IPDRatio=1.59 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t14992\t14992\t209\t-\t.\tcoverage=162;context=CTCATGTAACTGCGCCGTTAACCCGGACGTGCTGACGTCCC;IPDRatio=6.64 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t14997\t14997\t60\t-\t.\tcoverage=140;context=AGAGTCTCATGTAACTGCGCCGTTAACCCGGACGTGCTGAC;IPDRatio=2.29 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15006\t15006\t39\t-\t.\tcoverage=170;context=CCATCAGGCAGAGTCTCATGTAACTGCGCCGTTAACCCGGA;IPDRatio=1.74 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15008\t15008\t47\t+\t.\tcoverage=162;context=CGGGTTAACGGCGCAGTTACATGAGACTCTGCCTGATGGCG;IPDRatio=1.74 (esc)
@@ -54,18 +54,20 @@ Look at output gff file:
   lambda_NEB3011\tkinModCall\tmodified_base\t15078\t15078\t33\t-\t.\tcoverage=168;context=GCCCCCAGGACAATCTGGAATACGCCACCTGACTTGGCCCC;IPDRatio=1.62 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15095\t15095\t32\t-\t.\tcoverage=167;context=ATCCGGCAATGGCGGCAGCCCCCAGGACAATCTGGAATACG;IPDRatio=1.59 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15118\t15118\t32\t-\t.\tcoverage=163;context=GGTGGCTCCGGCGGTAAAGAATGATCCGGCAATGGCGGCAG;IPDRatio=1.54 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15121\t15121\t31\t-\t.\tcoverage=149;context=AAGGGTGGCTCCGGCGGTAAAGAATGATCCGGCAATGGCGG;IPDRatio=1.58 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15124\t15124\t34\t-\t.\tcoverage=170;context=TGCAAGGGTGGCTCCGGCGGTAAAGAATGATCCGGCAATGG;IPDRatio=1.57 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15195\t15195\t33\t-\t.\tcoverage=164;context=AGCACCATACTGGCACCGAGAGAAAACAGGATGCCGGTCAT;IPDRatio=1.60 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15239\t15239\t33\t+\t.\tcoverage=157;context=TGGTGTGGCGCAGATGCTGGCACCGAAAGCCAGAACTCCCC;IPDRatio=1.65 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15261\t15261\t38\t-\t.\tcoverage=167;context=CCGTTATCCGTTGTCTGTATACGGGGAGTTCTGGCTTTCGG;IPDRatio=1.73 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15291\t15291\t31\t+\t.\tcoverage=158;context=ACGGATAACGGTAAGCAGAACACCTATTTCTCCTCACTGGA;IPDRatio=1.68 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15292\t15292\t41\t-\t.\tcoverage=166;context=ATCCAGTGAGGAGAAATAGGTGTTCTGCTTACCGTTATCCG;IPDRatio=1.61 (esc)
+  lambda_NEB3011\tkinModCall\tmodified_base\t15311\t15311\t31\t-\t.\tcoverage=169;context=TGCCCTGGGCAACCATGTTATCCAGTGAGGAGAAATAGGTG;IPDRatio=1.47 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15402\t15402\t31\t-\t.\tcoverage=169;context=TGACCACCGTCCCCTTCGTCTGCCGTGCTGATCTCCTGAGA;IPDRatio=1.45 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t15566\t15566\t32\t+\t.\tcoverage=118;context=GAAGGACAACCTGAAGTCCACGCAGTTGCTGAGTGTGATCG;IPDRatio=1.79 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t16035\t16035\t32\t-\t.\tcoverage=38;context=ATCCTGCGCATCCGGATATTAAACGGGCGCGGCGGCAGGTT;IPDRatio=1.96 (esc)
 
   $  linecount tmp.gff
-  38
+  40
 
 What about the H5 file?
 
