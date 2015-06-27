@@ -16,13 +16,13 @@ Run base modification detection on H. pylori P6 chemistry validation data.
 This one also has lots of modifications, mostly m6A.
 
   $ linecount tst_Hpyl.gff
-  88452
+  80496
 
   $ grep -c m4C tst_Hpyl.gff
-  13723
+  10541
 
   $ grep -c m6A tst_Hpyl.gff
-  59721
+  57749
 
   $ grep -c modified_base tst_Hpyl.gff
-  15006
+  12204

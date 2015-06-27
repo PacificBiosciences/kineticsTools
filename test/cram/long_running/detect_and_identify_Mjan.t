@@ -16,13 +16,13 @@ Run base modification detection on M. jannaschii P6 chemistry validation data.
 This one has relatively few modificiations, 60% of which are identifiable.
 
   $ linecount tst_Mjan.gff
-  26652
+  18692
 
   $ grep -c m4C tst_Mjan.gff
-  5275
+  3332
 
   $ grep -c m6A tst_Mjan.gff
-  11571
+  9502
 
   $ grep -c modified_base tst_Mjan.gff
-  9802
+  5854

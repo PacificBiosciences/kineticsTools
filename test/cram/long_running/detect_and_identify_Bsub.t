@@ -17,15 +17,15 @@ Run base modification detection on B. subtilis P6 chemistry validation data
 This is an amplified control but it will still find some "modifications".
 
   $ linecount tst_Bsub.gff
-  41464
+  25445
 
 Most of these can't be positively identified, however.
 
   $ grep -c m4C tst_Bsub.gff
-  8385
+  3147
 
   $ grep -c m6A tst_Bsub.gff
-  3278
+  581
 
   $ grep -c modified_base tst_Bsub.gff
-  29799
+  21715
