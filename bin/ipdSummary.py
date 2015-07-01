@@ -521,7 +521,7 @@ class KineticsToolsRunner(object):
         contigs = ReferenceUtils.loadReferenceContigs(referencePath, cmpH5Path)
 
         # Read reference info table from cmp.h5
-        (refInfoTable, _) = ReferenceUtils.loadCmpH5Tables(cmpH5Path)
+        (refInfoTable, _) = ReferenceUtils.loadAlignmentTables(cmpH5Path)
 
         self.refInfo = refInfoTable
 
@@ -545,7 +545,7 @@ class KineticsToolsRunner(object):
                 logging.error("Params path doesn't exist: %s" % self.args.paramsPath)
                 sys.exit(1)
 
-            majorityChem = ReferenceUtils.loadCmpH5Chemistry(cmpH5Path)
+            majorityChem = ReferenceUtils.loadAlignmentChemistry(cmpH5Path)
             ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
             if majorityChem == 'unknown':
                 logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")

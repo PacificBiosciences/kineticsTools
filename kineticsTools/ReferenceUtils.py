@@ -39,7 +39,7 @@ from pbcore.io import openAlignmentFile
 class ReferenceUtils():
 
     @staticmethod
-    def loadReferenceContigs(referencePath, cmpH5Path):
+    def loadReferenceContigs(referencePath, alignmentPath):
         """Load the reference contigs, and tag each one with the ref.cmpH5ID it was assigned in the cmp.h5 file.  Return a list of contigs, which are used to set up IpdModel"""
 
         # Read contigs from FASTA file (or XML dataset)
@@ -48,7 +48,7 @@ class ReferenceUtils():
         contigDict = dict([(x.id, x) for x in contigs])
 
         # Read reference info table from cmp.h5
-        (refInfoTable, movieInfoTable) = ReferenceUtils.loadCmpH5Tables(cmpH5Path)
+        (refInfoTable, movieInfoTable) = ReferenceUtils.loadAlignmentTables(alignmentPath)
 
         # initially each contig has an id of None -- this will be overwritten with the id from the cmp.h5, if there are any
         # reads mapped to it.
@@ -118,19 +118,18 @@ class ReferenceUtils():
 
 
     @staticmethod
-    def loadCmpH5Tables(cmpH5File):
+    def loadAlignmentTables(alignmentFile):
         """Load the cmp.h5, get the ReferenceInfo table, in order to correctly number the contigs, then close the cmp.h5"""
-        cmph5 = openAlignmentFile(cmpH5File)
-        refInfoTable = cmph5.referenceInfoTable
-        readGroupTable = cmph5.readGroupTable
-        cmph5.close()
-        del cmph5
-
+        alignments = openAlignmentFile(alignmentFile)
+        refInfoTable = alignments.referenceInfoTable
+        readGroupTable = alignments.readGroupTable
+        alignments.close()
+        del alignments
         return (refInfoTable, readGroupTable)
 
     @staticmethod
-    def loadCmpH5Chemistry(cmpH5File):
-        with openAlignmentFile(cmpH5File) as f:
+    def loadAlignmentChemistry(alignmentFile):
+        with openAlignmentFile(alignmentFile) as f:
             chems = f.sequencingChemistry
 
         chemCounts = {k: len(list(v)) for k, v in itertools.groupby(chems)}

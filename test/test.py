@@ -107,7 +107,7 @@ class TestBasic(TestSetup):
 
             print "Pos: %d, TplStrand: %d" % (pos, tplStrand)
             print "Got ctx: %s" % snip
-            print "From lambda: %s" % (contig[(pos - 4):(pos + 11)])
+            #print "From lambda: %s" % (contig[(pos - 4):(pos + 11)])
 
             print "Lut prediction: %f" % ipdFunc(pos, tplStrand)
 
