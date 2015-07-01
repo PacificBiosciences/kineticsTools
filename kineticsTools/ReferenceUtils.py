@@ -45,7 +45,7 @@ class ReferenceUtils():
         # Read contigs from FASTA file
         fastaReader = FastaReader(referencePath)
         contigs = [x for x in fastaReader]
-        contigDict = dict([(x.md5, x) for x in contigs])
+        contigDict = dict([(x.id, x) for x in contigs])
 
         # Read reference info table from cmp.h5
         (refInfoTable, movieInfoTable) = ReferenceUtils.loadCmpH5Tables(cmpH5Path)
@@ -57,7 +57,7 @@ class ReferenceUtils():
 
         # Mark each contig with it's ID from the cmp.h5 - match them up using MD5s
         for x in refInfoTable:
-            contigDict[x.MD5].cmph5ID = x.ID
+            contigDict[x.FullName].cmph5ID = x.ID
 
         return contigs
 
