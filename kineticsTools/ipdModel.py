@@ -359,7 +359,7 @@ class IpdModel:
                 # This contig has no mapped reads -- skip it
                 continue
 
-            rawSeq = contig.sequence
+            rawSeq = contig.sequence[:]
             refSeq = np.fromstring(rawSeq, dtype=byte)
 
             # Store the reference length

@@ -32,7 +32,7 @@
 #!/usr/bin/env python
 
 import os, itertools, re, math
-from pbcore.io import FastaReader
+from pbcore.io import ReferenceSet
 from pbcore.io import openAlignmentFile
 
 
@@ -42,9 +42,9 @@ class ReferenceUtils():
     def loadReferenceContigs(referencePath, cmpH5Path):
         """Load the reference contigs, and tag each one with the ref.cmpH5ID it was assigned in the cmp.h5 file.  Return a list of contigs, which are used to set up IpdModel"""
 
-        # Read contigs from FASTA file
-        fastaReader = FastaReader(referencePath)
-        contigs = [x for x in fastaReader]
+        # Read contigs from FASTA file (or XML dataset)
+        refReader = ReferenceSet(referencePath)
+        contigs = [x for x in refReader]
         contigDict = dict([(x.id, x) for x in contigs])
 
         # Read reference info table from cmp.h5
