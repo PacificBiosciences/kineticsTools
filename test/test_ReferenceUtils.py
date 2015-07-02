@@ -4,6 +4,7 @@ import unittest
 import os.path
 
 from kineticsTools.ReferenceUtils import ReferenceUtils
+from pbcore.io import AlignmentSet
 
 big_data_dir = "/mnt/secondary-siv/testdata/kineticsTools"
 ref_dir = "/mnt/secondary-siv/references"
@@ -11,6 +12,7 @@ ref_dir = "/mnt/secondary-siv/references"
 logging.basicConfig()
 log = logging.getLogger()
 
+@unittest.skipUnless(os.path.isdir(big_data_dir), "Shared data folder missing")
 class ReferenceUtilsTest (unittest.TestCase):
     def setUp (self):
         pass
@@ -53,7 +55,14 @@ class ReferenceUtilsTest (unittest.TestCase):
         pass # TODO
 
     def test_parseReferenceWindow (self):
-        pass # TODO
+        window = "gi|12057207|gb|AE001439.1|:1-5000"
+        bamFile = os.path.join(big_data_dir, "Hpyl_1_5000.bam")
+        refFile = os.path.join(ref_dir, "Helicobacter_pylori_J99", "sequence",
+            "Helicobacter_pylori_J99.fasta")
+        alnFile = AlignmentSet(bamFile)
+        refId, refStart, refEnd = ReferenceUtils.parseReferenceWindow(window,
+            alnFile.referenceInfo)
+        self.assertEquals([refId, refStart, refEnd], [0, 1, 5000])
 
     def test_enumerateChunks (self):
         pass # TODO

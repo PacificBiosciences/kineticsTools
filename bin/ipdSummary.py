@@ -47,7 +47,7 @@ import Queue
 import traceback
 from pkg_resources import Requirement, resource_filename
 
-from pbcore.io import openAlignmentFile
+from pbcore.io import AlignmentSet
 
 from kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
 from kineticsTools.ResultWriter import KineticsWriter
@@ -494,8 +494,9 @@ class KineticsToolsRunner(object):
         # Launch the worker processes
         self._workers = []
         for i in xrange(self.options.numWorkers):
-            p = WorkerType(self.options, self._workQueue, self._resultsQueue, self.ipdModel,
-                           self._sharedAlignmentIndex)
+            p = WorkerType(self.options, self._workQueue, self._resultsQueue,
+                self.ipdModel,
+                sharedAlignmentSet=self._sharedAlignmentSet)
             self._workers.append(p)
             p.start()
         logging.info("Launched worker processes.")
@@ -558,14 +559,15 @@ class KineticsToolsRunner(object):
 
         self.ipdModel = IpdModel(contigs, ipdModel, self.args.modelIters)
 
-    def loadSharedAlignmentIndex(self, cmpH5Filename):
+    def loadSharedAlignmentSet(self, cmpH5Filename):
         """
         Read the alignmet index for the case cmph5 so we don't have to have the slaves
         keeps their own copies.
         """
-        cmph5Reader = openAlignmentFile(cmpH5Filename)
-        self._sharedAlignmentIndex = cmph5Reader.index
-        cmph5Reader.close()
+        self._sharedAlignmentSet = AlignmentSet(cmpH5Filename)
+        # XXX this should ensure that the file(s) get opened, including any
+        # .pbi indices - but need to confirm this
+        self._sharedAlignmentSet.addReference(self.args.reference)
 
     def _mainLoop(self):
         """
@@ -590,14 +592,14 @@ class KineticsToolsRunner(object):
         self.loadReferenceAndModel(self.args.reference, self.args.infile)
         
         # Load a copy of the cmpH5 alignment index to share with the slaves
-        self.loadSharedAlignmentIndex(self.args.infile)
+        self.loadSharedAlignmentSet(self.args.infile)
 
         # Spawn workers
         self._launchSlaveProcesses()
 
         # WARNING -- cmp.h5 file must be opened AFTER worker processes have been spawned
         # cmp.h5 we're using -- use this to orchestrate the work
-        self.cmph5 = openAlignmentFile(self.args.infile, self.args.reference, self._sharedAlignmentIndex)
+        self.cmph5 = self._sharedAlignmentSet.reopen()
         logging.info('Generating kinetics summary for [%s]' % self.args.infile)
 
         #self.referenceMap = self.cmph5['/RefGroup'].asDict('RefInfoID', 'ID')

@@ -7,7 +7,7 @@ import logging
 import os
 import platform
 import unittest
-from pbcore.io import BamReader, AlignmentSet
+from pbcore.io import AlignmentSet
 from kineticsTools.KineticWorker import KineticWorker
 from kineticsTools.ipdModel import IpdModel
 from kineticsTools.ReferenceUtils import ReferenceUtils
@@ -65,8 +65,8 @@ class TestBam(unittest.TestCase):
         self.ipdModel = IpdModel(self.contigs, os.path.join(resourcesDir, "P6-C4.h5"))
         # Create a functional KineticWorker object that can be poked at
         self.kw = KineticWorker(self.ipdModel)
-        self.cmpH5 = BamReader(alnFile, ref) #AlignmentSet(alnFile)
-        #self.cmpH5.addReference(ref)
+        self.cmpH5 = AlignmentSet(alnFile)
+        self.cmpH5.addReference(ref)
         # Put in our cmp.h5 - this is normally supplied by the Worker
         self.kw.caseCmpH5 = self.cmpH5
         self.kw.controlCmpH5 = None

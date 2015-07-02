@@ -31,12 +31,44 @@
 import cProfile
 import logging
 import os.path
-import numpy as np
+import copy
 from multiprocessing import Process
 from multiprocessing.process import current_process
 from threading import Thread, Event
+import warnings
 
-from pbcore.io import openAlignmentFile
+import numpy as np
+
+from pbcore.io import AlignmentSet
+
+# FIXME this should ultimately go somewhere else.  actually, so should the
+# rest of this module.
+def _reopen (self):
+    """
+    Force re-opening of underlying alignment files, preserving the
+    reference and indices if present, and return a copy of the
+    AlignmentSet.  This is a workaround to allow us to share the index
+    file(s) already loaded in memory while avoiding multiprocessing
+    problems related to .bam files.
+    """
+    refFile = None
+    if not self.isCmpH5:
+        for reader in self.resourceReaders():
+            if reader.referenceFasta is not None:
+                refFile = reader.referenceFasta.filename
+    newSet = copy.deepcopy(self)
+    if not self.isCmpH5 and not self.hasPbi:
+        newSet._openFiles(refFile=refFile)
+    else:
+        indices = [ f.index for f in self.resourceReaders() ]
+        if self.isCmpH5:
+            # XXX it isn't clear why, but if we don't call self.close() it
+            # screws everything up.  however, we also want to make sure
+            # we don't lose the indices, so we re-open everything.
+            self.close()
+            self._openFiles(sharedIndices=indices)
+        newSet._openFiles(refFile=refFile, sharedIndices=indices)
+    return newSet
 
 
 class Worker(object):
@@ -52,26 +84,30 @@ class Worker(object):
     process only O(genome length) work to do.
     """
 
-    def __init__(self, options, workQueue, resultsQueue, sharedAlignmentIndex=None):
+    def __init__(self, options, workQueue, resultsQueue,
+            sharedAlignmentSet=None):
         self.options = options
         self.daemon = True
         self._workQueue = workQueue
         self._resultsQueue = resultsQueue
-        self._sharedAlignmentIndex = sharedAlignmentIndex
+        self._sharedAlignmentSet = sharedAlignmentSet
 
     def _run(self):
         logging.info("Worker %s (PID=%d) started running" % (self.name, self.pid))
+        if self._sharedAlignmentSet is not None:
+            # XXX this will create an entirely new AlignmentSet object, but
+            # keeping any indices already loaded into memory
+            self.caseCmpH5 = _reopen(self._sharedAlignmentSet)
+        else:
+            warnings.warn("Shared AlignmentSet not used")
+            self.caseCmpH5 = AlignmentSet(self.options.infile)
+            self.caseCmpH5.addReference(self.options.reference)
 
-        self.caseCmpH5 = openAlignmentFile(self.options.infile,
-                                           self.options.reference,
-                                           self._sharedAlignmentIndex)
-
+        self.controlCmpH5 = None
         if not self.options.control is None:
             # We have a cmp.h5 with control vales -- load that cmp.h5
-            self.controlCmpH5 = openAlignmentFile(self.options.control,
-                                                  self.options.reference)
-        else:
-            self.controlCmpH5 = None
+            self.controlCmpH5 = AlignmentSet(self.options.control)
+            self.controlCmpH5.addReference(self.options.reference)
 
         if self.options.randomSeed is None:
             np.random.seed(42)
@@ -136,9 +172,9 @@ class WorkerProcess(Worker, Process):
 
     """Worker that executes as a process."""
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwds):
         Process.__init__(self)
-        super(WorkerProcess, self).__init__(*args)
+        super(WorkerProcess, self).__init__(*args, **kwds)
         self.daemon = True
 
     def _lowPriority(self):
@@ -175,9 +211,9 @@ class WorkerThread(Worker, Thread):
 
     """Worker that executes as a thread (for debugging purposes only)."""
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwds):
         Thread.__init__(self)
-        super(WorkerThread, self).__init__(*args)
+        super(WorkerThread, self).__init__(*args, **kwds)
         self._stop = Event()
         self.daemon = True
         self.exitcode = 0

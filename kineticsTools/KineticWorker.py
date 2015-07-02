@@ -375,15 +375,17 @@ class KineticWorker(object):
             hits = np.random.choice(hits, size=self.options.maxAlignments, replace=False)
 
         # FIXME -- we are dealing with the IPD format change from seconds to frames here
+        factor = 1.0 / cmpH5File.readGroupTable[0].FrameRate
         # Should be handled in pbcore
-        ver = cmpH5File.version[0:3]
-
-        if ver == '1.2':
-            factor = 1.0
-        else:
-            # NOTE -- assuming that all movies have the same frame rate!
-            fr = cmpH5File.readGroupTable[0].FrameRate
-            factor = 1.0 / fr
+        #for alnFile in cmpH5File.resourceReaders():
+        #    ver = alnFile.version[0:3]
+        #    if ver == '1.2':
+        #        factor = 1.0
+        #    else:
+        #        # NOTE -- assuming that all movies have the same frame rate!
+        #        fr = cmpH5File.readGroupTable[0].FrameRate
+        #        factor = 1.0 / fr
+        #    break
 
         rawIpds = self._loadRawIpds(hits, start, end, factor)
         ipdVect = rawIpds['ipd']
@@ -817,8 +819,8 @@ class KineticWorkerProcess(KineticWorker, WorkerProcess):
 
     """Worker that executes as a process."""
 
-    def __init__(self, options, workQueue, resultsQueue, ipdModel, sharedAlignmentIndex=None):
-        WorkerProcess.__init__(self, options, workQueue, resultsQueue, sharedAlignmentIndex)
+    def __init__(self, options, workQueue, resultsQueue, ipdModel, sharedAlignmentSet=None):
+        WorkerProcess.__init__(self, options, workQueue, resultsQueue, sharedAlignmentSet)
         KineticWorker.__init__(self, ipdModel)
 
 
@@ -826,6 +828,6 @@ class KineticWorkerThread(KineticWorker, WorkerThread):
 
     """Worker that executes as a thread (for debugging purposes only)."""
 
-    def __init__(self, options, workQueue, resultsQueue, ipdModel, sharedAlignmentIndex=None):
-        WorkerThread.__init__(self, options, workQueue, resultsQueue, sharedAlignmentIndex)
+    def __init__(self, options, workQueue, resultsQueue, ipdModel, sharedAlignmentSet=None):
+        WorkerThread.__init__(self, options, workQueue, resultsQueue, sharedAlignmentSet)
         KineticWorker.__init__(self, ipdModel)

@@ -2,7 +2,7 @@ import logging
 import os
 import platform
 import unittest
-from pbcore.io import CmpH5Reader
+from pbcore.io import AlignmentSet
 from kineticsTools.KineticWorker import KineticWorker
 from kineticsTools.ipdModel import IpdModel
 from kineticsTools.ReferenceUtils import ReferenceUtils
@@ -51,7 +51,8 @@ class TestSetup(unittest.TestCase):
 
         # Create a functional KineticWorker object that can be poked at manually.
         self.kw = KineticWorker(self.ipdModel)
-        self.cmpH5 = CmpH5Reader(cmpFile)
+        self.cmpH5 = AlignmentSet(cmpFile)
+        self.cmpH5.addReference(ref)
 
         # Put in our cmp.h5 - this is normally supplied by the Worker superclass
         self.kw.caseCmpH5 = self.cmpH5
