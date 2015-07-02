@@ -28,12 +28,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
-
-#!/usr/bin/env python
+# FIXME most of this belongs somewhere else
 
 import os, itertools, re, math
-from pbcore.io import ReferenceSet
-from pbcore.io import openAlignmentFile
+from pbcore.io import AlignmentSet, ReferenceSet
 
 
 class ReferenceUtils():
@@ -119,19 +117,17 @@ class ReferenceUtils():
 
     @staticmethod
     def loadAlignmentTables(alignmentFile):
-        """Load the cmp.h5, get the ReferenceInfo table, in order to correctly number the contigs, then close the cmp.h5"""
-        alignments = openAlignmentFile(alignmentFile)
-        refInfoTable = alignments.referenceInfoTable
-        readGroupTable = alignments.readGroupTable
-        alignments.close()
-        del alignments
-        return (refInfoTable, readGroupTable)
+        """
+        Load the alignments and get the ReferenceInfo table, in order to
+        correctly number the contigs.
+        """
+        with AlignmentSet(alignmentFile) as ds:
+            return ds.referenceInfoTable, ds.readGroupTable
 
     @staticmethod
     def loadAlignmentChemistry(alignmentFile):
-        with openAlignmentFile(alignmentFile) as f:
-            chems = f.sequencingChemistry
-
-        chemCounts = {k: len(list(v)) for k, v in itertools.groupby(chems)}
-        majorityChem = max(chemCounts, key=chemCounts.get)
-        return majorityChem
+        with AlignmentSet(alignmentFile) as ds:
+            chems = ds.sequencingChemistry
+            chemCounts = {k: len(list(v)) for k, v in itertools.groupby(chems)}
+            majorityChem = max(chemCounts, key=chemCounts.get)
+            return majorityChem
