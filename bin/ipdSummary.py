@@ -599,7 +599,7 @@ class KineticsToolsRunner(object):
 
         # WARNING -- cmp.h5 file must be opened AFTER worker processes have been spawned
         # cmp.h5 we're using -- use this to orchestrate the work
-        self.cmph5 = self._sharedAlignmentSet.reopen()
+        self.cmph5 = self._sharedAlignmentSet
         logging.info('Generating kinetics summary for [%s]' % self.args.infile)
 
         #self.referenceMap = self.cmph5['/RefGroup'].asDict('RefInfoID', 'ID')
