@@ -58,15 +58,11 @@ def _reopen (self):
                 refFile = reader.referenceFasta.filename
     newSet = copy.deepcopy(self)
     if not self.isCmpH5 and not self.hasPbi:
+        self.close()
         newSet._openFiles(refFile=refFile)
     else:
         indices = [ f.index for f in self.resourceReaders() ]
-        if self.isCmpH5:
-            # XXX it isn't clear why, but if we don't call self.close() it
-            # screws everything up.  however, we also want to make sure
-            # we don't lose the indices, so we re-open everything.
-            self.close()
-            self._openFiles(sharedIndices=indices)
+        self.close()
         newSet._openFiles(refFile=refFile, sharedIndices=indices)
     return newSet
 
@@ -98,6 +94,8 @@ class Worker(object):
             # XXX this will create an entirely new AlignmentSet object, but
             # keeping any indices already loaded into memory
             self.caseCmpH5 = _reopen(self._sharedAlignmentSet)
+            #`self._sharedAlignmentSet.close()
+            self._sharedAlignmentSet = None
         else:
             warnings.warn("Shared AlignmentSet not used")
             self.caseCmpH5 = AlignmentSet(self.options.infile)
