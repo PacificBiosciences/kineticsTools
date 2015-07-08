@@ -68,16 +68,20 @@ class KineticWorker(object):
 
     def _prepForReferenceWindow(self, referenceWindow):
         """ Set up member variable to call modifications on a window. """
-
-        (reference, start, end) = referenceWindow
-        self.refId = reference
+        start = referenceWindow.start
+        end = referenceWindow.end
+        # FIXME some inconsistency in how reference info is retrieved -
+        # DataSet API uses Name, ipdModel.py uses ID
+        self.refId = referenceWindow.refId
+        self.refName = referenceWindow.refName
+        refInfoTable = self.caseCmpH5.referenceInfo(self.refName)
 
         # Each chunk is from a single reference -- fire up meanIpd func on the current reference
-        self.meanIpdFunc = self.ipdModel.predictIpdFunc(reference)
-        self.manyManyIpdFunc = self.ipdModel.predictManyIpdFunc(reference)
+        self.meanIpdFunc = self.ipdModel.predictIpdFunc(self.refId)
+        self.manyManyIpdFunc = self.ipdModel.predictManyIpdFunc(self.refId)
 
         # Get the cognate base at a given position
-        self.cognateBaseFunc = self.ipdModel.cognateBaseFunc(reference)
+        self.cognateBaseFunc = self.ipdModel.cognateBaseFunc(self.refId)
 
         # Padding needed for multi-site models
         self.pad = self.ipdModel.gbmModel.pre + self.ipdModel.gbmModel.post + 1
@@ -92,10 +96,11 @@ class KineticWorker(object):
 
         # start and end are the windows of the reference that we are responsible for reporting data from.
         # We may elect to pull data from a wider window for use with positive control
-        (reference, start, end) = referenceWindow
+        start = referenceWindow.start
+        end = referenceWindow.end
 
         # Trim end coordinate to length of current template
-        end = min(end, self.ipdModel.refLength(reference))
+        end = min(end, self.ipdModel.refLength(self.refId))
 
         if self.options.identify:
             # If we are attempting to identify modifications, get the raw data for a slightly expanded window
@@ -196,9 +201,8 @@ class KineticWorker(object):
         (start, end) = targetBounds
         logging.info('Making summary: %d to %d' % (start, end))
 
-        caseReferenceGroupId = self.caseCmpH5.referenceInfo(self.refId).ID
+        caseReferenceGroupId = self.caseCmpH5.referenceInfo(self.refName).Name
         (caseChunks, capValue) = self._fetchChunks(caseReferenceGroupId, targetBounds, self.caseCmpH5)
-        self.refName = self.caseCmpH5.referenceInfo(self.refId).FullName
 
         if self.controlCmpH5 is None:
             # in silico control workflow -- only get data from the main 'case' cmp.h5
@@ -215,7 +219,7 @@ class KineticWorker(object):
             # case/control workflow -- get data from the case and control files and compare
             result = []
 
-            contigName = self.caseCmpH5.referenceInfo(self.refId).FullName
+            contigName = self.caseCmpH5.referenceInfo(self.refName).FullName
             controlRefTable = self.controlCmpH5.referenceInfoTable
 
             # Make sure this RefId contains a refGroup in the control cmp.h5 file

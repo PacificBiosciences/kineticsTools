@@ -3,6 +3,7 @@ import os
 import platform
 import unittest
 from pbcore.io import CmpH5Reader
+from kineticsTools.ReferenceUtils import ReferenceWindow
 from kineticsTools.KineticWorker import KineticWorker
 from kineticsTools.ipdModel import IpdModel
 
@@ -31,7 +32,7 @@ class TestMethylFraction(TestSetup):
 
         start = 14900
         end = 15100
-        referenceWindow = (1, start, end)
+        referenceWindow = ReferenceWindow(1, "lambda_NEB3011", start, end)
         bounds = (start, end)
 
         self.kw._prepForReferenceWindow(referenceWindow)

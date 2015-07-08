@@ -31,8 +31,11 @@
 # FIXME most of this belongs somewhere else
 
 import os, itertools, re, math
+from collections import namedtuple
+
 from pbcore.io import AlignmentSet, ReferenceSet
 
+ReferenceWindow = namedtuple("ReferenceWindow", ["refId", "refName", "start", "end"])
 
 class ReferenceUtils():
 
@@ -67,14 +70,24 @@ class ReferenceUtils():
         if m:
             refContigInfo = refInfoLookup(m.group(1))
             refId    = refContigInfo.ID
+            refName  = refContigInfo.Name
             refStart = int(m.group(2))
             refEnd   = min(int(m.group(3)), refContigInfo.Length)
         else:
             refContigInfo = refInfoLookup(s)
             refId    = refContigInfo.ID
+            refName  = refContigInfo.Name
             refStart = 0
             refEnd   = refContigInfo.Length
-        return (refId, refStart, refEnd)
+        return ReferenceWindow(refId=refId, refName=refName, start=refStart,
+            end=refEnd)
+
+    @staticmethod
+    def createReferenceWindows(refInfo):
+        return [ ReferenceWindow(refId=r.ID,
+                    refName=r.Name,
+                    start=0,
+                    end=r.Length) for r in refInfo ]
 
 
     @staticmethod
@@ -110,9 +123,11 @@ class ReferenceUtils():
                 roundWin = (s, s + stride)
                 yield intersection(bounds, roundWin)
 
-        winId, winStart, winEnd = referenceWindow
-        for (s, e) in enumerateIntervals((winStart, winEnd), referenceStride):
-            yield (winId, s, e)
+        for (s, e) in enumerateIntervals((referenceWindow.start,
+                referenceWindow.end), referenceStride):
+            yield ReferenceWindow(refId=referenceWindow.refId,
+                refName=referenceWindow.refName,
+                start=s, end=e)
 
 
     @staticmethod

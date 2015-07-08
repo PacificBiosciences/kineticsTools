@@ -29,7 +29,7 @@ Look at output gff file:
   ##gff-version 3
   ##source ipdSummary.py * (glob)
   ##source-commandline * (glob)
-  ##sequence-region ref000001 1 48502
+  ##sequence-region lambda_NEB3011 1 48502
   lambda_NEB3011\tkinModCall\tmodified_base\t14657\t14657\t34\t+\t.\tcoverage=155;context=CGGCACAGCCGGGCGATGTGCTGCTGTGCTGTTTTGGTTCA;IPDRatio=1.55 (esc)
   lambda_NEB3011\tkinModCall\tmodified_base\t14743\t14743\t34\t-\t.\tcoverage=173;context=TACCTCTCTCGTTTGCTCAGTTGTTCAGGAATATGGTGCAG;IPDRatio=1.54 (esc)
   lambda_NEB3011\tkinModCall\tm4C\t14756\t14756\t21\t-\t.\tcoverage=165;context=CCATTTGTCGGTGTACCTCTCTCGTTTGCTCAGTTGTTCAG;IPDRatio=1.32;identificationQv=24 (esc)
@@ -76,4 +76,4 @@ What about the H5 file?
 
   $ h5ls -r tmp.h5
   /                        Group
-  /ref000001               Dataset {48502}
+  /lambda_NEB3011          Dataset {48502}

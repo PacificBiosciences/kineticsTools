@@ -35,14 +35,45 @@ import copy
 from multiprocessing import Process
 from multiprocessing.process import current_process
 from threading import Thread, Event
+from urlparse import urlparse
 import warnings
 
 import numpy as np
 
-from pbcore.io import AlignmentSet
+import pbcore.io
+from pbcore.io.opener import (openAlignmentFile, openIndexedAlignmentFile)
+
 
 # FIXME this should ultimately go somewhere else.  actually, so should the
 # rest of this module.
+def _openFiles(self, refFile=None, sharedIndices=None):
+    """
+    Hack to enable sharing of indices (but not filehandles!) between dataset
+    instances.
+    """
+    log = logging.getLogger()
+    log.debug("Opening resources")
+    for k, extRes in enumerate(self.externalResources):
+        location = urlparse(extRes.resourceId).path
+        sharedIndex = None
+        if sharedIndices is not None:
+            sharedIndex = sharedIndices[k]
+        try:
+            resource = openIndexedAlignmentFile(
+                location,
+                referenceFastaFname=refFile,
+                sharedIndex=sharedIndex)
+        except (IOError, ValueError):
+            log.info("pbi file missing for {f}, operating with "
+                     "reduced speed and functionality".format(
+                         f=location))
+            resource = openAlignmentFile(location,
+                                        referenceFastaFname=refFile)
+        if not resource:
+            raise IOError("{f} fails to open".format(f=location))
+        self._openReaders.append(resource)
+    log.debug("Done opening resources")
+
 def _reopen (self):
     """
     Force re-opening of underlying alignment files, preserving the
@@ -63,7 +94,7 @@ def _reopen (self):
     else:
         indices = [ f.index for f in self.resourceReaders() ]
         self.close()
-        newSet._openFiles(refFile=refFile, sharedIndices=indices)
+        _openFiles(newSet, refFile=refFile, sharedIndices=indices)
     return newSet
 
 
@@ -98,13 +129,13 @@ class Worker(object):
             self._sharedAlignmentSet = None
         else:
             warnings.warn("Shared AlignmentSet not used")
-            self.caseCmpH5 = AlignmentSet(self.options.infile)
+            self.caseCmpH5 = pbcore.io.AlignmentSet(self.options.infile)
             self.caseCmpH5.addReference(self.options.reference)
 
         self.controlCmpH5 = None
         if not self.options.control is None:
             # We have a cmp.h5 with control vales -- load that cmp.h5
-            self.controlCmpH5 = AlignmentSet(self.options.control)
+            self.controlCmpH5 = pbcore.io.AlignmentSet(self.options.control)
             self.controlCmpH5.addReference(self.options.reference)
 
         if self.options.randomSeed is None:

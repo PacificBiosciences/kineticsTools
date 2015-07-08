@@ -48,7 +48,6 @@ import traceback
 from pkg_resources import Requirement, resource_filename
 
 from pbcore.io import AlignmentSet
-
 from kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
 from kineticsTools.ResultWriter import KineticsWriter
 from kineticsTools.ipdModel import IpdModel
@@ -514,7 +513,9 @@ class KineticsToolsRunner(object):
         """
         Compute the chunk extents and queue up the work for a single reference
         """
-        winId, winStart, winEnd = refWindow
+        winId = refWindow.refId
+        winStart = refWindow.start
+        winEnd = refWindow.end
         pass
 
     def loadReferenceAndModel(self, referencePath, cmpH5Path):
@@ -618,7 +619,8 @@ class KineticsToolsRunner(object):
                     else:
                         raise Exception, "Unrecognized contig!"
         else:
-            self.referenceWindows = [(r.ID, 0, r.Length) for r in self.refInfo]
+            self.referenceWindows = ReferenceUtils.createReferenceWindows(
+                self.refInfo)
 
         # Main loop -- we loop over ReferenceGroups in the cmp.h5.  For each contig we will:
         # 1. Load the sequence into the main memory of the parent process

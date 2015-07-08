@@ -28,10 +28,10 @@ Look at output gff file:
   ##gff-version 3
   ##source ipdSummary.py * (glob)
   ##source-commandline * (glob)
-  ##sequence-region ref000001 1 48502
+  ##sequence-region lambda_NEB3011 1 48502
 
 What about the IPD ratio H5 file?
 
   $ h5ls -r tmp.h5
   /                        Group
-  /ref000001               Dataset {48502}
+  /lambda_NEB3011          Dataset {48502}

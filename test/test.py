@@ -5,7 +5,7 @@ import unittest
 from pbcore.io import AlignmentSet
 from kineticsTools.KineticWorker import KineticWorker
 from kineticsTools.ipdModel import IpdModel
-from kineticsTools.ReferenceUtils import ReferenceUtils
+from kineticsTools.ReferenceUtils import ReferenceUtils, ReferenceWindow
 
 
 class TestSetup(unittest.TestCase):
@@ -156,7 +156,7 @@ class TestBasic(TestSetup):
 
         start = 14900
         end = 15100
-        referenceWindow = (1, start, end)
+        referenceWindow = ReferenceWindow(1, "lambda_NEB3011", start, end)
         bounds = (start, end)
 
         self.kw._prepForReferenceWindow(referenceWindow)

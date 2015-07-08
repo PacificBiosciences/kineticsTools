@@ -10,7 +10,7 @@ import unittest
 from pbcore.io import AlignmentSet
 from kineticsTools.KineticWorker import KineticWorker
 from kineticsTools.ipdModel import IpdModel
-from kineticsTools.ReferenceUtils import ReferenceUtils
+from kineticsTools.ReferenceUtils import ReferenceUtils, ReferenceWindow
 
 logging.basicConfig()
 log = logging.getLogger()
@@ -78,7 +78,8 @@ class TestBam(unittest.TestCase):
         # XXX should have mods on 60- (m4C), 89+ (m6A), 91- (m6A)
         start = 50
         end = 100
-        referenceWindow = (0, start, end)
+        referenceWindow = ReferenceWindow(0, "gi|12057207|gb|AE001439.1|",
+            start, end)
         bounds = (start, end)
 
         self.kw._prepForReferenceWindow(referenceWindow)

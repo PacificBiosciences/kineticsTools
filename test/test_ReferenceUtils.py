@@ -24,7 +24,7 @@ class ReferenceUtilsTest (unittest.TestCase):
         refFile = os.path.join(dataDir, 'lambda', 'sequence', 'lambda.fasta')
         cmpFile = os.path.join(dataDir, "p4-c2-lambda-mod-decode.cmp.h5")
         table1, table2 = ReferenceUtils.loadAlignmentTables(cmpFile)
-        self.assertEquals(list(table1[0]), [1, 1, 'ref000001',
+        self.assertEquals(list(table1[0]), [1, 1, 'lambda_NEB3011',
             'lambda_NEB3011', 48502, 'a1319ff90e994c8190a4fe6569d0822a',0,341])
         self.assertEquals(list(table2[0]), [1,
             'm130830_001214_ethan_c100541172550000001823090111241380_s1_p0',
@@ -60,9 +60,20 @@ class ReferenceUtilsTest (unittest.TestCase):
         refFile = os.path.join(ref_dir, "Helicobacter_pylori_J99", "sequence",
             "Helicobacter_pylori_J99.fasta")
         alnFile = AlignmentSet(bamFile)
-        refId, refStart, refEnd = ReferenceUtils.parseReferenceWindow(window,
+        win = ReferenceUtils.parseReferenceWindow(window,
             alnFile.referenceInfo)
-        self.assertEquals([refId, refStart, refEnd], [0, 1, 5000])
+        self.assertEquals([win.refId, win.start, win.end], [0, 1, 5000])
+
+    def test_createReferenceWindows (self):
+        bamFile = os.path.join(big_data_dir, "Hpyl_1_5000.bam")
+        (refInfoTable, _) = ReferenceUtils.loadAlignmentTables(bamFile)
+        windows = ReferenceUtils.createReferenceWindows(refInfoTable)
+        self.assertEqual(len(windows), 1)
+        w = windows[0]
+        self.assertEqual(w.refId, 0)
+        self.assertEqual(w.refName, 'gi|12057207|gb|AE001439.1|')
+        self.assertEqual(w.start, 0)
+        self.assertEqual(w.end, 1643831)
 
     def test_enumerateChunks (self):
         pass # TODO
