@@ -65,21 +65,40 @@ class TestBam(unittest.TestCase):
         self.ipdModel = IpdModel(self.contigs, os.path.join(resourcesDir, "P6-C4.h5"))
         # Create a functional KineticWorker object that can be poked at
         self.kw = KineticWorker(self.ipdModel)
-        self.cmpH5 = AlignmentSet(alnFile)
-        self.cmpH5.addReference(ref)
+        self.ds = AlignmentSet(alnFile)
+        self.ds.addReference(ref)
         # Put in our cmp.h5 - this is normally supplied by the Worker
-        self.kw.caseCmpH5 = self.cmpH5
+        self.kw.caseCmpH5 = self.ds
         self.kw.controlCmpH5 = None
 
         self.kw.options = self.getOpts()
+
+    def test_private_api (self):
+        start = 50
+        end = 100
+        REF_GROUP_ID = "gi|12057207|gb|AE001439.1|"
+        referenceWindow = ReferenceWindow(0, REF_GROUP_ID, start, end)
+        bounds = (start, end)
+        rir = list(self.kw.caseCmpH5.readsInRange(referenceWindow.refName,
+            referenceWindow.start, referenceWindow.end))
+        self.assertEqual(len(rir), 301)
+        chunks = self.kw._fetchChunks(REF_GROUP_ID, (start, end),
+            self.kw.caseCmpH5)
+        #log.critical(chunks)
+        factor = 1.0 / self.ds.readGroupTable[0].FrameRate
+        rawIpds = self.kw._loadRawIpds(rir, start, end, factor)
+        self.assertEqual("%.4f" % rawIpds[0][2], "0.2665")
+        log.critical(rawIpds)
+        chunks = self.kw._chunkRawIpds(rawIpds)
+        #log.critical(chunks)
 
     def testSmallDecode (self):
         """Test for known modifications near the start of H. pylori genome"""
         # XXX should have mods on 60- (m4C), 89+ (m6A), 91- (m6A)
         start = 50
         end = 100
-        referenceWindow = ReferenceWindow(0, "gi|12057207|gb|AE001439.1|",
-            start, end)
+        REF_GROUP_ID = "gi|12057207|gb|AE001439.1|"
+        referenceWindow = ReferenceWindow(0, REF_GROUP_ID, start, end)
         bounds = (start, end)
 
         self.kw._prepForReferenceWindow(referenceWindow)
@@ -104,6 +123,11 @@ class TestDataset (TestBam):
     def getAlignment (self):
         return os.path.join(data_dir, "Hpyl_1_5000.xml")
 
+    @unittest.skip("unimplemented")
+    def test_private_api (self):
+        pass
+
+    @unittest.skip("unimplemented")
     def testSmallDecode (self):
         pass # TODO
 
