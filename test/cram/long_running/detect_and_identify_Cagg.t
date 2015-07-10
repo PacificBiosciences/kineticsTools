@@ -17,10 +17,10 @@ Run base modification detection on C. aggregans P6 chemistry validation data
 This one actually has real modifications (and lots of them).
 
   $ linecount tst_Cagg.gff
-  177379
+  177331
   $ grep -c m4C tst_Cagg.gff
-  35051
+  35050
   $ grep -c m6A tst_Cagg.gff
   136593
   $ grep -c modified_base tst_Cagg.gff
-  5733
+  5686
