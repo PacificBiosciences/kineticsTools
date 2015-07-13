@@ -18,8 +18,7 @@ log = logging.getLogger()
 # FIXME
 data_dir = "/mnt/secondary-siv/testdata/kineticsTools"
 
-@unittest.skipUnless(os.path.isdir(data_dir), "Missing test data directory")
-class TestBam(unittest.TestCase):
+class _TestBase(object):
 
     def getOpts(self):
         """Derived tests can override this to customize behaviour"""
@@ -47,7 +46,7 @@ class TestBam(unittest.TestCase):
         return opts()
 
     def getAlignments (self):
-        return os.path.join(data_dir, "Hpyl_1_5000.bam")
+        raise NotImplementedError()
 
     def getReference (self):
         refDir = "/mnt/secondary-siv/references"
@@ -117,19 +116,22 @@ class TestBam(unittest.TestCase):
             else:
                 self.assertTrue(x['tpl'] in [59,90])
 
+@unittest.skipUnless(os.path.isdir(data_dir), "Missing test data directory")
+class TestBam(_TestBase, unittest.TestCase):
+    def getAlignments (self):
+        return os.path.join(data_dir, "Hpyl_1_5000.bam")
+
 
 @unittest.skipUnless(os.path.isdir(data_dir), "Missing test data directory")
-class TestDataset (TestBam):
-    def getAlignment (self):
+class TestDataset (TestBam, unittest.TestCase):
+    def getAlignments (self):
         return os.path.join(data_dir, "Hpyl_1_5000.xml")
 
-    @unittest.skip("unimplemented")
-    def test_private_api (self):
-        pass
 
-    @unittest.skip("unimplemented")
-    def testSmallDecode (self):
-        pass # TODO
+@unittest.skipUnless(os.path.isdir(data_dir), "Missing test data directory")
+class TestSplitDataset(_TestBase, unittest.TestCase):
+    def getAlignments (self):
+        return os.path.join(data_dir, "Hpyl_1_5000_split.xml")
 
 
 if __name__ == '__main__':
