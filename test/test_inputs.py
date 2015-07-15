@@ -60,12 +60,12 @@ class _TestBase(object):
         alnFile = self.getAlignments()
         assert os.path.exists(alnFile) and os.path.exists(ref)
 
-        self.contigs = ReferenceUtils.loadReferenceContigs(ref, alnFile)
+        self.ds = AlignmentSet(alnFile)
+        self.ds.addReference(ref)
+        self.contigs = ReferenceUtils.loadReferenceContigs(ref, self.ds)
         self.ipdModel = IpdModel(self.contigs, os.path.join(resourcesDir, "P6-C4.h5"))
         # Create a functional KineticWorker object that can be poked at
         self.kw = KineticWorker(self.ipdModel)
-        self.ds = AlignmentSet(alnFile)
-        self.ds.addReference(ref)
         # Put in our cmp.h5 - this is normally supplied by the Worker
         self.kw.caseCmpH5 = self.ds
         self.kw.controlCmpH5 = None
@@ -83,11 +83,10 @@ class _TestBase(object):
         self.assertEqual(len(rir), 301)
         chunks = self.kw._fetchChunks(REF_GROUP_ID, (start, end),
             self.kw.caseCmpH5)
-        #log.critical(chunks)
         factor = 1.0 / self.ds.readGroupTable[0].FrameRate
         rawIpds = self.kw._loadRawIpds(rir, start, end, factor)
         self.assertEqual("%.4f" % rawIpds[0][2], "0.2665")
-        log.critical(rawIpds)
+        log.info(rawIpds)
         chunks = self.kw._chunkRawIpds(rawIpds)
         #log.critical(chunks)
 
@@ -103,7 +102,7 @@ class _TestBase(object):
         self.kw._prepForReferenceWindow(referenceWindow)
         kinetics = self.kw._summarizeReferenceRegion(bounds, False, True)
         mods = self.kw._decodePositiveControl(kinetics, bounds)
-        log.critical(mods)
+        log.info(mods)
 
         # Verify that we detect m6A mods at 14982 and 14991
         m6AMods = [x for x in mods if x['modification'] == 'm6A' and x['tpl'] in (88, 90) ]

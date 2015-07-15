@@ -92,6 +92,7 @@ validateNoneOrDir = functools.partial(_validateNoneOrResource, os.path.isdir)
 class KineticsToolsRunner(object):
 
     def __init__(self):
+        self._sharedAlignmentSet = None
         desc = ['Tool for detecting DNA base-modifications from kinetic signatures',
                 'Notes: For all command-line arguments, default values are listed in [].']
         description = '\n'.join(desc)
@@ -518,14 +519,12 @@ class KineticsToolsRunner(object):
         winEnd = refWindow.end
         pass
 
-    def loadReferenceAndModel(self, referencePath, cmpH5Path):
+    def loadReferenceAndModel(self, referencePath):
+        assert self._sharedAlignmentSet is not None
         # Load the reference contigs - annotated with their refID from the cmp.h5
-        contigs = ReferenceUtils.loadReferenceContigs(referencePath, cmpH5Path)
-
-        # Read reference info table from cmp.h5
-        (refInfoTable, _) = ReferenceUtils.loadAlignmentTables(cmpH5Path)
-
-        self.refInfo = refInfoTable
+        logging.info("Loading reference contigs %s" % referencePath)
+        contigs = ReferenceUtils.loadReferenceContigs(referencePath,
+            alignmentSet=self._sharedAlignmentSet)
 
         # There are three different ways the ipdModel can be loaded.
         # In order of precedence they are:
@@ -547,7 +546,8 @@ class KineticsToolsRunner(object):
                 logging.error("Params path doesn't exist: %s" % self.args.paramsPath)
                 sys.exit(1)
 
-            majorityChem = ReferenceUtils.loadAlignmentChemistry(cmpH5Path)
+            majorityChem = ReferenceUtils.loadAlignmentChemistry(
+                self._sharedAlignmentSet)
             ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
             if majorityChem == 'unknown':
                 logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")
@@ -562,13 +562,17 @@ class KineticsToolsRunner(object):
 
     def loadSharedAlignmentSet(self, cmpH5Filename):
         """
-        Read the alignmet index for the case cmph5 so we don't have to have the slaves
-        keeps their own copies.
+        Read the input AlignmentSet so the indices can be shared with the
+        slaves.  This is also used to pass to ReferenceUtils for setting up
+        the ipdModel object.
         """
+        logging.info("Reading AlignmentSet %s" % cmpH5Filename)
         self._sharedAlignmentSet = AlignmentSet(cmpH5Filename)
         # XXX this should ensure that the file(s) get opened, including any
         # .pbi indices - but need to confirm this
+        logging.info("Loading reference %s" % self.args.reference)
         self._sharedAlignmentSet.addReference(self.args.reference)
+        self.refInfo = self._sharedAlignmentSet.referenceInfoTable
 
     def _mainLoop(self):
         """
@@ -589,12 +593,12 @@ class KineticsToolsRunner(object):
         # essentially harmless.
         gc.disable()
 
-        # Load reference and IpdModel
-        self.loadReferenceAndModel(self.args.reference, self.args.infile)
-        
         # Load a copy of the cmpH5 alignment index to share with the slaves
         self.loadSharedAlignmentSet(self.args.infile)
 
+        # Load reference and IpdModel
+        self.loadReferenceAndModel(self.args.reference)
+        
         # Spawn workers
         self._launchSlaveProcesses()
 

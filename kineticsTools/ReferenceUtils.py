@@ -28,28 +28,37 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
-# FIXME most of this belongs somewhere else
+# FIXME all of this belongs somewhere else (probably either pbcore.io.dataset
+# or a future base module for resequencing apps)
 
-import os, itertools, re, math
 from collections import namedtuple
+import itertools
+import math
+import re
+import os
 
 from pbcore.io import AlignmentSet, ReferenceSet
 
 ReferenceWindow = namedtuple("ReferenceWindow", ["refId", "refName", "start", "end"])
 
+
 class ReferenceUtils():
 
     @staticmethod
-    def loadReferenceContigs(referencePath, alignmentPath):
-        """Load the reference contigs, and tag each one with the ref.cmpH5ID it was assigned in the cmp.h5 file.  Return a list of contigs, which are used to set up IpdModel"""
+    def loadReferenceContigs(referencePath, alignmentSet):
+        # FIXME we should get rid of this entirely, but I think it requires
+        # fixing the inconsistency in how contigs are referenced here versus in
+        # pbcore.io
+        """
+        Load the reference contigs, and tag each one with the ref.cmpH5ID it
+        was assigned in the alignment file(s).  Return a list of contigs,
+        which are used to set up IpdModel.
+        """
 
         # Read contigs from FASTA file (or XML dataset)
         refReader = ReferenceSet(referencePath)
         contigs = [x for x in refReader]
         contigDict = dict([(x.id, x) for x in contigs])
-
-        # Read reference info table from cmp.h5
-        (refInfoTable, movieInfoTable) = ReferenceUtils.loadAlignmentTables(alignmentPath)
 
         # initially each contig has an id of None -- this will be overwritten with the id from the cmp.h5, if there are any
         # reads mapped to it.
@@ -57,7 +66,7 @@ class ReferenceUtils():
             x.cmph5ID = None
 
         # Mark each contig with it's ID from the cmp.h5 - match them up using MD5s
-        for x in refInfoTable:
+        for x in alignmentSet.referenceInfoTable:
             contigDict[x.FullName].cmph5ID = x.ID
 
         return contigs
@@ -129,20 +138,9 @@ class ReferenceUtils():
                 refName=referenceWindow.refName,
                 start=s, end=e)
 
-
     @staticmethod
-    def loadAlignmentTables(alignmentFile):
-        """
-        Load the alignments and get the ReferenceInfo table, in order to
-        correctly number the contigs.
-        """
-        with AlignmentSet(alignmentFile) as ds:
-            return ds.referenceInfoTable, ds.readGroupTable
-
-    @staticmethod
-    def loadAlignmentChemistry(alignmentFile):
-        with AlignmentSet(alignmentFile) as ds:
-            chems = ds.sequencingChemistry
-            chemCounts = {k: len(list(v)) for k, v in itertools.groupby(chems)}
-            majorityChem = max(chemCounts, key=chemCounts.get)
-            return majorityChem
+    def loadAlignmentChemistry(alignmentSet):
+        chems = alignmentSet.sequencingChemistry
+        chemCounts = {k: len(list(v)) for k, v in itertools.groupby(chems)}
+        majorityChem = max(chemCounts, key=chemCounts.get)
+        return majorityChem

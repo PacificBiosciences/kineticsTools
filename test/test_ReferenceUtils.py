@@ -23,32 +23,22 @@ class ReferenceUtilsTest (unittest.TestCase):
         resourcesDir = os.path.join(base_dir, '../kineticsTools/resources')
         refFile = os.path.join(dataDir, 'lambda', 'sequence', 'lambda.fasta')
         cmpFile = os.path.join(dataDir, "p4-c2-lambda-mod-decode.cmp.h5")
-        table1, table2 = ReferenceUtils.loadAlignmentTables(cmpFile)
-        self.assertEquals(list(table1[0]), [1, 1, 'lambda_NEB3011',
-            'lambda_NEB3011', 48502, 'a1319ff90e994c8190a4fe6569d0822a',0,341])
-        self.assertEquals(list(table2[0]), [1,
-            'm130830_001214_ethan_c100541172550000001823090111241380_s1_p0',
-            'standard', 'P4-C2', 75.0])
-        contigs = ReferenceUtils.loadReferenceContigs(refFile, cmpFile)
+        ds = AlignmentSet(cmpFile)
+        contigs = ReferenceUtils.loadReferenceContigs(refFile, ds)
         self.assertEquals(len(contigs), 1)
         self.assertEquals(contigs[0].cmph5ID, 1)
-        chemistry = ReferenceUtils.loadAlignmentChemistry(cmpFile)
+        chemistry = ReferenceUtils.loadAlignmentChemistry(ds)
         self.assertEquals(chemistry, "P4-C2")
 
     def test_bam (self):
         bamFile = os.path.join(big_data_dir, "Hpyl_1_5000.bam")
         refFile = os.path.join(ref_dir, "Helicobacter_pylori_J99", "sequence",
             "Helicobacter_pylori_J99.fasta")
-        table1, table2 = ReferenceUtils.loadAlignmentTables(bamFile)
-        self.assertEquals(list(table1[0]), [0, 0, 'gi|12057207|gb|AE001439.1|',             'gi|12057207|gb|AE001439.1|', 1643831,
-            'cc055ae276c41fc1c6d7fbedd1c1a27f', 0, 0])
-        self.assertEquals(list(table2[0]), [660570681,
-            'm140907_161732_42142_c100676542550000001823129611271416_s1_p0',
-            'SUBREAD', 'P6-C4', 75.0])
-        contigs = ReferenceUtils.loadReferenceContigs(refFile, bamFile)
+        ds = AlignmentSet(bamFile)
+        contigs = ReferenceUtils.loadReferenceContigs(refFile, ds)
         self.assertEquals(len(contigs), 1)
         self.assertEquals(contigs[0].cmph5ID, 0)
-        chemistry = ReferenceUtils.loadAlignmentChemistry(bamFile)
+        chemistry = ReferenceUtils.loadAlignmentChemistry(ds)
         self.assertEquals(chemistry, "P6-C4")
 
     def test_dataset (self):
@@ -66,7 +56,8 @@ class ReferenceUtilsTest (unittest.TestCase):
 
     def test_createReferenceWindows (self):
         bamFile = os.path.join(big_data_dir, "Hpyl_1_5000.bam")
-        (refInfoTable, _) = ReferenceUtils.loadAlignmentTables(bamFile)
+        ds = AlignmentSet(bamFile)
+        refInfoTable = ds.referenceInfoTable
         windows = ReferenceUtils.createReferenceWindows(refInfoTable)
         self.assertEqual(len(windows), 1)
         w = windows[0]

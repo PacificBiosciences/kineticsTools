@@ -46,13 +46,13 @@ class TestSetup(unittest.TestCase):
         ref = os.path.join(dataDir, 'lambda', 'sequence', 'lambda.fasta')
         cmpFile = os.path.join(dataDir, "p4-c2-lambda-mod-decode.cmp.h5")
 
-        self.contigs = ReferenceUtils.loadReferenceContigs(ref, cmpFile)
+        self.cmpH5 = AlignmentSet(cmpFile)
+        self.cmpH5.addReference(ref)
+        self.contigs = ReferenceUtils.loadReferenceContigs(ref, self.cmpH5)
         self.ipdModel = IpdModel(self.contigs, os.path.join(resourcesDir, "P4-C2.h5"))
 
         # Create a functional KineticWorker object that can be poked at manually.
         self.kw = KineticWorker(self.ipdModel)
-        self.cmpH5 = AlignmentSet(cmpFile)
-        self.cmpH5.addReference(ref)
 
         # Put in our cmp.h5 - this is normally supplied by the Worker superclass
         self.kw.caseCmpH5 = self.cmpH5

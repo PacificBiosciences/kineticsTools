@@ -371,6 +371,7 @@ class KineticWorker(object):
                  if ((hit.mapQV >= self.options.mapQvThreshold) and
                      (hit.identity >= MIN_IDENTITY) and
                      (hit.readLength >= MIN_READLENGTH)) ]
+        logging.info("Retrieved %d hits" % len(hits))
         if len(hits) > self.options.maxAlignments:
             # XXX a bit of a hack - to ensure deterministic behavior when
             # running in parallel, re-seed the RNG before each call
