@@ -28,8 +28,8 @@ Look at output gff file:
   274
   $ cat tmp_xml1.gff | head -20
   ##gff-version 3
-  ##source ipdSummary.py v2.0
-  ##source-commandline /home/nechols/py/bin/ipdSummary.py --gff tmp_xml1.gff --csv tmp_xml1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference /mnt/secondary-siv/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta --referenceWindows=gi|12057207|gb|AE001439.1|:0-5000 /mnt/secondary-siv/testdata/kineticsTools/Hpyl_1_5000.xml
+  ##source ipdSummary.py * (glob)
+  ##source-commandline * (glob)
   ##sequence-region gi|12057207|gb|AE001439.1| 1 1643831
   gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t35\t35\t187\t-\t.\tcoverage=118;context=TTTAAGGGCGTTTTATGCCTAAATTTAAAAAATGATGCTGT;IPDRatio=5.68;identificationQv=196 (esc)
   gi|12057207|gb|AE001439.1|\tkinModCall\tm4C\t60\t60\t49\t-\t.\tcoverage=112;context=AAAAAGCTCGCTCAAAAACCCTTGATTTAAGGGCGTTTTAT;IPDRatio=2.58;identificationQv=33 (esc)

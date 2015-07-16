@@ -60,8 +60,7 @@ class _TestBase(object):
         alnFile = self.getAlignments()
         assert os.path.exists(alnFile) and os.path.exists(ref)
 
-        self.ds = AlignmentSet(alnFile)
-        self.ds.addReference(ref)
+        self.ds = AlignmentSet(alnFile, referenceFastaFname=ref)
         self.contigs = ReferenceUtils.loadReferenceContigs(ref, self.ds)
         self.ipdModel = IpdModel(self.contigs, os.path.join(resourcesDir, "P6-C4.h5"))
         # Create a functional KineticWorker object that can be poked at

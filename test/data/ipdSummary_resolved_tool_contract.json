@@ -1,0 +1,27 @@
+{
+  "_comment": "Example resolved tool contract for running ipdSummary.py",
+  "tool_contract": {
+    "tool_contract_id": "kineticsTools.ipdSummary",
+    "tool_type": "pbsmrtpipe.constants.distributed_task",
+    "input_files": [
+      "/mnt/secondary-siv/testdata/kineticsTools/Hpyl_1_5000.xml",
+      "/mnt/secondary-siv/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta"
+    ],
+    "output_files": [
+      "tst_basemods_tool_contract.gff",
+      "tst_basemods_tool_contract.csv"
+    ],
+    "options": {
+      "basemods.identify": "m6A,m4C",
+      "basemods.max_length": 3000000000,
+      "basemods.compute_methyl_fraction": false,
+      "basemods.pvalue": 0.001
+    },
+    "nproc": 12,
+    "resources": []
+  },
+  "driver": {
+    "exe": "ipySummary.py --resolved-tool-contract",
+    "env": {}
+  }
+}

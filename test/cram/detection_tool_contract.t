@@ -1,32 +1,32 @@
-Test detection and identification modes of ipdSummary.py using .bam file as input.
+Test detection and identification modes of ipdSummary.py using a resolved tool contract as input.  Actual input files are exactly the same as in detect_bam_dataset.t, and the output should be nearly the same except that we aren't limiting the reference window range.
 
   $ . $TESTDIR/portability.sh
 
 Load in data:
 
-  $ DATA=/mnt/secondary-siv/testdata/kineticsTools
-  $ INPUT=$DATA/Hpyl_1_5000.bam
-  $ REFERENCE=/mnt/secondary-siv/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta
+  $ DATA=$TESTDIR/../data
+  $ INPUT=$DATA/ipdSummary_resolved_tool_contract.json
 
 Run basic ipdSummary.py:
 
-  $ ipdSummary.py --gff tmp1.gff --csv tmp1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
+  $ ipdSummary.py --resolved-tool-contract $INPUT
+  Attempting to Load resolved tool contract from ['--resolved-tool-contract', '*/ipdSummary_resolved_tool_contract.json'] (glob)
 
 Look at output csv file:
 
-  $ head -3 tmp1.csv
+  $ head -3 tst_basemods_tool_contract.csv
   refName,tpl,strand,base,score,tMean,tErr,modelPrediction,ipdRatio,coverage
   "gi|12057207|gb|AE001439.1|",1,0,A,10,2.387,0.464,1.710,1.396,29
   "gi|12057207|gb|AE001439.1|",1,1,T,1,0.492,0.075,0.602,0.817,57
 
-  $ linecount tmp1.csv
-  10001
+  $ linecount tst_basemods_tool_contract.csv
+  13357
 
 Look at output gff file:
 
-  $ linecount tmp1.gff
-  274
-  $ cat tmp1.gff | head -20
+  $ linecount tst_basemods_tool_contract.gff
+  338
+  $ cat tst_basemods_tool_contract.gff | head -20
   ##gff-version 3
   ##source ipdSummary.py * (glob)
   ##source-commandline * (glob)
@@ -47,10 +47,3 @@ Look at output gff file:
   gi|12057207|gb|AE001439.1|\tkinModCall\tm4C\t312\t312\t37\t-\t.\tcoverage=204;context=GCTTTAAGCCTTTTTAATGGCGTGTTAGAAAAAATCAATGA;IPDRatio=1.88;identificationQv=3 (esc)
   gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t373\t373\t393\t+\t.\tcoverage=219;context=TAATCTTTTTTTCTTCTAACATGCTGGAAGCGATTTTTTTA;IPDRatio=7.11;identificationQv=353 (esc)
   gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t374\t374\t337\t-\t.\tcoverage=221;context=TTAAAAAAATCGCTTCCAGCATGTTAGAAGAAAAAAAGATT;IPDRatio=6.06;identificationQv=323 (esc)
-
-Now try limiting the number of alignments:
-
-  $ ipdSummary.py --gff tmp2.gff --csv tmp2.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --maxAlignments 100 --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
-
-  $ N_DIFF=`diff tmp1.gff tmp2.gff | wc --lines`
-  $ python -c "assert 100 < ${N_DIFF}, ${N_DIFF}"

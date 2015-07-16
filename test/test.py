@@ -46,8 +46,7 @@ class TestSetup(unittest.TestCase):
         ref = os.path.join(dataDir, 'lambda', 'sequence', 'lambda.fasta')
         cmpFile = os.path.join(dataDir, "p4-c2-lambda-mod-decode.cmp.h5")
 
-        self.cmpH5 = AlignmentSet(cmpFile)
-        self.cmpH5.addReference(ref)
+        self.cmpH5 = AlignmentSet(cmpFile, referenceFastaFname=ref)
         self.contigs = ReferenceUtils.loadReferenceContigs(ref, self.cmpH5)
         self.ipdModel = IpdModel(self.contigs, os.path.join(resourcesDir, "P4-C2.h5"))
 

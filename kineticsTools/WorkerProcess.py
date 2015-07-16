@@ -84,10 +84,9 @@ def _reopen (self):
     """
     refFile = None
     if not self.isCmpH5:
-        for reader in self.resourceReaders():
-            if reader.referenceFasta is not None:
-                refFile = reader.referenceFasta.filename
+        refFile = self._referenceFile
     newSet = copy.deepcopy(self)
+    newSet._referenceFastaFname = refFile
     if not self.isCmpH5 and not self.hasPbi:
         self.close()
         newSet._openFiles(refFile=refFile)
@@ -129,14 +128,14 @@ class Worker(object):
             self._sharedAlignmentSet = None
         else:
             warnings.warn("Shared AlignmentSet not used")
-            self.caseCmpH5 = pbcore.io.AlignmentSet(self.options.infile)
-            self.caseCmpH5.addReference(self.options.reference)
+            self.caseCmpH5 = pbcore.io.AlignmentSet(self.options.infile,
+                referenceFastaFname=self.options.reference)
 
         self.controlCmpH5 = None
         if not self.options.control is None:
             # We have a cmp.h5 with control vales -- load that cmp.h5
-            self.controlCmpH5 = pbcore.io.AlignmentSet(self.options.control)
-            self.controlCmpH5.addReference(self.options.reference)
+            self.controlCmpH5 = pbcore.io.AlignmentSet(self.options.control,
+                referenceFastaFname=self.options.reference)
 
         if self.options.randomSeed is None:
             np.random.seed(42)

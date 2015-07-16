@@ -29,8 +29,8 @@ Look at output gff file:
   66
   $ cat tmp1.gff | head -20
   ##gff-version 3
-  ##source ipdSummary.py v2.0
-  ##source-commandline /home/nechols/py/bin/ipdSummary.py --gff tmp1.gff --csv tmp1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference /mnt/secondary-siv/references/Methanocaldococcus_jannaschii_DSM2661/sequence/Methanocaldococcus_jannaschii_DSM2661.fasta /mnt/secondary-siv/testdata/kineticsTools/Mjan_1_5000_lossless.bam
+  ##source ipdSummary.py * (glob)
+  ##source-commandline * (glob)
   ##sequence-region gi|6626255|gb|L77117.1| 1 1664970
   ##sequence-region gi|1500644|gb|L77118.1|MII2CG 1 58407
   ##sequence-region gi|1500688|gb|L77119.1|MII1CG 1 16550

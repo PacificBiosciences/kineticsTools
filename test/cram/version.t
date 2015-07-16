@@ -4,17 +4,18 @@ A simple test of the version and help options:
   2.2
 
   $ ipdSummary.py
-  usage: ipdSummary.py [-h] [--reference REFERENCE] [--outfile OUTFILE]
-                       [--gff GFF] [--m5Cgff M5CGFF]
-                       [--m5Cclassifer M5CCLASSIFIER] [--csv CSV]
+  usage: ipdSummary.py [-h] [-v] [--reference REFERENCE] [--gff GFF] [--csv CSV]
+                       [--identify IDENTIFY] [--methylFraction]
+                       [--maxLength MAXLENGTH] [--pvalue PVALUE]
+                       [--numWorkers NUMWORKERS] [--outfile OUTFILE]
+                       [--m5Cgff M5CGFF] [--m5Cclassifer M5CCLASSIFIER]
                        [--csv_h5 CSV_H5] [--pickle PICKLE]
                        [--summary_h5 SUMMARY_H5] [--ms_csv MS_CSV]
-                       [--control CONTROL] [--identify IDENTIFY]
-                       [--methylFraction] [--useLDA] [--paramsPath PARAMSPATH]
-                       [--maxLength MAXLENGTH] [--minCoverage MINCOVERAGE]
-                       [--maxQueueSize MAXQUEUESIZE] [--maxCoverage MAXCOVERAGE]
-                       [--mapQvThreshold MAPQVTHRESHOLD] [--pvalue PVALUE]
-                       [--ipdModel IPDMODEL] [--modelIters MODELITERS]
+                       [--control CONTROL] [--useLDA] [--paramsPath PARAMSPATH]
+                       [--minCoverage MINCOVERAGE] [--maxQueueSize MAXQUEUESIZE]
+                       [--maxCoverage MAXCOVERAGE]
+                       [--mapQvThreshold MAPQVTHRESHOLD] [--ipdModel IPDMODEL]
+                       [--modelIters MODELITERS]
                        [--cap_percentile CAP_PERCENTILE]
                        [--methylMinCov METHYLMINCOV]
                        [--identifyMinCov IDENTIFYMINCOV]
@@ -23,8 +24,9 @@ A simple test of the version and help options:
                        [--refContigIndex REFCONTIGINDEX]
                        [-W REFERENCEWINDOWSASSTRING]
                        [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
-                       [--numWorkers NUMWORKERS] [--threaded] [--profile]
-                       [--debug] [--seed RANDOMSEED] [--verbose] [--version]
-                       input.cmp.h5
+                       [--threaded] [--profile] [--debug] [--seed RANDOMSEED]
+                       [--verbose]
+                       [--resolved-tool-contract RESOLVED_TOOL_CONTRACT]
+                       aligned.subreads.xml
   ipdSummary.py: error: too few arguments
   [2]

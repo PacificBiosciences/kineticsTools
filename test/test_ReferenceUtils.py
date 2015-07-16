@@ -23,7 +23,7 @@ class ReferenceUtilsTest (unittest.TestCase):
         resourcesDir = os.path.join(base_dir, '../kineticsTools/resources')
         refFile = os.path.join(dataDir, 'lambda', 'sequence', 'lambda.fasta')
         cmpFile = os.path.join(dataDir, "p4-c2-lambda-mod-decode.cmp.h5")
-        ds = AlignmentSet(cmpFile)
+        ds = AlignmentSet(cmpFile, referenceFastaFname=refFile)
         contigs = ReferenceUtils.loadReferenceContigs(refFile, ds)
         self.assertEquals(len(contigs), 1)
         self.assertEquals(contigs[0].cmph5ID, 1)
@@ -34,7 +34,7 @@ class ReferenceUtilsTest (unittest.TestCase):
         bamFile = os.path.join(big_data_dir, "Hpyl_1_5000.bam")
         refFile = os.path.join(ref_dir, "Helicobacter_pylori_J99", "sequence",
             "Helicobacter_pylori_J99.fasta")
-        ds = AlignmentSet(bamFile)
+        ds = AlignmentSet(bamFile, referenceFastaFname=refFile)
         contigs = ReferenceUtils.loadReferenceContigs(refFile, ds)
         self.assertEquals(len(contigs), 1)
         self.assertEquals(contigs[0].cmph5ID, 0)
@@ -49,14 +49,14 @@ class ReferenceUtilsTest (unittest.TestCase):
         bamFile = os.path.join(big_data_dir, "Hpyl_1_5000.bam")
         refFile = os.path.join(ref_dir, "Helicobacter_pylori_J99", "sequence",
             "Helicobacter_pylori_J99.fasta")
-        alnFile = AlignmentSet(bamFile)
+        alnFile = AlignmentSet(bamFile, referenceFastaFname=refFile)
         win = ReferenceUtils.parseReferenceWindow(window,
             alnFile.referenceInfo)
         self.assertEquals([win.refId, win.start, win.end], [0, 1, 5000])
 
     def test_createReferenceWindows (self):
         bamFile = os.path.join(big_data_dir, "Hpyl_1_5000.bam")
-        ds = AlignmentSet(bamFile)
+        ds = AlignmentSet(bamFile, referenceFastaFname=None)
         refInfoTable = ds.referenceInfoTable
         windows = ReferenceUtils.createReferenceWindows(refInfoTable)
         self.assertEqual(len(windows), 1)
