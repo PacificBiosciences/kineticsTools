@@ -20,7 +20,8 @@ setup(
         'pbcore >= 0.8.0',
         'numpy >= 1.6.0',
         'h5py >= 1.3.0',
-        'scipy >= 0.9.0'
+        'scipy >= 0.9.0',
+        'pbcommand >= 0.1.7',
     ],
     entry_points={'console_scripts': [
         "ipdSummary.py = kineticsTools.ipdSummary:main",

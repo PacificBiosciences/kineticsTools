@@ -10,7 +10,7 @@ Load in data:
 
 Run basic ipdSummary.py:
 
-  $ ipdSummary.py --gff tmp_xml1.gff --csv tmp_xml1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
+  $ ipdSummary.py --outfile tmp_xml1 --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
 
 Look at output csv file:
 

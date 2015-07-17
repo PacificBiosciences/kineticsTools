@@ -832,10 +832,10 @@ class KineticsWriter(ResultCollectorProcess):
         # Spec for what kinds of output files we can generate.
         # Entry format is (<option field name>, <extension>, <writer consumer function>)
         fileSpec = [
-            ('m5Cgff', 'gff', self.m5CgffConsumer),
+            ('m5Cgff', 'm5C.gff', self.m5CgffConsumer),
             ('gff', 'gff', self.gffConsumer),
             ('csv', 'csv', self.csvConsumer),
-            ('ms_csv', 'csv', self.msCsvConsumer),
+            ('ms_csv', 'ms.csv', self.msCsvConsumer),
             ('pickle', 'pickle', self.csvConsumer),
             ('summary_h5', 'summary.h5', self.ipdRatioH5Consumer),
             ('csv_h5', 'h5', self.hdf5CsvConsumer)
