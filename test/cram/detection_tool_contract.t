@@ -10,7 +10,7 @@ Load in data:
 Run basic ipdSummary.py:
 
   $ ipdSummary.py --resolved-tool-contract $INPUT
-  Attempting to Load resolved tool contract from ['--resolved-tool-contract', '/home/nechols/src/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/resolved_tool_contract.json']
+  Attempting to Load resolved tool contract from ['--resolved-tool-contract', '/*data/resolved_tool_contract.json'] (glob)
 
 Look at output csv file:
 
@@ -28,8 +28,8 @@ Look at output gff file:
   338
   $ cat tst_basemods_tool_contract.gff | head -20
   ##gff-version 3
-  ##source ipdSummary.py v2.0
-  ##source-commandline /home/nechols/py/bin/ipdSummary.py --resolved-tool-contract /home/nechols/src/smrtanalysis/bioinformatics/tools/kineticsTools/test/cram/../data/resolved_tool_contract.json
+  ##source ipdSummary.py * (glob)
+  ##source-commandline * (glob)
   ##sequence-region gi|12057207|gb|AE001439.1| 1 1643831
   gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t35\t35\t187\t-\t.\tcoverage=118;context=TTTAAGGGCGTTTTATGCCTAAATTTAAAAAATGATGCTGT;IPDRatio=5.68;identificationQv=196 (esc)
   gi|12057207|gb|AE001439.1|\tkinModCall\tm4C\t60\t60\t49\t-\t.\tcoverage=112;context=AAAAAGCTCGCTCAAAAACCCTTGATTTAAGGGCGTTTTAT;IPDRatio=2.58;identificationQv=33 (esc)
