@@ -70,6 +70,12 @@ revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
 changeNum = int(__p4change__.strip("$").split(":")[-1])
 __version__ = "2.2"
 
+class Constants(object):
+    PVALUE_ID = "kinetics_tools.task_options.pvalue"
+    MAX_LENGTH_ID = "kinetics_tools.task_options.max_length"
+    METHYL_FRACTION_ID = "kinetics_tools.task_options.compute_methyl_fraction"
+    IDENTIFY_ID = "kinetics_tools.task_options.identify"
+
 def _getResourcePath():
     return resource_filename(Requirement.parse('kineticsTools'),'kineticsTools/resources')
 
@@ -124,12 +130,16 @@ def get_contract_parser():
         name="CSV file",
         description="CSV file of per-nucleotide information",
         default_name="basemods.csv")
-    p.add_int("numWorkers", "numWorkers", nproc, "Number of processors",
-        "Number of processors")
-    p.add_float("pvalue", "pvalue", 0.01, "P-value", "P-value cutoff")
-    p.add_int("maxLength", "maxLength", int(3e12), "Max sequence length",
-        "Maximum number of bases to process per contig")
-    p.add_str(option_id="identify",
+    p.add_float(Constants.PVALUE_ID, "pvalue",
+        default=0.01,
+        name="P-value",
+        description="P-value cutoff")
+    p.add_int(Constants.MAX_LENGTH_ID,
+        option_str="maxLength",
+        default=int(3e12),
+        name="Max sequence length",
+        description="Maximum number of bases to process per contig")
+    p.add_str(Constants.IDENTIFY_ID,
         option_str="identify",
         default=None,
         name="Identify basemods",
@@ -725,29 +735,28 @@ def resolved_tool_contract_runner(resolved_contract):
     :type resolved_contract: ResolvedToolContract
     :return: Exit code
     """
-    alignment_path = resolved_contract.task.input_files[0]
-    reference_path = resolved_contract.task.input_files[1]
-    gff_path = resolved_contract.task.output_files[0]
-    csv_path = resolved_contract.task.output_files[1]
+    rc = resolved_contract
+    alignment_path = rc.task.input_files[0]
+    reference_path = rc.task.input_files[1]
+    gff_path = rc.task.output_files[0]
+    csv_path = rc.task.output_files[1]
     args = [
         alignment_path,
         "--reference", reference_path,
         "--gff", gff_path,
         "--csv", csv_path,
-        "--numWorkers", str(resolved_contract.task.nproc),
-        "--pvalue", str(resolved_contract.task.options["basemods.pvalue"]),
+        "--numWorkers", str(rc.task.nproc),
+        "--pvalue", str(rc.task.options[Constants.PVALUE_ID]),
     ]
-    if resolved_contract.task.options["basemods.max_length"]:
+    if rc.task.options[Constants.MAX_LENGTH_ID]:
         args.extend([
-            "--maxLength",
-            str(resolved_contract.task.options["basemods.max_length"]),
+            "--maxLength", str(rc.task.options[Constants.MAX_LENGTH_ID]),
         ])
-    if resolved_contract.task.options["basemods.compute_methyl_fraction"]:
+    if rc.task.options[Constants.METHYL_FRACTION_ID]:
         args.append("--methylFraction")
-    if resolved_contract.task.options["basemods.identify"]:
+    if rc.task.options[Constants.IDENTIFY_ID]:
         args.extend([
-            "--identify",
-            resolved_contract.task.options["basemods.identify"],
+            "--identify", rc.task.options[Constants.IDENTIFY_ID],
         ])
     parser = get_argument_parser()
     args_ = parser.parse_args(args)

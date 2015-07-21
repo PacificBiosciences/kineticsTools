@@ -12,10 +12,10 @@
       "tst_basemods_tool_contract.csv"
     ],
     "options": {
-      "basemods.identify": "m6A,m4C",
-      "basemods.max_length": 3000000000,
-      "basemods.compute_methyl_fraction": false,
-      "basemods.pvalue": 0.001
+      "kinetics_tools.task_options.identify": "m6A,m4C",
+      "kinetics_tools.task_options.max_length": 3000000000,
+      "kinetics_tools.task_options.compute_methyl_fraction": false,
+      "kinetics_tools.task_options.pvalue": 0.001
     },
     "nproc": 12,
     "resources": []
