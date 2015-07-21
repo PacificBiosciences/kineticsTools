@@ -24,9 +24,10 @@ A simple test of the version and help options:
                        [--refContigIndex REFCONTIGINDEX]
                        [-W REFERENCEWINDOWSASSTRING]
                        [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
-                       [--threaded] [--profile] [--debug] [--seed RANDOMSEED]
+                       [--threaded] [--profile] [--usePdb] [--seed RANDOMSEED]
                        [--verbose]
                        [--resolved-tool-contract RESOLVED_TOOL_CONTRACT]
+                       [--emit-tool-contract]
                        aligned.subreads.xml
   ipdSummary.py: error: too few arguments
   [2]

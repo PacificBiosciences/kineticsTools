@@ -38,6 +38,7 @@ import functools
 import gc
 import itertools
 import argparse
+import json
 
 import os
 import logging
@@ -99,8 +100,7 @@ validateNoneOrDir = functools.partial(_validateNoneOrResource, os.path.isdir)
 
 # XXX FUTURE: use this!  then we can generate the tool contract dynamically
 # instead of editing a static file.
-def __get_parser():
-    raise NotImplementedError()
+def get_contract_parser():
     nproc = 1
     resources = ()
     driver_exe = "ipdSummary.py --resolved-tool-contract "
@@ -114,27 +114,27 @@ def __get_parser():
         resources)
     p.add_input_file_type(FileTypes.DS_BAM, "infile",
         "Alignment DataSet", "BAM or Alignment DataSet")
-    p.add_input_file_type(FileTypes.DS_FASTA, "reference",
+    p.add_input_file_type(FileTypes.DS_REF, "reference",
         "Reference DataSet", "Fasta or Reference DataSet")
+    p.add_output_file_type(FileTypes.GFF, "gff",
+        name="GFF file",
+        description="GFF file of modified bases",
+        default_name="basemods.gff")
+    p.add_output_file_type(FileTypes.CSV, "csv",
+        name="CSV file",
+        description="CSV file of per-nucleotide information",
+        default_name="basemods.csv")
     p.add_int("numWorkers", "numWorkers", nproc, "Number of processors",
         "Number of processors")
     p.add_float("pvalue", "pvalue", 0.01, "P-value", "P-value cutoff")
     p.add_int("maxLength", "maxLength", int(3e12), "Max sequence length",
         "Maximum number of bases to process per contig")
-    p.add_str("gff", "gff",
-        default=None,
-        name="GFF file",
-        description="Name of output GFF file")
-    p.add_str('csv', 'csv',
-        default=None,
-        name="CSV file",
-        description="Name of output CSV file")
     p.add_str(option_id="identify",
         option_str="identify",
         default=None,
         name="Identify basemods",
         description="Specific modifications to identify (comma-separated list")
-    get_more_options(p.arg_parser.parser)
+    _get_more_options(p.arg_parser.parser)
     return p
 
 def get_argument_parser():
@@ -181,11 +181,23 @@ def get_argument_parser():
         default=1,
         type=int,
         help='Number of thread to use (-1 uses all logical cpus)')
-    get_more_options(parser)
+    _get_more_options(parser)
+    add_resolved_tool_contract_option(parser)
+    # FIXME temporary workaround for parser chaos
+    class EmitToolContractAction(argparse.Action):
+        def __call__(self, parser_, namespace, values, option_string=None):
+            parser2 = get_contract_parser()
+            sys.stdout.write(json.dumps(parser2.to_contract(), indent=4)+'\n')
+            sys.exit(0)
+    parser.add_argument("--emit-tool-contract",
+                        nargs=0,
+                        action=EmitToolContractAction)
     return parser
 
-# advanced options that won't be exposed via tool contract interface
-def get_more_options(parser):
+def _get_more_options(parser):
+    """
+    Advanced options that won't be exposed via tool contract interface.
+    """
     parser.add_argument('--outfile',
         dest='outfile',
         default=None,
@@ -355,7 +367,7 @@ def get_more_options(parser):
                              default=False,
                              help="Enable Python-level profiling (using cProfile).")
 
-    parser.add_argument('--debug',
+    parser.add_argument('--usePdb',
                              action='store_true',
                              dest="usePdb",
                              default=False,
@@ -372,17 +384,6 @@ def get_more_options(parser):
     parser.add_argument("--verbose",
                         action="store_true",
                         default=False)
-
-    # FIXME need something in pbcommand? or already dealt with?
-    # Version
-#    class PrintVersionAction(argparse.Action):
-#        def __call__(self, parser, namespace, values, option_string=None):
-#            print __version__
-#            sys.exit(0)
-#    parser.add_argument("--version",
-#                             nargs=0,
-#                             action=PrintVersionAction)
-    add_resolved_tool_contract_option(parser)
     return parser
 
 
@@ -733,7 +734,6 @@ def resolved_tool_contract_runner(resolved_contract):
         "--reference", reference_path,
         "--gff", gff_path,
         "--csv", csv_path,
-        #"--sumary_h5", h5_path,
         "--numWorkers", str(resolved_contract.task.nproc),
         "--pvalue", str(resolved_contract.task.options["basemods.pvalue"]),
     ]
