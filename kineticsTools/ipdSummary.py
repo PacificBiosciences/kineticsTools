@@ -111,7 +111,7 @@ def get_contract_parser():
     resources = ()
     driver_exe = "ipdSummary.py --resolved-tool-contract "
     p = get_default_contract_parser(
-        "kineticsTools.ipdSummary",
+        "kinetics_tools.tasks.ipd_summary",
         __version__,
         __doc__,
         driver_exe,
