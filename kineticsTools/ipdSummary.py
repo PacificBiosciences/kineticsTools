@@ -53,7 +53,8 @@ from pkg_resources import Requirement, resource_filename
 
 from pbcommand.cli import (pacbio_args_or_contract_runner,
                            get_default_argparser)
-from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
+from pbcommand.models import (TaskTypes, FileTypes, SymbolTypes,
+    get_default_contract_parser)
 from pbcommand.utils import setup_log
 from pbcommand.common_options import add_resolved_tool_contract_option
 
@@ -71,6 +72,8 @@ changeNum = int(__p4change__.strip("$").split(":")[-1])
 __version__ = "2.2"
 
 class Constants(object):
+    TOOL_ID = "kinetics_tools.tasks.ipd_summary"
+    DRIVER_EXE = "python -m kineticsTools.ipdSummary --resolved-tool-contract"
     PVALUE_ID = "kinetics_tools.task_options.pvalue"
     MAX_LENGTH_ID = "kinetics_tools.task_options.max_length"
     METHYL_FRACTION_ID = "kinetics_tools.task_options.compute_methyl_fraction"
@@ -107,14 +110,13 @@ validateNoneOrDir = functools.partial(_validateNoneOrResource, os.path.isdir)
 # XXX FUTURE: use this!  then we can generate the tool contract dynamically
 # instead of editing a static file.
 def get_contract_parser():
-    nproc = 1
+    nproc = SymbolTypes.MAX_NPROC
     resources = ()
-    driver_exe = "ipdSummary.py --resolved-tool-contract "
     p = get_default_contract_parser(
-        "kinetics_tools.tasks.ipd_summary",
+        Constants.TOOL_ID,
         __version__,
         __doc__,
-        driver_exe,
+        Constants.DRIVER_EXE,
         TaskTypes.DISTRIBUTED,
         nproc,
         resources)
