@@ -38,6 +38,7 @@ class TestPbreportModifications(pbcommand.testkit.PbTestApp):
     DRIVER_RESOLVE = DRIVER_BASE + " --resolved-tool-contract "
     REQUIRES_PBCORE = True
     MAX_NPROC = 8
+    RESOLVED_NPROC = 8
     INPUT_FILES = [
         os.path.join(DATA_DIR, "Hpyl_1_5000.xml"),
         os.path.join(REF_DIR, "sequence", "Helicobacter_pylori_J99.fasta"),

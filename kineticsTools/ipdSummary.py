@@ -143,9 +143,14 @@ def get_contract_parser():
         description="Maximum number of bases to process per contig")
     p.add_str(Constants.IDENTIFY_ID,
         option_str="identify",
-        default=None,
+        default="",
         name="Identify basemods",
         description="Specific modifications to identify (comma-separated list")
+    p.add_boolean(Constants.METHYL_FRACTION_ID,
+        option_str="methylFraction",
+        default=False,
+        name="Compute methyl fraction",
+        description="Compute methyl fraction")
     _get_more_options(p.arg_parser.parser)
     return p
 
