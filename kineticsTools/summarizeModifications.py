@@ -29,67 +29,45 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
+"""
+Summarizes kinetic modifications in the alignment_summary.gff file.
+"""
 
 import cProfile
 from itertools import groupby
-from pbcore.io import GffReader, Gff3Record
 import os
 import logging
 import sys
 
-from pbcore.util.ToolRunner import PBToolRunner
+from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
+from pbcommand.cli import pacbio_args_or_contract_runner_emit
+from pbcommand.common_options import add_debug_option
+from pbcommand.utils import setup_log
+from pbcore.io import GffReader, Gff3Record
 
 # Version info...
 __version__ = "1.0"
 
 
-class ModificationSummary(PBToolRunner):
+class Constants(object):
+    TOOL_ID = "kinetics_tools.tasks.summarize_modifications"
+    DRIVER_EXE = "python -m kineticsTools.summarizeModifications --resolved-tool-contract"
 
-    def __init__(self):
-        desc = ['Summarizes kinetic modifications in the alignment_summary.gff file',
-                'Notes: For all command-line arguments, default values are listed in [].']
-        super(ModificationSummary, self).__init__('\n'.join(desc))
 
-        self.parser.add_argument('--modifications',
-                                 dest="modifications",
-                                 help='Name of input GFF file [%(default)s]')
+class ModificationSummary(object):
+    def __init__(self, modifications, alignmentSummary, outfile):
+        self.modifications = modifications
+        self.alignmentSummary = alignmentSummary
+        self.outfile = outfile
 
-        self.parser.add_argument('--alignmentSummary',
-                                 dest="alignmentSummary",
-                                 help='Name alignment summary file [%(default)s]')
-
-        self.parser.add_argument('--outfile',
-                                 dest="outfile",
-                                 help='Name of modified alignment summary GFF file [%(default)s]')
-
-    def getVersion(self):
-        return __version__
-
-    def validateArgs(self):
-        if not os.path.exists(self.args.modifications):
-            self.parser.error('input modifications gff file provided does not exist')
-
-        if not os.path.exists(self.args.alignmentSummary):
-            self.parser.error('input alignment summary gff file provided does not exist')
-
-    def run(self):
-        self.options = self.args
-
+    def run(self, profile=False):
         self.knownModificationEvents = ["modified_base", "m6A", "m4C", "m5C"]
-
-        # Log generously
-        logFormat = '%(asctime)s [%(levelname)s] %(message)s'
-        logging.basicConfig(level=logging.INFO, format=logFormat)
-        stdOutHandler = logging.StreamHandler(sys.stdout)
-        logging.Logger.root.addHandler(stdOutHandler)
-        logging.info("t1")
-
-        if self.args.profile:
+        if profile:
             cProfile.runctx("self._mainLoop()",
                             globals=globals(),
                             locals=locals(),
                             filename="profile.out")
-
+            return 0
         else:
             return self._mainLoop()
 
@@ -105,7 +83,7 @@ class ModificationSummary(PBToolRunner):
     def _mainLoop(self):
 
         # Read in the existing modifications.gff
-        modReader = GffReader(self.args.modifications)
+        modReader = GffReader(self.modifications)
 
         headerString = ",".join(['"' + x + '"' for x in self.knownModificationEvents])
 
@@ -126,10 +104,10 @@ class ModificationSummary(PBToolRunner):
                 for x in modReader if x.type in self.knownModificationEvents]
 
         # Summary reader
-        summaryFile = file(self.args.alignmentSummary)
+        summaryFile = file(self.alignmentSummary)
 
         # Modified gff file
-        summaryWriter = file(self.args.outfile, "w")
+        summaryWriter = file(self.outfile, "w")
 
         self.seqMap = {}
         inHeader = True
@@ -169,7 +147,58 @@ class ModificationSummary(PBToolRunner):
                 rec.modsrev = ",".join([str(cRev[x]) for x in self.knownModificationEvents])
 
                 print >>summaryWriter, str(rec)
+        return 0
+
+
+def args_runner(args):
+    return ModificationSummary(
+        modifications=args.modifications,
+        alignmentSummary=args.alignmentSummary,
+        outfile=args.outfile).run()
+
+def resolved_tool_contract_runner(resolved_tool_contract):
+    rtc = resolved_tool_contract
+    return ModificationSummary(
+        modifications=rtc.task.input_files[0],
+        alignmentSummary=rtc.task.input_files[1],
+        outfile=rtc.task.output_files[0]).run()
+
+def get_parser():
+    nproc = 1
+    resources = ()
+    p = get_default_contract_parser(
+        Constants.TOOL_ID,
+        __version__,
+        __doc__,
+        Constants.DRIVER_EXE,
+        TaskTypes.LOCAL,
+        nproc,
+        resources)
+    p.add_input_file_type(FileTypes.GFF, "modifications",
+        name="GFF file",
+        description="Base modification GFF file")
+    p.add_input_file_type(FileTypes.GFF, "alignmentSummary",
+        name="GFF file",
+        description="Alignment summary GFF")
+    p.add_output_file_type(FileTypes.GFF, "gff_out",
+        name="GFF file",
+        description="Modified alignment summary file",
+        default_name="alignment_summary_with_basemods.gff")
+    return p
+
+def main(argv=sys.argv):
+    mp = get_parser()
+    logFormat = '%(asctime)s [%(levelname)s] %(message)s'
+    logging.basicConfig(level=logging.INFO, format=logFormat)
+    stdOutHandler = logging.StreamHandler(sys.stdout)
+    logging.Logger.root.addHandler(stdOutHandler)
+    log = logging.getLogger()
+    return pacbio_args_or_contract_runner_emit(argv[1:],
+                                               mp,
+                                               args_runner,
+                                               resolved_tool_contract_runner,
+                                               log,
+                                               lambda *args: log)
 
 if __name__ == "__main__":
-    kt = ModificationSummary()
-    kt.start()
+    main()

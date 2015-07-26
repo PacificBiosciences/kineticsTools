@@ -32,7 +32,7 @@ gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t89\t89\t223\t+\t.\tcoverage=139;con
 
 @unittest.skipUnless(os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),
     "%s or %s not available" % (DATA_DIR, REF_DIR))
-class TestPbreportModifications(pbcommand.testkit.PbTestApp):
+class TestIpdSummary(pbcommand.testkit.PbTestApp):
     DRIVER_BASE = "python -m kineticsTools.ipdSummary "
     DRIVER_EMIT = DRIVER_BASE + " --emit-tool-contract "
     DRIVER_RESOLVE = DRIVER_BASE + " --resolved-tool-contract "
@@ -72,6 +72,20 @@ class TestPbreportModifications(pbcommand.testkit.PbTestApp):
                     break
             return "\n".join(out)
         self.assertEqual(head2(gff_file, 3), Constants.INITIAL_LINES_GFF)
+
+
+@unittest.skipUnless(os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),
+    "%s or %s not available" % (DATA_DIR, REF_DIR))
+class TestSummarizeModifications(pbcommand.testkit.PbTestApp):
+    DRIVER_BASE = "python -m kineticsTools.summarizeModifications"
+    DRIVER_EMIT = DRIVER_BASE + " --emit-tool-contract "
+    DRIVER_RESOLVE = DRIVER_BASE + " --resolved-tool-contract "
+    REQUIRES_PBCORE = True
+    INPUT_FILES = [
+        os.path.join(DATA_DIR, "Hpyl_1_5000_modifications.gff"),
+        os.path.join(DATA_DIR, "Hpyl_1_5000_alignment_summary.gff"),
+    ]
+
 
 if __name__ == "__main__":
     unittest.main()

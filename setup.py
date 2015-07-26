@@ -8,7 +8,7 @@ setup(
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license=open('LICENSES.txt').read(),
-    scripts=['bin/summarizeModifications.py', 'bin/copyIpdSummaryDataset.py'],
+    scripts=['bin/copyIpdSummaryDataset.py'],
     packages=find_packages('.'),
     package_dir={'': '.'},
     package_data={'kineticsTools': ['resources/*.h5']},
@@ -25,5 +25,6 @@ setup(
     ],
     entry_points={'console_scripts': [
         "ipdSummary.py = kineticsTools.ipdSummary:main",
+        "summarizeModifications.py = kineticsTools.summarizeModifications:main",
     ]},
 )
