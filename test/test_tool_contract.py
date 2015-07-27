@@ -51,11 +51,8 @@ class TestIpdSummary(pbcommand.testkit.PbTestApp):
     }
 
     def run_after(self, rtc, output_dir):
-        file_names = set(os.listdir(output_dir))
-        for file_name in EXPECTED_FILES:
-            self.assertTrue(file_name in file_names, "Missing %s" % file_name)
-        csv_file = os.path.join(output_dir, EXPECTED_FILES[0])
-        gff_file = os.path.join(output_dir, EXPECTED_FILES[1])
+        gff_file = os.path.join(output_dir, rtc.task.output_files[0])
+        csv_file = os.path.join(output_dir, rtc.task.output_files[1])
         def lc(fn): return len(open(fn).readlines())
         self.assertEqual(lc(gff_file), Constants.N_LINES_GFF)
         self.assertEqual(lc(csv_file), Constants.N_LINES_CSV)
