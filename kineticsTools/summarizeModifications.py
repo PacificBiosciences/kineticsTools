@@ -39,8 +39,8 @@ import os
 import logging
 import sys
 
-from pbcommand.models import TaskTypes, FileTypes, get_default_contract_parser
-from pbcommand.cli import pacbio_args_or_contract_runner_emit
+from pbcommand.models import FileTypes, get_pbparser
+from pbcommand.cli import pbparser_runner
 from pbcommand.common_options import add_debug_option
 from pbcommand.utils import setup_log
 from pbcore.io import GffReader, Gff3Record
@@ -164,16 +164,12 @@ def resolved_tool_contract_runner(resolved_tool_contract):
         outfile=rtc.task.output_files[0]).run()
 
 def get_parser():
-    nproc = 1
-    resources = ()
-    p = get_default_contract_parser(
-        Constants.TOOL_ID,
-        __version__,
-        __doc__,
-        Constants.DRIVER_EXE,
-        TaskTypes.LOCAL,
-        nproc,
-        resources)
+    p = get_pbparser(
+        tool_id=Constants.TOOL_ID,
+        version=__version__,
+        name=Constants.TOOL_ID,
+        description=__doc__,
+        driver_exe=Constants.DRIVER_EXE)
     p.add_input_file_type(FileTypes.GFF, "modifications",
         name="GFF file",
         description="Base modification GFF file")
@@ -193,12 +189,13 @@ def main(argv=sys.argv):
     stdOutHandler = logging.StreamHandler(sys.stdout)
     logging.Logger.root.addHandler(stdOutHandler)
     log = logging.getLogger()
-    return pacbio_args_or_contract_runner_emit(argv[1:],
-                                               mp,
-                                               args_runner,
-                                               resolved_tool_contract_runner,
-                                               log,
-                                               lambda *args: log)
+    return pbparser_runner(
+        argv=argv[1:],
+        parser=mp,
+        args_runner_func=args_runner,
+        contract_runner_func=resolved_tool_contract_runner,
+        alog=log,
+        setup_log_func=setup_log)
 
 if __name__ == "__main__":
     main()

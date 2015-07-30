@@ -53,8 +53,7 @@ from pkg_resources import Requirement, resource_filename
 
 from pbcommand.cli import (pacbio_args_or_contract_runner,
                            get_default_argparser)
-from pbcommand.models import (TaskTypes, FileTypes, SymbolTypes,
-    get_default_contract_parser)
+from pbcommand.models import FileTypes, SymbolTypes, get_pbparser
 from pbcommand.utils import setup_log
 from pbcommand.common_options import add_resolved_tool_contract_option
 
@@ -110,17 +109,16 @@ validateNoneOrDir = functools.partial(_validateNoneOrResource, os.path.isdir)
 # XXX FUTURE: use this!  then we can generate the tool contract dynamically
 # instead of editing a static file.
 def get_contract_parser():
-    nproc = SymbolTypes.MAX_NPROC
-    resources = ()
-    p = get_default_contract_parser(
-        Constants.TOOL_ID,
-        __version__,
-        __doc__,
-        Constants.DRIVER_EXE,
-        TaskTypes.DISTRIBUTED,
-        nproc,
-        resources)
-    p.add_input_file_type(FileTypes.DS_BAM, "infile",
+    p = get_pbparser(
+        tool_id=Constants.TOOL_ID,
+        version=__version__,
+        name=Constants.TOOL_ID,
+        description=__doc__,
+        driver_exe=Constants.DRIVER_EXE,
+        is_distributed=True,
+        nproc=SymbolTypes.MAX_NPROC,
+        resource_types=())
+    p.add_input_file_type(FileTypes.DS_ALIGN, "infile",
         "Alignment DataSet", "BAM or Alignment DataSet")
     p.add_input_file_type(FileTypes.DS_REF, "reference",
         "Reference DataSet", "Fasta or Reference DataSet")
@@ -204,7 +202,8 @@ def get_argument_parser():
     class EmitToolContractAction(argparse.Action):
         def __call__(self, parser_, namespace, values, option_string=None):
             parser2 = get_contract_parser()
-            sys.stdout.write(json.dumps(parser2.to_contract(), indent=4)+'\n')
+            sys.stdout.write(json.dumps(parser2.to_contract().to_dict(),
+                indent=4)+'\n')
             sys.exit(0)
     parser.add_argument("--emit-tool-contract",
                         nargs=0,
@@ -782,7 +781,7 @@ def main(argv=sys.argv, out=sys.stdout):
                                               args_runner,
                                               resolved_tool_contract_runner,
                                               log,
-                                              lambda *args: log)
+                                              setup_log)
     # FIXME is there a more central place to deal with this?
     except Exception as e:
         type, value, tb = sys.exc_info()
