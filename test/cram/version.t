@@ -4,16 +4,18 @@ A simple test of the version and help options:
   2.2
 
   $ ipdSummary.py
-  usage: ipdSummary.py [-h] [-v] [--reference REFERENCE] [--gff GFF] [--csv CSV]
-                       [--identify IDENTIFY] [--methylFraction]
-                       [--maxLength MAXLENGTH] [--pvalue PVALUE]
-                       [--numWorkers NUMWORKERS] [--outfile OUTFILE]
-                       [--m5Cgff M5CGFF] [--m5Cclassifer M5CCLASSIFIER]
-                       [--csv_h5 CSV_H5] [--pickle PICKLE]
-                       [--summary_h5 SUMMARY_H5] [--ms_csv MS_CSV]
-                       [--control CONTROL] [--useLDA] [--paramsPath PARAMSPATH]
-                       [--minCoverage MINCOVERAGE] [--maxQueueSize MAXQUEUESIZE]
-                       [--maxCoverage MAXCOVERAGE]
+  usage: ipdSummary.py [-h] [-v] [--emit-tool-contract]
+                       [--resolved-tool-contract RESOLVED_TOOL_CONTRACT]
+                       [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+                       [--debug] --reference REFERENCE [--gff GFF] [--csv CSV]
+                       [--numWorkers NUMWORKERS] [--pvalue PVALUE]
+                       [--maxLength MAXLENGTH] [--identify IDENTIFY]
+                       [--methylFraction] [--outfile OUTFILE] [--m5Cgff M5CGFF]
+                       [--m5Cclassifer M5CCLASSIFIER] [--csv_h5 CSV_H5]
+                       [--pickle PICKLE] [--summary_h5 SUMMARY_H5]
+                       [--ms_csv MS_CSV] [--control CONTROL] [--useLDA]
+                       [--paramsPath PARAMSPATH] [--minCoverage MINCOVERAGE]
+                       [--maxQueueSize MAXQUEUESIZE] [--maxCoverage MAXCOVERAGE]
                        [--mapQvThreshold MAPQVTHRESHOLD] [--ipdModel IPDMODEL]
                        [--modelIters MODELITERS]
                        [--cap_percentile CAP_PERCENTILE]
@@ -26,8 +28,6 @@ A simple test of the version and help options:
                        [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
                        [--threaded] [--profile] [--usePdb] [--seed RANDOMSEED]
                        [--verbose]
-                       [--resolved-tool-contract RESOLVED_TOOL_CONTRACT]
-                       [--emit-tool-contract]
-                       aligned.subreads.xml
+                       alignment_set
   ipdSummary.py: error: too few arguments
   [2]

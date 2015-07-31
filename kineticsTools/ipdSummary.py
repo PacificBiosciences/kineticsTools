@@ -29,8 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 """
-Tool for detecting DNA base-modifications from kinetic signatures
-Notes: For all command-line arguments, default values are listed in []
+Tool for detecting DNA base-modifications from kinetic signatures.
 """
 
 import cProfile
@@ -51,13 +50,11 @@ import Queue
 import traceback
 from pkg_resources import Requirement, resource_filename
 
-from pbcommand.cli import (pacbio_args_or_contract_runner,
-                           get_default_argparser)
 from pbcommand.models import FileTypes, SymbolTypes, get_pbparser
+from pbcommand.cli import pbparser_runner
 from pbcommand.utils import setup_log
-from pbcommand.common_options import add_resolved_tool_contract_option
-
 from pbcore.io import AlignmentSet
+
 from kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
 from kineticsTools.ResultWriter import KineticsWriter
 from kineticsTools.ipdModel import IpdModel
@@ -72,9 +69,12 @@ __version__ = "2.2"
 
 class Constants(object):
     TOOL_ID = "kinetics_tools.tasks.ipd_summary"
+    TOOL_NAME = "ipdSummary"
     DRIVER_EXE = "python -m kineticsTools.ipdSummary --resolved-tool-contract"
     PVALUE_ID = "kinetics_tools.task_options.pvalue"
+    PVALUE_DEFAULT = 0.01
     MAX_LENGTH_ID = "kinetics_tools.task_options.max_length"
+    MAX_LENGTH_DEFAULT = int(3e12)
     METHYL_FRACTION_ID = "kinetics_tools.task_options.compute_methyl_fraction"
     IDENTIFY_ID = "kinetics_tools.task_options.identify"
 
@@ -106,109 +106,68 @@ validateDir = functools.partial(_validateResource, os.path.isdir)
 validateNoneOrFile = functools.partial(_validateNoneOrResource, os.path.isfile)
 validateNoneOrDir = functools.partial(_validateNoneOrResource, os.path.isdir)
 
-# XXX FUTURE: use this!  then we can generate the tool contract dynamically
-# instead of editing a static file.
-def get_contract_parser():
+def get_parser():
     p = get_pbparser(
         tool_id=Constants.TOOL_ID,
         version=__version__,
-        name=Constants.TOOL_ID,
+        name=Constants.TOOL_NAME,
         description=__doc__,
         driver_exe=Constants.DRIVER_EXE,
         is_distributed=True,
-        nproc=SymbolTypes.MAX_NPROC,
-        resource_types=())
-    p.add_input_file_type(FileTypes.DS_ALIGN, "infile",
+        nproc=SymbolTypes.MAX_NPROC)
+    p.add_input_file_type(FileTypes.DS_ALIGN, "alignment_set",
         "Alignment DataSet", "BAM or Alignment DataSet")
-    p.add_input_file_type(FileTypes.DS_REF, "reference",
+    # FIXME just use a positional argument...
+    p.tool_contract_parser.add_input_file_type(FileTypes.DS_REF, "reference",
         "Reference DataSet", "Fasta or Reference DataSet")
-    p.add_output_file_type(FileTypes.GFF, "gff",
+    p.arg_parser.parser.add_argument("--reference", action="store",
+        required=True,
+        type=validateFile, help="Fasta or Reference DataSet")
+    # XXX GFF and CSV are "option" for arg parser, not tool contract
+    p.tool_contract_parser.add_output_file_type(FileTypes.GFF, "gff",
         name="GFF file",
         description="GFF file of modified bases",
         default_name="basemods.gff")
-    p.add_output_file_type(FileTypes.CSV, "csv",
+    p.tool_contract_parser.add_output_file_type(FileTypes.CSV, "csv",
         name="CSV file",
         description="CSV file of per-nucleotide information",
         default_name="basemods.csv")
+    p.arg_parser.parser.add_argument("--gff", action="store", default=None,
+        help="Output GFF file of modified bases")
+    p.arg_parser.parser.add_argument("--csv", action="store", default=None,
+        help="Output CSV file out per-nucleotide information")
+    # FIXME use central --nproc option
+    p.arg_parser.parser.add_argument('--numWorkers', '-j',
+        dest='numWorkers',
+        default=1,
+        type=int,
+        help='Number of thread to use (-1 uses all logical cpus)')
+    # common options
     p.add_float(Constants.PVALUE_ID, "pvalue",
-        default=0.01,
+        default=Constants.PVALUE_DEFAULT,
         name="P-value",
         description="P-value cutoff")
     p.add_int(Constants.MAX_LENGTH_ID,
         option_str="maxLength",
-        default=int(3e12),
+        default=Constants.MAX_LENGTH_DEFAULT,
         name="Max sequence length",
         description="Maximum number of bases to process per contig")
     p.add_str(Constants.IDENTIFY_ID,
         option_str="identify",
         default="",
         name="Identify basemods",
-        description="Specific modifications to identify (comma-separated list")
+        description="Specific modifications to identify (comma-separated "+\
+            "list).  Currrent options are m6A, m4C, m5C_TET.  Cannot be "+\
+            "used with --control.")
     p.add_boolean(Constants.METHYL_FRACTION_ID,
         option_str="methylFraction",
-        default=False,
+        default=True, # XXX this means action=store_true - default is False!
         name="Compute methyl fraction",
-        description="Compute methyl fraction")
+        description="In the --identify mode, add --methylFraction to "+\
+            "command line to estimate the methylated fraction, along with "+\
+            "95%% confidence interval bounds.")
     _get_more_options(p.arg_parser.parser)
     return p
-
-def get_argument_parser():
-    parser = get_default_argparser(__version__, __doc__)
-
-    # Positional arguments:
-    parser.add_argument('infile',
-                        metavar='aligned.subreads.xml',
-                        type=validateFile,
-                        help='Input AlignmentSet filename')
-    # Note: reference is actually not optional:
-    parser.add_argument('--reference', '-r',
-                        type=validateFile,
-                        help='Path to reference FASTA file')
-    parser.add_argument('--gff',
-                        dest='gff',
-                        default=None,
-                        help='Name of output GFF file')
-    parser.add_argument('--csv',
-                        dest='csv',
-                        default=None,
-                        help='Name of output CSV file.')
-    parser.add_argument('--identify',
-        dest='identify',
-        default=False,
-        help='Identify modification types. Comma-separated list of know modification types. Current options are: m6A, m4C, m5C_TET. Cannot be used with --control')
-
-    parser.add_argument("--methylFraction",
-        action="store_true",
-        dest="methylFraction",
-        default=False,
-        help="In the --identify mode, add --methylFraction to command line to estimate the methylated fraction, along with 95%% confidence interval bounds.")
-    parser.add_argument("--maxLength",
-                        default=3e12,
-                        type=int,
-                        help="Maximum number of bases to process per contig")
-    parser.add_argument('--pvalue',
-                        dest='pvalue',
-                        default=0.01,
-                        type=float,
-                        help='p-value required to call a modified base')
-    parser.add_argument('--numWorkers', '-j',
-        dest='numWorkers',
-        default=1,
-        type=int,
-        help='Number of thread to use (-1 uses all logical cpus)')
-    _get_more_options(parser)
-    add_resolved_tool_contract_option(parser)
-    # FIXME temporary workaround for parser chaos
-    class EmitToolContractAction(argparse.Action):
-        def __call__(self, parser_, namespace, values, option_string=None):
-            parser2 = get_contract_parser()
-            sys.stdout.write(json.dumps(parser2.to_contract().to_dict(),
-                indent=4)+'\n')
-            sys.exit(0)
-    parser.add_argument("--emit-tool-contract",
-                        nargs=0,
-                        action=EmitToolContractAction)
-    return parser
 
 def _get_more_options(parser):
     """
@@ -227,116 +186,116 @@ def _get_more_options(parser):
 
     # FIXME: Make sure that this is specified if --useLDA flag is set.
     parser.add_argument('--m5Cclassifer',
-                             dest='m5Cclassifier',
-                             default=None,
-                             help='Specify csv file containing a 127 x 2 matrix')
+                        dest='m5Cclassifier',
+                        default=None,
+                        help='Specify csv file containing a 127 x 2 matrix')
 
 
     parser.add_argument('--csv_h5',
-                             dest='csv_h5',
-                             default=None,
-                             help='Name of csv output to be written in hdf5 format.')
+                        dest='csv_h5',
+                        default=None,
+                        help='Name of csv output to be written in hdf5 format.')
 
     parser.add_argument('--pickle',
-                             dest='pickle',
-                             default=None,
-                             help='Name of output pickle file.')
+                        dest='pickle',
+                        default=None,
+                        help='Name of output pickle file.')
 
     parser.add_argument('--summary_h5',
-                             dest='summary_h5',
-                             default=None,
-                             help='Name of output summary h5 file.')
+                        dest='summary_h5',
+                        default=None,
+                        help='Name of output summary h5 file.')
 
 
     parser.add_argument('--ms_csv',
-                             dest='ms_csv',
-                             default=None,
-                             help='Multisite detection CSV file.')
+                        dest='ms_csv',
+                        default=None,
+                        help='Multisite detection CSV file.')
 
 
     # Calculation options:
 
 
     parser.add_argument('--control',
-                             dest='control',
-                             default=None,
-                             type=validateNoneOrFile,
-                             help='cmph.h5 file containing a control sample. Tool will perform a case-control analysis')
+                        dest='control',
+                        default=None,
+                        type=validateNoneOrFile,
+                        help='cmph.h5 file containing a control sample. Tool will perform a case-control analysis')
 
     # Temporary addition to test LDA for Ca5C detection:
     parser.add_argument('--useLDA',
-                             action="store_true",
-                             dest='useLDA',
-                             default=False,
-                             help='Set this flag to debug LDA for m5C/Ca5C detection')
+                        action="store_true",
+                        dest='useLDA',
+                        default=False,
+                        help='Set this flag to debug LDA for m5C/Ca5C detection')
 
 
 
     # Parameter options:
 
     parser.add_argument('--paramsPath',
-                             dest='paramsPath',
-                             default=_getResourcePath(),
-                             type=validateNoneOrDir,
-                             help='Directory containing in-silico trained model for each chemistry')
+                        dest='paramsPath',
+                        default=_getResourcePath(),
+                        type=validateNoneOrDir,
+                        help='Directory containing in-silico trained model for each chemistry')
 
     parser.add_argument('--minCoverage',
-                             dest='minCoverage',
-                             default=3,
-                             type=int,
-                             help='Minimum coverage required to call a modified base')
+                        dest='minCoverage',
+                        default=3,
+                        type=int,
+                        help='Minimum coverage required to call a modified base')
 
     parser.add_argument('--maxQueueSize',
-                             dest='maxQueueSize',
-                             default=20,
-                             type=int,
-                             help='Max Queue Size')
+                        dest='maxQueueSize',
+                        default=20,
+                        type=int,
+                        help='Max Queue Size')
 
     parser.add_argument('--maxCoverage',
-                             dest='maxCoverage',
-                             type=int, default=-1,
-                             help='Maximum coverage to use at each site')
+                        dest='maxCoverage',
+                        type=int, default=-1,
+                        help='Maximum coverage to use at each site')
 
     parser.add_argument('--mapQvThreshold',
-                             dest='mapQvThreshold',
-                             type=float,
-                             default=-1.0)
+                        dest='mapQvThreshold',
+                        type=float,
+                        default=-1.0)
 
     parser.add_argument('--ipdModel',
-                             dest='ipdModel',
-                             default=None,
-                             help='Alternate synthetic IPD model HDF5 file')
+                        dest='ipdModel',
+                        default=None,
+                        help='Alternate synthetic IPD model HDF5 file')
 
     parser.add_argument('--modelIters',
-                             dest='modelIters',
-                             type=int,
-                             default=-1,
-                             help='[Internal] Number of GBM model iteration to use')
+                        dest='modelIters',
+                        type=int,
+                        default=-1,
+                        help='[Internal] Number of GBM model iteration to use')
 
     parser.add_argument('--cap_percentile',
-                             dest='cap_percentile',
-                             type=float,
-                             default=99.0,
-                             help='Global IPD percentile to cap IPDs at')
+                        dest='cap_percentile',
+                        type=float,
+                        default=99.0,
+                        help='Global IPD percentile to cap IPDs at')
 
 
     parser.add_argument("--methylMinCov",
-                             type=int,
-                             dest='methylMinCov',
-                             default=10,
-                             help="Do not try to estimate methylFraction unless coverage is at least this.")
+                        type=int,
+                        dest='methylMinCov',
+                        default=10,
+                        help="Do not try to estimate methylFraction unless coverage is at least this.")
 
     parser.add_argument("--identifyMinCov",
-                             type=int,
-                             dest='identifyMinCov',
-                             default=5,
-                             help="Do not try to identify the modification type unless coverage is at least this.")
+                        type=int,
+                        dest='identifyMinCov',
+                        default=5,
+                        help="Do not try to identify the modification type unless coverage is at least this.")
 
     parser.add_argument("--maxAlignments",
-                             type=int,
-                             dest="maxAlignments",
-                             default=1500,
-                             help="Maximum number of alignments to use for a given window")
+                        type=int,
+                        dest="maxAlignments",
+                        default=1500,
+                        help="Maximum number of alignments to use for a given window")
 
 
     # Computation management options:
@@ -358,43 +317,43 @@ def _get_more_options(parser):
                              help="For debugging purposes only - rather than enter a reference contig name, simply enter an index" ) 
 
     parser.add_argument("-W", "--referenceWindowsFile",
-                              "--refContigsFile", # backwards compatibility
-                             type=slurpWindowFile,
-                             dest='referenceWindowsAsString',
-                             default=None,
-                             help="A file containing reference window designations, one per line")
+                        "--refContigsFile", # backwards compatibility
+                        type=slurpWindowFile,
+                        dest='referenceWindowsAsString',
+                        default=None,
+                        help="A file containing reference window designations, one per line")
 
     parser.add_argument("--skipUnrecognizedContigs",
-                             type=bool,
-                             default=False,
-                             help="Whether to skip, or abort, unrecognized contigs in the -w/-W flags")
+                        type=bool,
+                        default=False,
+                        help="Whether to skip, or abort, unrecognized contigs in the -w/-W flags")
     
     # Debugging help options:
 
     parser.add_argument("--threaded", "-T",
-                             action="store_true",
-                             dest="threaded",
-                             default=False,
-                             help="Run threads instead of processes (for debugging purposes only)")
+                        action="store_true",
+                        dest="threaded",
+                        default=False,
+                        help="Run threads instead of processes (for debugging purposes only)")
 
     parser.add_argument("--profile",
-                             action="store_true",
-                             dest="doProfiling",
-                             default=False,
-                             help="Enable Python-level profiling (using cProfile).")
+                        action="store_true",
+                        dest="doProfiling",
+                        default=False,
+                        help="Enable Python-level profiling (using cProfile).")
 
     parser.add_argument('--usePdb',
-                             action='store_true',
-                             dest="usePdb",
-                             default=False,
-                             help="Enable dropping down into pdb debugger if an Exception is raised.")
+                        action='store_true',
+                        dest="usePdb",
+                        default=False,
+                        help="Enable dropping down into pdb debugger if an Exception is raised.")
 
     parser.add_argument("--seed",
-                             action="store",
-                             dest="randomSeed",
-                             type=int,
-                             default=None,
-                             help="Random seed (for development and debugging purposes only)")
+                        action="store",
+                        dest="randomSeed",
+                        type=int,
+                        default=None,
+                        help="Random seed (for development and debugging purposes only)")
 
     # Verbosity
     parser.add_argument("--verbose",
@@ -416,22 +375,23 @@ class KineticsToolsRunner(object):
         return __version__
 
     def validateArgs(self):
-        if not os.path.exists(self.args.infile):
-            self.parser.error('input.cmp.h5 file provided does not exist')
+        parser = get_parser()
+        if not os.path.exists(self.args.alignment_set):
+            parser.error('Input AlignmentSet file provided does not exist')
 
         if self.args.identify and self.args.control:
-            self.parser.error('--control and --identify are mutally exclusive. Please choose one or the other')
+            parser.error('--control and --identify are mutally exclusive. Please choose one or the other')
 
         if self.args.useLDA:
             if self.args.m5Cclassifier is None:
-                self.parser.error('Please specify a folder containing forward.csv and reverse.csv classifiers in --m5Cclassifier.')
+                parser.error('Please specify a folder containing forward.csv and reverse.csv classifiers in --m5Cclassifier.')
 
         if self.args.m5Cgff:
             if not self.args.useLDA:
-                self.parser.error('m5Cgff file can only be generated in --useLDA mode.')
+                parser.error('m5Cgff file can only be generated in --useLDA mode.')
 
         # if self.args.methylFraction and not self.args.identify:
-        #    self.parser.error('Currently, --methylFraction only works when the --identify option is specified.')
+        #    parser.error('Currently, --methylFraction only works when the --identify option is specified.')
 
     def run(self):
 
@@ -633,7 +593,7 @@ class KineticsToolsRunner(object):
         gc.disable()
 
         # Load a copy of the cmpH5 alignment index to share with the slaves
-        self.loadSharedAlignmentSet(self.args.infile)
+        self.loadSharedAlignmentSet(self.args.alignment_set)
 
         # Load reference and IpdModel
         self.loadReferenceAndModel(self.args.reference)
@@ -644,7 +604,7 @@ class KineticsToolsRunner(object):
         # WARNING -- cmp.h5 file must be opened AFTER worker processes have been spawned
         # cmp.h5 we're using -- use this to orchestrate the work
         self.cmph5 = self._sharedAlignmentSet
-        logging.info('Generating kinetics summary for [%s]' % self.args.infile)
+        logging.info('Generating kinetics summary for [%s]' % self.args.alignment_set)
 
         #self.referenceMap = self.cmph5['/RefGroup'].asDict('RefInfoID', 'ID')
         #self.alnInfo = self.cmph5['/AlnInfo'].asRecArray()
@@ -764,8 +724,7 @@ def resolved_tool_contract_runner(resolved_contract):
         args.extend([
             "--identify", rc.task.options[Constants.IDENTIFY_ID],
         ])
-    parser = get_argument_parser()
-    args_ = parser.parse_args(args)
+    args_ = get_parser().arg_parser.parser.parse_args(args)
     return args_runner(args_)
 
 def main(argv=sys.argv, out=sys.stdout):
@@ -775,13 +734,13 @@ def main(argv=sys.argv, out=sys.stdout):
     stdOutHandler = logging.StreamHandler(sys.stdout)
     log = logging.getLogger()
     try:
-        mp = get_argument_parser()
-        return pacbio_args_or_contract_runner(argv[1:],
-                                              mp,
-                                              args_runner,
-                                              resolved_tool_contract_runner,
-                                              log,
-                                              setup_log)
+        return pbparser_runner(
+            argv=argv[1:],
+            parser=get_parser(),
+            args_runner_func=args_runner,
+            contract_runner_func=resolved_tool_contract_runner,
+            alog=log,
+            setup_log_func=setup_log)
     # FIXME is there a more central place to deal with this?
     except Exception as e:
         type, value, tb = sys.exc_info()
