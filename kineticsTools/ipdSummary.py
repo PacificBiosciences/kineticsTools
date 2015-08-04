@@ -159,13 +159,17 @@ def get_parser():
         description="Specific modifications to identify (comma-separated "+\
             "list).  Currrent options are m6A, m4C, m5C_TET.  Cannot be "+\
             "used with --control.")
-    p.add_boolean(Constants.METHYL_FRACTION_ID,
-        option_str="methylFraction",
-        default=True, # XXX this means action=store_true - default is False!
-        name="Compute methyl fraction",
-        description="In the --identify mode, add --methylFraction to "+\
+    _DESC = "In the --identify mode, add --methylFraction to "+\
             "command line to estimate the methylated fraction, along with "+\
-            "95%% confidence interval bounds.")
+            "95%% confidence interval bounds."
+    # FIXME tool contract parser and argparser conflict
+    p.tool_contract_parser.add_boolean(Constants.METHYL_FRACTION_ID,
+        option_str="methylFraction",
+        default=False,
+        name="Compute methyl fraction",
+        description=_DESC)
+    p.arg_parser.parser.add_argument("--methylFraction", action="store_true",
+        help=_DESC)
     _get_more_options(p.arg_parser.parser)
     return p
 
