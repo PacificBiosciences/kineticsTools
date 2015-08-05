@@ -10,6 +10,8 @@ import os.path
 
 import pbcommand.testkit
 
+os.environ["PACBIO_TEST_ENV"] = "1" # turns off --verbose
+
 DATA_DIR = "/mnt/secondary-siv/testdata/kineticsTools"
 REF_DIR = "/mnt/secondary-siv/references/Helicobacter_pylori_J99"
 

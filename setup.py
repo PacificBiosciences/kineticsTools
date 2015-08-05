@@ -23,7 +23,7 @@ setup(
         'pbcommand >= 0.2.0',
     ],
     entry_points={'console_scripts': [
-        "ipdSummary.py = kineticsTools.ipdSummary:main",
-        "summarizeModifications.py = kineticsTools.summarizeModifications:main",
+        "ipdSummary = kineticsTools.ipdSummary:main",
+        "summarizeModifications = kineticsTools.summarizeModifications:main",
     ]},
 )

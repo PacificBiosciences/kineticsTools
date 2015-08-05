@@ -727,7 +727,7 @@ class KineticsWriter(ResultCollectorProcess):
         gff = GffWriter(f)
 
         # write headers describing the program that generated the data
-        gff.writeHeader('##source ipdSummary.py v2.0')
+        gff.writeHeader('##source ipdSummary v2.0')
         gff.writeHeader('##source-commandline %s' % self.options.cmdLine)
 
         # Write the reference renaming info into the gff headers ala evicons
@@ -803,7 +803,7 @@ class KineticsWriter(ResultCollectorProcess):
 
               
         # write headers describing the program that generated the data        
-        gff.writeHeader('##source ipdSummary.py v2.0')        
+        gff.writeHeader('##source ipdSummary v2.0')        
         gff.writeHeader('##source-commandline %s' % self.options.cmdLine)
         
         # Write the reference renaming info into the gff headers ala evicons        

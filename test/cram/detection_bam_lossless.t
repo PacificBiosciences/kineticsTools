@@ -1,4 +1,4 @@
-Test detection and identification modes of ipdSummary.py using .bam file as input, with lossless encoding of pulse information.
+Test detection and identification modes of ipdSummary using .bam file as input, with lossless encoding of pulse information.
 
   $ . $TESTDIR/portability.sh
 
@@ -9,9 +9,9 @@ Load in data:
   $ export REF_DIR=/mnt/secondary-siv/references
   $ export REF_SEQ=${REF_DIR}/Methanocaldococcus_jannaschii_DSM2661/sequence/Methanocaldococcus_jannaschii_DSM2661.fasta
 
-Run basic ipdSummary.py:
+Run basic ipdSummary:
 
-  $ ipdSummary.py --gff tmp1.gff --csv tmp1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REF_SEQ $INPUT
+  $ ipdSummary --gff tmp1.gff --csv tmp1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REF_SEQ $INPUT
 
 Look at output csv file:
 
@@ -29,7 +29,7 @@ Look at output gff file:
   66
   $ cat tmp1.gff | head -20
   ##gff-version 3
-  ##source ipdSummary.py * (glob)
+  ##source ipdSummary * (glob)
   ##source-commandline * (glob)
   ##sequence-region gi|6626255|gb|L77117.1| 1 1664970
   ##sequence-region gi|1500644|gb|L77118.1|MII2CG 1 58407

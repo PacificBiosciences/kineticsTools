@@ -1,4 +1,4 @@
-Test detection and identification modes of ipdSummary.py using .xml dataset file as input.  Results should be identical to those using the equivalent .bam file.  This will also be tested for a split dataset (two non-overlapping .bam files in one .xml).
+Test detection and identification modes of ipdSummary using .xml dataset file as input.  Results should be identical to those using the equivalent .bam file.  This will also be tested for a split dataset (two non-overlapping .bam files in one .xml).
 
   $ . $TESTDIR/portability.sh
 
@@ -8,9 +8,9 @@ Load in data:
   $ INPUT=$DATA/Hpyl_1_5000.xml
   $ REFERENCE=/mnt/secondary-siv/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta
 
-Run basic ipdSummary.py:
+Run basic ipdSummary:
 
-  $ ipdSummary.py --outfile tmp_xml1 --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
+  $ ipdSummary --outfile tmp_xml1 --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
 
 Look at output csv file:
 
@@ -28,7 +28,7 @@ Look at output gff file:
   274
   $ cat tmp_xml1.gff | head -20
   ##gff-version 3
-  ##source ipdSummary.py * (glob)
+  ##source ipdSummary * (glob)
   ##source-commandline * (glob)
   ##sequence-region gi|12057207|gb|AE001439.1| 1 1643831
   gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t35\t35\t187\t-\t.\tcoverage=118;context=TTTAAGGGCGTTTTATGCCTAAATTTAAAAAATGATGCTGT;IPDRatio=5.68;identificationQv=196 (esc)
@@ -51,7 +51,7 @@ Look at output gff file:
 Now try with a split dataset:
 
   $ INPUT=$DATA/Hpyl_1_5000_split.xml
-  $ ipdSummary.py --gff tmp_xml2.gff --csv tmp_xml2.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
+  $ ipdSummary --gff tmp_xml2.gff --csv tmp_xml2.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
   $ grep -v "source-commandline" tmp_xml1.gff > tmp_xml1b.gff
   $ grep -v "source-commandline" tmp_xml2.gff > tmp_xml2b.gff
   $ diff tmp_xml1b.gff tmp_xml2b.gff

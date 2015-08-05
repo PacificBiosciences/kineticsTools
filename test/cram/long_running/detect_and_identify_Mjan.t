@@ -8,7 +8,7 @@ Run base modification detection on M. jannaschii P6 chemistry validation data.
   $ export REF_DIR=/mnt/secondary/Smrtanalysis/current/common/references
   $ export REF_SEQ=${REF_DIR}/Methanocaldococcus_jannaschii_DSM2661/sequence/Methanocaldococcus_jannaschii_DSM2661.fasta
 
-  $ ipdSummary.py ${BAMFILE} --reference ${REF_SEQ} --gff tst_Mjan.gff --csv tst_Mjan.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C
+  $ ipdSummary ${BAMFILE} --reference ${REF_SEQ} --gff tst_Mjan.gff --csv tst_Mjan.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C
 
   $ linecount tst_Mjan.csv
   3479855

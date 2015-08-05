@@ -1,4 +1,4 @@
-Test detection and identification modes of ipdSummary.py using .bam file as input.
+Test detection and identification modes of ipdSummary using .bam file as input.
 
   $ . $TESTDIR/portability.sh
 
@@ -8,9 +8,9 @@ Load in data:
   $ INPUT=$DATA/Hpyl_1_5000.bam
   $ REFERENCE=/mnt/secondary-siv/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta
 
-Run basic ipdSummary.py:
+Run basic ipdSummary:
 
-  $ ipdSummary.py --gff tmp1.gff --csv tmp1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
+  $ ipdSummary --gff tmp1.gff --csv tmp1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
 
 Look at output csv file:
 
@@ -28,7 +28,7 @@ Look at output gff file:
   274
   $ cat tmp1.gff | head -20
   ##gff-version 3
-  ##source ipdSummary.py * (glob)
+  ##source ipdSummary * (glob)
   ##source-commandline * (glob)
   ##sequence-region gi|12057207|gb|AE001439.1| 1 1643831
   gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t35\t35\t187\t-\t.\tcoverage=118;context=TTTAAGGGCGTTTTATGCCTAAATTTAAAAAATGATGCTGT;IPDRatio=5.68;identificationQv=196 (esc)
@@ -50,7 +50,7 @@ Look at output gff file:
 
 Now try limiting the number of alignments:
 
-  $ ipdSummary.py --gff tmp2.gff --csv tmp2.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --maxAlignments 100 --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
+  $ ipdSummary --gff tmp2.gff --csv tmp2.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --maxAlignments 100 --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
 
   $ N_DIFF=`diff tmp1.gff tmp2.gff | wc --lines`
   $ python -c "assert 100 < ${N_DIFF}, ${N_DIFF}"

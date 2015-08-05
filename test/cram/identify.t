@@ -1,4 +1,4 @@
-Test basic mode of ipdSummary.py.
+Test basic mode of ipdSummary.
 
   $ . $TESTDIR/portability.sh
 
@@ -8,9 +8,9 @@ Load in data:
   $ INPUT=$DATA/p4-c2-lambda-mod-decode.cmp.h5
   $ REFERENCE=$DATA/lambda/sequence/lambda.fasta
 
-Run basic ipdSummary.py:
+Run basic ipdSummary:
 
-  $ ipdSummary.py --numWorkers 1 --pvalue 0.001 --identify m6A,m4C --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --reference $REFERENCE $INPUT
+  $ ipdSummary --numWorkers 1 --pvalue 0.001 --identify m6A,m4C --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --reference $REFERENCE $INPUT
 
 Look at output csv file:
 
@@ -27,7 +27,7 @@ Look at output gff file:
 
   $ cat tmp.gff
   ##gff-version 3
-  ##source ipdSummary.py * (glob)
+  ##source ipdSummary * (glob)
   ##source-commandline * (glob)
   ##sequence-region lambda_NEB3011 1 48502
   lambda_NEB3011\tkinModCall\tmodified_base\t14657\t14657\t34\t+\t.\tcoverage=155;context=CGGCACAGCCGGGCGATGTGCTGCTGTGCTGTTTTGGTTCA;IPDRatio=1.55 (esc)

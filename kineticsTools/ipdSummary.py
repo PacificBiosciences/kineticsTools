@@ -717,8 +717,9 @@ def resolved_tool_contract_runner(resolved_contract):
         "--csv", csv_path,
         "--numWorkers", str(rc.task.nproc),
         "--pvalue", str(rc.task.options[Constants.PVALUE_ID]),
-        "--verbose", # we need this for pbsmrtpipe debugging
     ]
+    if not "PACBIO_TEST_ENV" in os.environ:
+        args.append("--verbose") # we need this for pbsmrtpipe debugging
     if rc.task.options[Constants.MAX_LENGTH_ID]:
         args.extend([
             "--maxLength", str(rc.task.options[Constants.MAX_LENGTH_ID]),
