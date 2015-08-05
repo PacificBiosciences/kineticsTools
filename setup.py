@@ -8,7 +8,6 @@ setup(
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license=open('LICENSES.txt').read(),
-    scripts=['bin/copyIpdSummaryDataset.py'],
     packages=find_packages('.'),
     package_dir={'': '.'},
     package_data={'kineticsTools': ['resources/*.h5']},
