@@ -331,6 +331,11 @@ def _get_more_options(parser):
                         type=bool,
                         default=False,
                         help="Whether to skip, or abort, unrecognized contigs in the -w/-W flags")
+    # FIXME shouldn't it always do this?
+    parser.add_argument("--alignmentSetRefWindows",
+        action="store_true",
+        dest="referenceWindowsFromAlignment",
+        help="Use refWindows in dataset")
     
     # Debugging help options:
 
@@ -625,6 +630,8 @@ class KineticsToolsRunner(object):
                         continue
                     else:
                         raise Exception, "Unrecognized contig!"
+        elif self.args.referenceWindowsFromAlignment:
+            self.referenceWindows = ReferenceUtils.referenceWindowsFromAlignment(self._sharedAlignmentSet, self.cmph5.referenceInfo)
         else:
             self.referenceWindows = ReferenceUtils.createReferenceWindows(
                 self.refInfo)
@@ -717,6 +724,7 @@ def resolved_tool_contract_runner(resolved_contract):
         "--csv", csv_path,
         "--numWorkers", str(rc.task.nproc),
         "--pvalue", str(rc.task.options[Constants.PVALUE_ID]),
+        "--alignmentSetRefWindows",
     ]
     if not "PACBIO_TEST_ENV" in os.environ:
         args.append("--verbose") # we need this for pbsmrtpipe debugging

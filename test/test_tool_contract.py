@@ -7,6 +7,7 @@ including consistency checks on output files.
 import unittest
 import logging
 import os.path
+import csv
 
 import pbcommand.testkit
 
@@ -69,6 +70,33 @@ class TestIpdSummary(pbcommand.testkit.PbTestApp):
                     break
             return "\n".join(out)
         self.assertEqual(head2(gff_file, 3), Constants.INITIAL_LINES_GFF)
+
+
+@unittest.skipUnless(os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),
+    "%s or %s not available" % (DATA_DIR, REF_DIR))
+class TestIpdSummaryChunk(TestIpdSummary):
+    """
+    This test is identical to the above except for using an AlignmentSet with
+    filters applied as input.  We want the output to actually be within the
+    range specified by the filters, not a seemingly arbitirary larger range
+    around it.
+    """
+    INPUT_FILES = [
+        os.path.join(DATA_DIR, "Hpyl_1_5000_chunk.xml"),
+        os.path.join(REF_DIR, "sequence", "Helicobacter_pylori_J99.fasta"),
+    ]
+
+    def run_after(self, rtc, output_dir):
+        gff_file = os.path.join(output_dir, rtc.task.output_files[0])
+        csv_file = os.path.join(output_dir, rtc.task.output_files[1])
+        logging.critical(gff_file)
+        logging.critical(csv_file)
+        with open(csv_file) as f:
+            records = [ r for r in csv.DictReader(f) ]
+            logging.critical("start=%s end=%s" % (records[0]['tpl'],
+                records[-1]["tpl"]))
+            self.assertEqual(records[0]["tpl"], "1001")
+            self.assertEqual(records[-1]["tpl"], "1050")
 
 
 @unittest.skipUnless(os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),

@@ -39,6 +39,7 @@ import os
 
 from pbcore.io import AlignmentSet, ReferenceSet
 
+# FIXME pbcore keys contigs by name, but kineticsTools usually keys by ID
 ReferenceWindow = namedtuple("ReferenceWindow", ["refId", "refName", "start", "end"])
 
 
@@ -70,6 +71,13 @@ class ReferenceUtils():
             contigDict[x.FullName].cmph5ID = x.ID
 
         return contigs
+
+    @staticmethod
+    def referenceWindowsFromAlignment(ds, refInfoLookup):
+        return [ ReferenceWindow(refId=refInfoLookup(w[0]).ID,
+                                 refName=w[0],
+                                 start=w[1],
+                                 end=w[2]) for w in ds.refWindows ]
 
     @staticmethod
     def parseReferenceWindow(s, refInfoLookup):

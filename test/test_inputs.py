@@ -84,6 +84,7 @@ class _TestBase(object):
             self.kw.caseCmpH5)
         factor = 1.0 / self.ds.readGroupTable[0].FrameRate
         rawIpds = self.kw._loadRawIpds(rir, start, end, factor)
+        logging.critical(len(rawIpds))
         self.assertEqual("%.4f" % rawIpds[0][2], "0.2665")
         log.info(rawIpds)
         chunks = self.kw._chunkRawIpds(rawIpds)
