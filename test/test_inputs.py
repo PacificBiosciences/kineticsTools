@@ -19,6 +19,10 @@ log = logging.getLogger()
 data_dir = "/mnt/secondary-siv/testdata/kineticsTools"
 
 class _TestBase(object):
+    """
+    Common test functionality.  All input type tests should inherit from this,
+    and yield identical results.
+    """
 
     def getOpts(self):
         """Derived tests can override this to customize behaviour"""
@@ -85,7 +89,11 @@ class _TestBase(object):
         factor = 1.0 / self.ds.readGroupTable[0].FrameRate
         rawIpds = self.kw._loadRawIpds(rir, start, end, factor)
         logging.critical(len(rawIpds))
-        self.assertEqual("%.4f" % rawIpds[0][2], "0.2665")
+        # XXX note that this is very dependent on the exact order of reads
+        # found by readsInRange(), which may be altered by changes to the
+        # implementation of the dataset API.  It should, however, remain
+        # consistent across equivalent input types.
+        self.assertEqual("%.4f" % rawIpds[0][2], "3.7079")
         log.info(rawIpds)
         chunks = self.kw._chunkRawIpds(rawIpds)
         #log.critical(chunks)

@@ -37,6 +37,6 @@ Method to generate alignment files (python-like pseudo-code):
        " -in ".join(bam_files))
   call("samtools index aligned3.bam")
 
-Running ipdSummary.py on these inputs takes 1-3 hours on our cluster.  This
+Running ipdSummary on these inputs takes 1-3 hours on our cluster.  This
 can be significantly reduced by using parallelization, but this introduces
 stochastic behavior for some jobs.
