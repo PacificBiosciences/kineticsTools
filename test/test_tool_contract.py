@@ -18,17 +18,16 @@ REF_DIR = "/mnt/secondary-siv/references/Helicobacter_pylori_J99"
 
 
 class Constants(object):
-    N_LINES_GFF = 341
+    N_LINES_GFF = 338
     N_LINES_CSV = 13357
     INITIAL_LINES_CSV = """\
 refName,tpl,strand,base,score,tMean,tErr,modelPrediction,ipdRatio,coverage
-"gi|12057207|gb|AE001439.1|",1,0,A,9,2.308,0.471,1.710,1.350,29
-"gi|12057207|gb|AE001439.1|",1,1,T,1,0.506,0.077,0.602,0.841,57"""
+"gi|12057207|gb|AE001439.1|",1,0,A,10,2.387,0.464,1.710,1.396,29
+"gi|12057207|gb|AE001439.1|",1,1,T,1,0.492,0.075,0.602,0.817,57"""
     INITIAL_LINES_GFF = """\
-gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t35\t35\t186\t-\t.\tcoverage=118;context=TTTAAGGGCGTTTTATGCCTAAATTTAAAAAATGATGCTGT;IPDRatio=5.67;identificationQv=195
-gi|12057207|gb|AE001439.1|\tkinModCall\tm4C\t60\t60\t51\t-\t.\tcoverage=112;context=AAAAAGCTCGCTCAAAAACCCTTGATTTAAGGGCGTTTTAT;IPDRatio=2.64;identificationQv=32
-gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t89\t89\t222\t+\t.\tcoverage=139;context=AGCGAGCTTTTTGCTCAAAGAATCCAAGATAGCGTTTAAAA;IPDRatio=5.58;identificationQv=187"""
-
+gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t35\t35\t187\t-\t.\tcoverage=118;context=TTTAAGGGCGTTTTATGCCTAAATTTAAAAAATGATGCTGT;IPDRatio=5.68;identificationQv=196
+gi|12057207|gb|AE001439.1|\tkinModCall\tm4C\t60\t60\t49\t-\t.\tcoverage=112;context=AAAAAGCTCGCTCAAAAACCCTTGATTTAAGGGCGTTTTAT;IPDRatio=2.58;identificationQv=33
+gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t89\t89\t223\t+\t.\tcoverage=139;context=AGCGAGCTTTTTGCTCAAAGAATCCAAGATAGCGTTTAAAA;IPDRatio=5.69;identificationQv=187"""
 
 @unittest.skipUnless(os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),
     "%s or %s not available" % (DATA_DIR, REF_DIR))
