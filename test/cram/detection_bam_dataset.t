@@ -52,5 +52,5 @@ Now try with a split dataset:
 
   $ INPUT=$DATA/Hpyl_1_5000_split.xml
   $ ipdSummary --gff tmp_xml2.gff --csv tmp_xml2.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
-  $ wc tmp_xml2.gff
-    276  2473 42* tmp_xml2.gff (glob)
+  $ linecount tmp_xml2.gff
+  274
