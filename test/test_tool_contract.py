@@ -86,7 +86,7 @@ class TestIpdSummaryChunk(TestIpdSummary):
         gff_file = os.path.join(output_dir, rtc.task.output_files[0])
         csv_file = os.path.join(output_dir, rtc.task.output_files[1])
         logging.critical(gff_file)
-        logging.critical(csv_file)
+        logging.critical("%s %s" % (csv_file, os.path.getsize(csv_file)))
         with open(csv_file) as f:
             records = [ r for r in csv.DictReader(f) ]
             logging.critical("start=%s end=%s" % (records[0]['tpl'],

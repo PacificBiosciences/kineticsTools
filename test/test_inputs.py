@@ -100,7 +100,7 @@ class _TestBase(object):
         chunks = self.kw._chunkRawIpds(rawIpds)
         #log.critical(chunks)
 
-    def testSmallDecode (self):
+    def test_small_decode (self):
         """Test for known modifications near the start of H. pylori genome"""
         # XXX should have mods on 60- (m4C), 89+ (m6A), 91- (m6A)
         start = 50
@@ -141,6 +141,29 @@ class TestDataset (TestBam, unittest.TestCase):
 class TestSplitDataset(_TestBase, unittest.TestCase):
     def getAlignments (self):
         return os.path.join(data_dir, "Hpyl_1_5000_split.xml")
+
+
+@unittest.skipUnless(os.path.isdir(data_dir), "Missing test data directory")
+class TestChunkedDataset(_TestBase, unittest.TestCase):
+
+    def getAlignments(self):
+        return os.path.join(data_dir, "Hpyl_1_5000_chunk.xml")
+
+    @unittest.skip
+    def test_private_api(self):
+        pass
+
+    def test_small_decode(self):
+        start = 985
+        end = 1065
+        REF_GROUP_ID = "gi|12057207|gb|AE001439.1|"
+        referenceWindow = ReferenceWindow(0, REF_GROUP_ID, start, end)
+        bounds = (start, end)
+
+        self.kw._prepForReferenceWindow(referenceWindow)
+        kinetics = self.kw._summarizeReferenceRegion(bounds, False, True)
+        mods = self.kw._decodePositiveControl(kinetics, bounds)
+        self.assertEqual(len(mods), 4)
 
 
 if __name__ == '__main__':
