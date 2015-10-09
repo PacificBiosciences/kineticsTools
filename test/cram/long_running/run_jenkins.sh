@@ -7,11 +7,11 @@ if [ -z "${BASE_PATH}" ] || [ ! -d "${BASE_PATH}" ]; then
   echo "Base path required as first argument"
   exit 1
 fi
-if [ -z "${XML_DEST}" ] || [ ! -d "${XML_DEST}" ]; then
+if [ -z "${XML_DEST}" ] || [ -d "${XML_DEST}" ]; then
   echo "XML output file required as first argument"
   exit 1
 fi
-
+rm -f ${XML_DEST}
 
 cd ${BASE_PATH}
 virtualenv ${BASE_PATH}/venv
