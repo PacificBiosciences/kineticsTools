@@ -4,9 +4,9 @@ Run base modification detection on B. subtilis P6 chemistry validation data
 
   $ . $TESTDIR/../portability.sh
 
-  $ export DATA_DIR=/mnt/secondary-siv/testdata/kineticsTools
+  $ export DATA_DIR=/pbi/dept/secondary/siv/testdata/kineticsTools
   $ export BAMFILE=${DATA_DIR}/Bsub_aligned.subreads.bam
-  $ export REF_DIR=/mnt/secondary-siv/references
+  $ export REF_DIR=/pbi/dept/secondary/siv/references
   $ export REF_SEQ=${REF_DIR}/B_subtilis_strW23/sequence/B_subtilis_strW23.fasta
 
   $ ipdSummary ${BAMFILE} --reference ${REF_SEQ} --gff tst_Bsub.gff --csv tst_Bsub.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C

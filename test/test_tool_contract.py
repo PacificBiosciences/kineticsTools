@@ -13,8 +13,8 @@ import pbcommand.testkit
 
 os.environ["PACBIO_TEST_ENV"] = "1" # turns off --verbose
 
-DATA_DIR = "/mnt/secondary-siv/testdata/kineticsTools"
-REF_DIR = "/mnt/secondary-siv/references/Helicobacter_pylori_J99"
+DATA_DIR = "/pbi/dept/secondary/siv/testdata/kineticsTools"
+REF_DIR = "/pbi/dept/secondary/siv/references/Helicobacter_pylori_J99"
 
 
 class Constants(object):

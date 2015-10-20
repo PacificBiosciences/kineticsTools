@@ -4,9 +4,9 @@ Test detection and identification modes of ipdSummary using .bam file as input, 
 
 Load in data:
 
-  $ DATA=/mnt/secondary-siv/testdata/kineticsTools
+  $ DATA=/pbi/dept/secondary/siv/testdata/kineticsTools
   $ INPUT=$DATA/Mjan_1_5000_lossless.bam
-  $ export REF_DIR=/mnt/secondary-siv/references
+  $ export REF_DIR=/pbi/dept/secondary/siv/references
   $ export REF_SEQ=${REF_DIR}/Methanocaldococcus_jannaschii_DSM2661/sequence/Methanocaldococcus_jannaschii_DSM2661.fasta
 
 Run basic ipdSummary:

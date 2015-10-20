@@ -16,7 +16,7 @@ logging.basicConfig()
 log = logging.getLogger()
 
 # FIXME
-data_dir = "/mnt/secondary-siv/testdata/kineticsTools"
+data_dir = "/pbi/dept/secondary/siv/testdata/kineticsTools"
 
 class _TestBase(object):
     """
@@ -53,7 +53,7 @@ class _TestBase(object):
         raise NotImplementedError()
 
     def getReference (self):
-        refDir = "/mnt/secondary-siv/references"
+        refDir = "/pbi/dept/secondary/siv/references"
         return os.path.join(refDir, "Helicobacter_pylori_J99", "sequence",
             "Helicobacter_pylori_J99.fasta")
 

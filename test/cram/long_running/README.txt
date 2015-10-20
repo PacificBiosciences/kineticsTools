@@ -1,6 +1,6 @@
-====================================================
-README for /mnt/secondary-siv/testdata/kineticsTools
-====================================================
+=========================================================
+README for /pbi/dept/secondary/siv/testdata/kineticsTools
+=========================================================
 
 Most of these files are derived from Tyson Clark's P6 chemistry validation
 experiments.  Bsub is an amplified control.

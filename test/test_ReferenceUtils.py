@@ -6,8 +6,8 @@ import os.path
 from kineticsTools.ReferenceUtils import ReferenceUtils
 from pbcore.io import AlignmentSet
 
-big_data_dir = "/mnt/secondary-siv/testdata/kineticsTools"
-ref_dir = "/mnt/secondary-siv/references"
+big_data_dir = "/pbi/dept/secondary/siv/testdata/kineticsTools"
+ref_dir = "/pbi/dept/secondary/siv/references"
 
 logging.basicConfig()
 log = logging.getLogger()

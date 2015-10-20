@@ -4,7 +4,7 @@ Run base modification detection on C. aggregans P6 chemistry validation data
 
   $ . $TESTDIR/../portability.sh
 
-  $ export DATA_DIR=/mnt/secondary-siv/testdata/kineticsTools
+  $ export DATA_DIR=/pbi/dept/secondary/siv/testdata/kineticsTools
   $ export BAMFILE=${DATA_DIR}/Cagg_aligned.subreads.bam
   $ export REF_DIR=/mnt/secondary/Smrtanalysis/current/common/references
   $ export REF_SEQ=${REF_DIR}/Chloroflexus_aggregans_DSM9485/sequence/Chloroflexus_aggregans_DSM9485.fasta

@@ -3,7 +3,7 @@ Run base modification detection on M. jannaschii P6 chemistry validation data.
 
   $ . $TESTDIR/../portability.sh
 
-  $ export DATA_DIR=/mnt/secondary-siv/testdata/kineticsTools
+  $ export DATA_DIR=/pbi/dept/secondary/siv/testdata/kineticsTools
   $ export BAMFILE=${DATA_DIR}/Mjan_aligned.subreads.bam
   $ export REF_DIR=/mnt/secondary/Smrtanalysis/current/common/references
   $ export REF_SEQ=${REF_DIR}/Methanocaldococcus_jannaschii_DSM2661/sequence/Methanocaldococcus_jannaschii_DSM2661.fasta

@@ -4,9 +4,9 @@ Test detection and identification modes of ipdSummary using .xml dataset file as
 
 Load in data:
 
-  $ DATA=/mnt/secondary-siv/testdata/kineticsTools
+  $ DATA=/pbi/dept/secondary/siv/testdata/kineticsTools
   $ INPUT=$DATA/Hpyl_1_5000.xml
-  $ REFERENCE=/mnt/secondary-siv/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta
+  $ REFERENCE=/pbi/dept/secondary/siv/references/Helicobacter_pylori_J99/sequence/Helicobacter_pylori_J99.fasta
 
 Run basic ipdSummary:
 
