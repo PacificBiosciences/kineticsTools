@@ -19,6 +19,8 @@ log = logging.getLogger()
 data_dir = "/pbi/dept/secondary/siv/testdata/kineticsTools"
 
 class _TestBase(object):
+    MAX_ALIGNMENTS = 1500
+
     """
     Common test functionality.  All input type tests should inherit from this,
     and yield identical results.
@@ -30,6 +32,7 @@ class _TestBase(object):
 
     def basicOpts(self):
         """Mock up some options for the kinetic worker"""
+        self_ = self
         class opts:
             def __init__(self):
                 self.mapQvThreshold = -1
@@ -45,7 +48,7 @@ class _TestBase(object):
                 self.identifyMinCov = 5
                 self.methylMinCov = 10
                 self.useLDA = False
-                self.maxAlignments = 1500
+                self.maxAlignments = self_.MAX_ALIGNMENTS
                 self.randomSeed = None
         return opts()
 
@@ -164,6 +167,32 @@ class TestChunkedDataset(_TestBase, unittest.TestCase):
         kinetics = self.kw._summarizeReferenceRegion(bounds, False, True)
         mods = self.kw._decodePositiveControl(kinetics, bounds)
         self.assertEqual(len(mods), 4)
+
+
+@unittest.skipUnless(os.path.isdir(data_dir), "Missing test data directory")
+class TestNonStochastic(TestBam): #_TestBase, unittest.TestCase):
+    # XXX force this down to trigger RNG
+    MAX_ALIGNMENTS = 150
+
+    @unittest.skip
+    def test_private_api(self):
+        pass
+
+    def test_small_decode(self):
+        start = 50
+        end = 100
+        REF_GROUP_ID = "gi|12057207|gb|AE001439.1|"
+        referenceWindow = ReferenceWindow(0, REF_GROUP_ID, start, end)
+        bounds = (start, end)
+        self.kw._prepForReferenceWindow(referenceWindow)
+        kinetics = self.kw._summarizeReferenceRegion(bounds, False, True)
+        # XXX note that this is very dependent on the exact order of reads
+        # found by readsInRange(), which may be altered by changes to the
+        # implementation of the dataset API.  It should be immune to stochastic
+        # effects, however.
+        self.assertEqual("%.5f" % kinetics[0]['ipdRatio'], "1.06460")
+        mods = self.kw._decodePositiveControl(kinetics, bounds)
+        self.assertEqual(len(mods), 3)
 
 
 if __name__ == '__main__':
