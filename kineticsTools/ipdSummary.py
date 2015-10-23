@@ -169,7 +169,7 @@ def get_parser():
             "used with --control.")
     _DESC = "In the --identify mode, add --methylFraction to "+\
             "command line to estimate the methylated fraction, along with "+\
-            "95%% confidence interval bounds."
+            "95% confidence interval bounds."
     # FIXME tool contract parser and argparser conflict
     tcp.add_boolean(Constants.METHYL_FRACTION_ID,
         option_str="methylFraction",
@@ -177,7 +177,7 @@ def get_parser():
         name="Compute methyl fraction",
         description="When identifying specific modifications (m4C and/or "+
                     "m6A), enabling this option will estimate the methylated "+
-                    "fraction, aling with 95%% confidence interval bounds.")
+                    "fraction, along with 95% confidence interval bounds.")
     argp.add_argument("--methylFraction", action="store_true",
         help=_DESC)
     _get_more_options(argp)
