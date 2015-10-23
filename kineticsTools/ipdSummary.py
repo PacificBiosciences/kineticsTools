@@ -117,27 +117,29 @@ def get_parser():
         nproc=SymbolTypes.MAX_NPROC)
     p.add_input_file_type(FileTypes.DS_ALIGN, "alignment_set",
         "Alignment DataSet", "BAM or Alignment DataSet")
+    tcp = p.tool_contract_parser
     # FIXME just use a positional argument...
-    p.tool_contract_parser.add_input_file_type(FileTypes.DS_REF, "reference",
+    tcp.add_input_file_type(FileTypes.DS_REF, "reference",
         "Reference DataSet", "Fasta or Reference DataSet")
-    p.arg_parser.parser.add_argument("--reference", action="store",
+    argp = p.arg_parser.parser
+    argp.add_argument("--reference", action="store",
         required=True,
         type=validateFile, help="Fasta or Reference DataSet")
     # XXX GFF and CSV are "option" for arg parser, not tool contract
-    p.tool_contract_parser.add_output_file_type(FileTypes.GFF, "gff",
+    tcp.add_output_file_type(FileTypes.GFF, "gff",
         name="GFF file",
         description="GFF file of modified bases",
         default_name="basemods.gff")
-    p.tool_contract_parser.add_output_file_type(FileTypes.CSV, "csv",
+    tcp.add_output_file_type(FileTypes.CSV, "csv",
         name="CSV file",
         description="CSV file of per-nucleotide information",
         default_name="basemods.csv")
-    p.arg_parser.parser.add_argument("--gff", action="store", default=None,
+    argp.add_argument("--gff", action="store", default=None,
         help="Output GFF file of modified bases")
-    p.arg_parser.parser.add_argument("--csv", action="store", default=None,
+    argp.add_argument("--csv", action="store", default=None,
         help="Output CSV file out per-nucleotide information")
     # FIXME use central --nproc option
-    p.arg_parser.parser.add_argument('--numWorkers', '-j',
+    argp.add_argument('--numWorkers', '-j',
         dest='numWorkers',
         default=1,
         type=int,
@@ -152,25 +154,33 @@ def get_parser():
         default=Constants.MAX_LENGTH_DEFAULT,
         name="Max sequence length",
         description="Maximum number of bases to process per contig")
-    p.add_str(Constants.IDENTIFY_ID,
+    tcp.add_str(Constants.IDENTIFY_ID,
         option_str="identify",
         default="",
         name="Identify basemods",
         description="Specific modifications to identify (comma-separated "+\
+            "list).  Currrent options are m6A and/or m4C.")
+    argp.add_argument(
+        "--identify",
+        action="store",
+        default="",
+        help="Specific modifications to identify (comma-separated "+\
             "list).  Currrent options are m6A, m4C, m5C_TET.  Cannot be "+\
             "used with --control.")
     _DESC = "In the --identify mode, add --methylFraction to "+\
             "command line to estimate the methylated fraction, along with "+\
             "95%% confidence interval bounds."
     # FIXME tool contract parser and argparser conflict
-    p.tool_contract_parser.add_boolean(Constants.METHYL_FRACTION_ID,
+    tcp.add_boolean(Constants.METHYL_FRACTION_ID,
         option_str="methylFraction",
         default=False,
         name="Compute methyl fraction",
-        description=_DESC)
-    p.arg_parser.parser.add_argument("--methylFraction", action="store_true",
+        description="When identifying specific modifications (m4C and/or "+
+                    "m6A), enabling this option will estimate the methylated "+
+                    "fraction, aling with 95%% confidence interval bounds.")
+    argp.add_argument("--methylFraction", action="store_true",
         help=_DESC)
-    _get_more_options(p.arg_parser.parser)
+    _get_more_options(argp)
     return p
 
 def _get_more_options(parser):
