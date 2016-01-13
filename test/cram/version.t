@@ -6,6 +6,7 @@ A simple test of the version and help options:
   $ ipdSummary
   usage: ipdSummary [-h] [-v] [--emit-tool-contract]
                     [--resolved-tool-contract RESOLVED_TOOL_CONTRACT]
+                    [--log-file LOG_FILE]
                     [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [--debug]
                     --reference REFERENCE [--gff GFF] [--csv CSV]
                     [--numWorkers NUMWORKERS] [--pvalue PVALUE]

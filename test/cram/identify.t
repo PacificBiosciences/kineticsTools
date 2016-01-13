@@ -10,7 +10,7 @@ Load in data:
 
 Run basic ipdSummary:
 
-  $ ipdSummary --numWorkers 1 --pvalue 0.001 --identify m6A,m4C --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --reference $REFERENCE $INPUT
+  $ ipdSummary --numWorkers 1 --pvalue 0.001 --identify m6A,m4C --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --reference $REFERENCE $INPUT >/dev/null
 
 Look at output csv file:
 

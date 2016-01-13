@@ -11,7 +11,7 @@ Load in data:
 
 Run basic ipdSummary:
 
-  $ ipdSummary --gff tmp1.gff --csv tmp1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REF_SEQ $INPUT
+  $ ipdSummary --gff tmp1.gff --csv tmp1.csv --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REF_SEQ $INPUT >/dev/null
 
 Look at output csv file:
 
