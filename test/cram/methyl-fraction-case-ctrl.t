@@ -10,7 +10,7 @@ Load in data:
 
 Run basic ipdSummary:
 
-  $ ipdSummary --numWorkers 1 --methylFraction --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --control $INPUT --reference $REFERENCE $INPUT >/dev/null
+  $ ipdSummary --log-level=WARNING --numWorkers 1 --methylFraction --csv tmp.csv --gff tmp.gff --summary_h5 tmp.h5 --control $INPUT --reference $REFERENCE $INPUT
 
 Look at output csv file:
 
