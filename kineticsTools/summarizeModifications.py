@@ -35,13 +35,13 @@ Summarizes kinetic modifications in the alignment_summary.gff file.
 
 import cProfile
 from itertools import groupby
+import functools
 import os
 import logging
 import sys
 
 from pbcommand.models import FileTypes, get_pbparser
 from pbcommand.cli import pbparser_runner
-from pbcommand.common_options import add_debug_option
 from pbcommand.utils import setup_log
 from pbcore.io import GffReader, Gff3Record
 
@@ -169,7 +169,8 @@ def get_parser():
         version=__version__,
         name=Constants.TOOL_ID,
         description=__doc__,
-        driver_exe=Constants.DRIVER_EXE)
+        driver_exe=Constants.DRIVER_EXE,
+        default_level="INFO")
     p.add_input_file_type(FileTypes.GFF, "modifications",
         name="GFF file",
         description="Base modification GFF file")
@@ -184,18 +185,15 @@ def get_parser():
 
 def main(argv=sys.argv):
     mp = get_parser()
-    logFormat = '%(asctime)s [%(levelname)s] %(message)s'
-    logging.basicConfig(level=logging.INFO, format=logFormat)
-    stdOutHandler = logging.StreamHandler(sys.stdout)
-    logging.Logger.root.addHandler(stdOutHandler)
-    log = logging.getLogger()
+    setup_log_ = functools.partial(setup_log,
+        str_formatter='%(asctime)s [%(levelname)s] %(message)s')
     return pbparser_runner(
         argv=argv[1:],
         parser=mp,
         args_runner_func=args_runner,
         contract_runner_func=resolved_tool_contract_runner,
-        alog=log,
-        setup_log_func=setup_log)
+        alog=logging.getLogger(__name__),
+        setup_log_func=setup_log_)
 
 if __name__ == "__main__":
     main()

@@ -50,6 +50,7 @@ import Queue
 import traceback
 from pkg_resources import Requirement, resource_filename
 
+from pbcommand.common_options import add_debug_option
 from pbcommand.models import FileTypes, SymbolTypes, get_pbparser
 from pbcommand.cli import pbparser_runner
 from pbcommand.utils import setup_log
@@ -114,7 +115,8 @@ def get_parser():
         description=__doc__,
         driver_exe=Constants.DRIVER_EXE,
         is_distributed=True,
-        nproc=SymbolTypes.MAX_NPROC)
+        nproc=SymbolTypes.MAX_NPROC,
+        default_level="WARN")
     p.add_input_file_type(FileTypes.DS_ALIGN, "alignment_set",
         "Alignment DataSet", "BAM or Alignment DataSet")
     tcp = p.tool_contract_parser
@@ -361,11 +363,7 @@ def _get_more_options(parser):
                         default=False,
                         help="Enable Python-level profiling (using cProfile).")
 
-    parser.add_argument('--usePdb',
-                        action='store_true',
-                        dest="usePdb",
-                        default=False,
-                        help="Enable dropping down into pdb debugger if an Exception is raised.")
+    add_debug_option(parser)
 
     parser.add_argument("--seed",
                         action="store",
@@ -374,10 +372,6 @@ def _get_more_options(parser):
                         default=None,
                         help="Random seed (for development and debugging purposes only)")
 
-    # Verbosity
-    parser.add_argument("--verbose",
-                        action="store_true",
-                        default=False)
     return parser
 
 
@@ -704,11 +698,6 @@ def monitorChildProcesses(children):
         time.sleep(1)
 
 def args_runner(args):
-    log = logging.getLogger()
-    if args.verbose:
-        log.setLevel(logging.INFO)
-    else:
-        log.setLevel(logging.WARN)
     kt = KineticsToolsRunner(args)
     return kt.start()
 
@@ -752,19 +741,16 @@ def resolved_tool_contract_runner(resolved_contract):
     return args_runner(args_)
 
 def main(argv=sys.argv, out=sys.stdout):
-    # Log generously
-    logFormat = '%(asctime)s [%(levelname)s] %(message)s'
-    logging.basicConfig(format=logFormat, level=logging.WARN)
-    stdOutHandler = logging.StreamHandler(sys.stdout)
-    log = logging.getLogger()
+    setup_log_ = functools.partial(setup_log,
+        str_formatter='%(asctime)s [%(levelname)s] %(message)s')
     try:
         return pbparser_runner(
             argv=argv[1:],
             parser=get_parser(),
             args_runner_func=args_runner,
             contract_runner_func=resolved_tool_contract_runner,
-            alog=log,
-            setup_log_func=setup_log)
+            alog=logging.getLogger(__name__),
+            setup_log_func=setup_log_)
     # FIXME is there a more central place to deal with this?
     except Exception as e:
         type, value, tb = sys.exc_info()
