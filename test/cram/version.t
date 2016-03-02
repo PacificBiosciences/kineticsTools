@@ -4,10 +4,10 @@ A simple test of the version and help options:
   2.2
 
   $ ipdSummary
-  usage: ipdSummary [-h] [-v] [--emit-tool-contract]
+  usage: ipdSummary [-h] [--version] [--emit-tool-contract]
                     [--resolved-tool-contract RESOLVED_TOOL_CONTRACT]
                     [--log-file LOG_FILE]
-                    [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [--debug]
+                    [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL} | --debug | --quiet | -v]
                     --reference REFERENCE [--gff GFF] [--csv CSV]
                     [--numWorkers NUMWORKERS] [--pvalue PVALUE]
                     [--maxLength MAXLENGTH] [--identify IDENTIFY]
@@ -26,8 +26,8 @@ A simple test of the version and help options:
                     [--refContigIndex REFCONTIGINDEX]
                     [-W REFERENCEWINDOWSASSTRING]
                     [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
-                    [--alignmentSetRefWindows] [--threaded] [--profile]
-                    [--usePdb] [--seed RANDOMSEED] [--verbose]
+                    [--alignmentSetRefWindows] [--threaded] [--profile] [--pdb]
+                    [--seed RANDOMSEED]
                     alignment_set
   ipdSummary: error: too few arguments
   [2]
