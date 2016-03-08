@@ -131,11 +131,11 @@ def get_parser():
     tcp.add_output_file_type(FileTypes.GFF, "gff",
         name="GFF file",
         description="GFF file of modified bases",
-        default_name="basemods.gff")
+        default_name="basemods")
     tcp.add_output_file_type(FileTypes.CSV, "csv",
         name="CSV file",
         description="CSV file of per-nucleotide information",
-        default_name="basemods.csv")
+        default_name="basemods")
     argp.add_argument("--gff", action="store", default=None,
         help="Output GFF file of modified bases")
     argp.add_argument("--csv", action="store", default=None,

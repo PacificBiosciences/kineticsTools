@@ -180,7 +180,7 @@ def get_parser():
     p.add_output_file_type(FileTypes.GFF, "gff_out",
         name="GFF file",
         description="Modified alignment summary file",
-        default_name="alignment_summary_with_basemods.gff")
+        default_name="alignment_summary_with_basemods")
     return p
 
 def main(argv=sys.argv):
