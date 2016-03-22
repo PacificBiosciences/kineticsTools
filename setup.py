@@ -16,11 +16,11 @@ setup(
                            export_symbols=["innerPredict", "innerPredictCtx", "init_native"])],
     zip_safe=False,
     install_requires=[
-        'pbcore >= 1.2.2',
+        'pbcore >= 1.2.8',
         'numpy >= 1.6.0',
         'h5py >= 1.3.0',
         'scipy >= 0.9.0',
-        'pbcommand >= 0.2.0',
+        'pbcommand >= 0.3.22',
     ],
     entry_points={'console_scripts': [
         "ipdSummary = kineticsTools.ipdSummary:main",
