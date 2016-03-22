@@ -16,4 +16,4 @@ dependencies:
     
 test:
   override:
-    - make test # Run doctests in addition to the usual unit tests
+    - make unit-tests
