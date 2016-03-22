@@ -12,6 +12,7 @@ dependencies:
     - (cd .circleci && bash installHDF5.sh)
     - HDF5_DIR=$PWD/.circleci/prefix pip install -r requirements-ci.txt
     - HDF5_DIR=$PWD/.circleci/prefix pip install -r requirements-dev.txt
+    - pip install cram nose
     
 test:
   override:
