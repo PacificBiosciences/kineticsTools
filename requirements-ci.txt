@@ -1,0 +1,12 @@
+cython
+numpy
+h5py
+jinja2
+networkx
+jsonschema
+xmlbuilder
+functools32
+pyxb
+# Install from github
+-e git://github.com/PacificBiosciences/pbcore.git@master#egg=pbcore
+-e git://github.com/PacificBiosciences/pbcommand.git#egg=pbcommand
