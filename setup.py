@@ -8,7 +8,7 @@ setup(
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license=open('LICENSES.txt').read(),
-    packages=find_packages('.', exclude=["bin"])),
+    packages=find_packages('.', exclude=["bin"]),
     package_dir={'': '.'},
     package_data={'kineticsTools': ['resources/*.h5']},
     ext_modules=[Extension('kineticsTools/tree_predict', ['kineticsTools/tree_predict.c'],
