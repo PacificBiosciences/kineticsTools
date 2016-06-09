@@ -28,6 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
+from collections import namedtuple
 import cProfile
 import logging
 import os.path
@@ -291,6 +292,56 @@ class KineticsWriter(ResultCollectorProcess):
             return
         except Exception as e:
             print e
+
+    @consumer
+    def bigWigConsumer(self, filename):
+        import pyBigWig
+        records = []
+        ranges = {}
+        BaseInfo = namedtuple("BaseInfo", ("seqid", "pos", "sense", "ipd"))
+        try:
+            while True:
+                chunk = (yield)
+                if len(chunk) == 0:
+                    continue
+                # Fill out the ipd observations into the dataset
+                for x in chunk:
+                    pos = int(x['tpl'])
+                    seqid = x['refName']
+                    ranges.setdefault(seqid, (sys.maxint, 0))
+                    ranges[seqid] = (min(ranges[seqid][0], pos),
+                                     max(ranges[seqid][0], pos))
+                    records.append(BaseInfo(
+                        seqid=seqid,
+                        pos=pos,
+                        sense=int(x['strand']),
+                        ipd=float(x['ipdRatio'])))
+        except GeneratorExit:
+            records.sort(lambda a, b: cmp(a.pos, b.pos))
+            records.sort(lambda a, b: cmp(a.seqid, b.seqid))
+            bw = pyBigWig.open(filename, "w")
+            regions = [(s, ranges[s][1]) for s in sorted(ranges.keys())]
+            bw.addHeader(regions)
+            k = 0
+            seqids = []
+            starts = []
+            ends = []
+            ipd_enc = []
+            # XXX is it safe to assume that both strands will always be
+            # represented equally?
+            while k < len(records):
+                rec_plus = records[k] if records[k].sense else records[k + 1]
+                rec_minus = records[k + 1] if records[k].sense else records[k]
+                assert rec_plus.pos == rec_minus.pos, (rec_plus, rec_minus)
+                seqids.append(rec_plus.seqid)
+                starts.append(rec_plus.pos)
+                ends.append(rec_plus.pos + 1)
+                ipd_enc.append(rec_minus.ipd + 65536 * rec_plus.ipd)
+                k += 2
+            logging.info("Writing records for {n} bases".format(n=len(seqids)))
+            bw.addEntries(seqids, starts, ends=ends, values=ipd_enc)
+            bw.close()
+            return
 
     @consumer
     def hdf5CsvConsumer(self, filename):
@@ -835,6 +886,7 @@ class KineticsWriter(ResultCollectorProcess):
             ('m5Cgff', 'm5C.gff', self.m5CgffConsumer),
             ('gff', 'gff', self.gffConsumer),
             ('csv', 'csv', self.csvConsumer),
+            ('bigwig', 'bw', self.bigWigConsumer),
             ('ms_csv', 'ms.csv', self.msCsvConsumer),
             ('pickle', 'pickle', self.csvConsumer),
             ('summary_h5', 'summary.h5', self.ipdRatioH5Consumer),
@@ -850,7 +902,15 @@ class KineticsWriter(ResultCollectorProcess):
 
             # The 'outfile argument causes all outputs to be generated
             if self.options.outfile:
-                name = self.options.outfile + '.' + ext
+                if ext == "bw":
+                    try:
+                        import pyBigWig
+                    except ImportError:
+                        pass
+                    else:
+                        name = self.options.outfile + '.' + ext
+                else:
+                    name = self.options.outfile + '.' + ext
 
             # Individual outputs can specified - these filename override the default
             if self.options.__getattribute__(fileType):

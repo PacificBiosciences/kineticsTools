@@ -140,6 +140,8 @@ def get_parser():
         help="Output GFF file of modified bases")
     argp.add_argument("--csv", action="store", default=None,
         help="Output CSV file out per-nucleotide information")
+    argp.add_argument("--bigwig", action="store", default=None,
+        help="Output BigWig file encoding IpdRatio for both strands")
     # FIXME use central --nproc option
     argp.add_argument('--numWorkers', '-j',
         dest='numWorkers',
