@@ -1,6 +1,6 @@
 cython
-numpy
-h5py
+numpy >= 1.6.0
+h5py >= 1.3.0
 jinja2
 networkx
 jsonschema
