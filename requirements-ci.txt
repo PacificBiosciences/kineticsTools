@@ -7,6 +7,7 @@ jsonschema
 xmlbuilder
 functools32
 pyxb
+pyBigWig
 # Install from github
 -e git://github.com/PacificBiosciences/pbcore.git@master#egg=pbcore
 -e git://github.com/PacificBiosciences/pbcommand.git#egg=pbcommand
