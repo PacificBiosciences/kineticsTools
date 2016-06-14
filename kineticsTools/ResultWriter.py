@@ -310,7 +310,7 @@ class KineticsWriter(ResultCollectorProcess):
                     seqid = x['refName']
                     ranges.setdefault(seqid, (sys.maxint, 0))
                     ranges[seqid] = (min(ranges[seqid][0], pos),
-                                     max(ranges[seqid][0], pos))
+                                     max(ranges[seqid][1], pos+1))
                     records.append(BaseInfo(
                         seqid=seqid,
                         pos=pos,
