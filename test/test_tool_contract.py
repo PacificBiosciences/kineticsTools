@@ -44,12 +44,13 @@ class TestIpdSummary(pbcommand.testkit.PbTestApp):
       "kinetics_tools.task_options.identify": "m6A,m4C",
       "kinetics_tools.task_options.max_length": 3000000000,
       "kinetics_tools.task_options.compute_methyl_fraction": False,
-      "kinetics_tools.task_options.pvalue": 0.001
+      "kinetics_tools.task_options.pvalue": 0.001,
+      "kinetics_tools.task_options.write_csv": True
     }
 
     def run_after(self, rtc, output_dir):
         gff_file = os.path.join(output_dir, rtc.task.output_files[0])
-        csv_file = os.path.join(output_dir, rtc.task.output_files[1])
+        csv_file = os.path.splitext(gff_filw)[0] + ".csv"
         def lc(fn): return len(open(fn).readlines())
         self.assertEqual(lc(gff_file), Constants.N_LINES_GFF)
         self.assertEqual(lc(csv_file), Constants.N_LINES_CSV)
@@ -84,7 +85,7 @@ class TestIpdSummaryChunk(TestIpdSummary):
 
     def run_after(self, rtc, output_dir):
         gff_file = os.path.join(output_dir, rtc.task.output_files[0])
-        csv_file = os.path.join(output_dir, rtc.task.output_files[1])
+        csv_file = os.path.splitext(gff_filw)[0] + ".csv"
         logging.critical(gff_file)
         logging.critical("%s %s" % (csv_file, os.path.getsize(csv_file)))
         with open(csv_file) as f:
