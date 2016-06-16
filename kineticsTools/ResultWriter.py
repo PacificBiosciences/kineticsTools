@@ -383,7 +383,7 @@ class KineticsWriter(ResultCollectorProcess):
                     fracUpDataset = grp[FRACup]
                 '''
 
-                start = min(x['tpl'] for x in chunk)
+                start = min(2*x['tpl'] for x in chunk)
                 end = min(max(2*x['tpl'] for x in chunk), tplDataset.shape[0] - 1)
                 arrLen = end - start + 1
 
@@ -406,7 +406,7 @@ class KineticsWriter(ResultCollectorProcess):
                 for x in chunk:
                     # offset into the current chunk
                     _strand = int(x['strand'])
-                    idx = 2 * (x['tpl'] - start) + _strand
+                    idx = (2 * x['tpl']) - start + _strand
 
                     # Data points past the end of the reference can make it
                     # through -- filter them out here

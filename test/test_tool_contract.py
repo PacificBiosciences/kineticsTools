@@ -9,6 +9,8 @@ import logging
 import os.path
 import csv
 
+import h5py
+
 import pbcommand.testkit
 
 os.environ["PACBIO_TEST_ENV"] = "1" # turns off --verbose
@@ -50,7 +52,7 @@ class TestIpdSummary(pbcommand.testkit.PbTestApp):
 
     def run_after(self, rtc, output_dir):
         gff_file = os.path.join(output_dir, rtc.task.output_files[0])
-        csv_file = os.path.splitext(gff_filw)[0] + ".csv"
+        csv_file = os.path.splitext(gff_file)[0] + ".csv"
         def lc(fn): return len(open(fn).readlines())
         self.assertEqual(lc(gff_file), Constants.N_LINES_GFF)
         self.assertEqual(lc(csv_file), Constants.N_LINES_CSV)
@@ -67,6 +69,9 @@ class TestIpdSummary(pbcommand.testkit.PbTestApp):
                     break
             return "\n".join(out)
         self.assertEqual(head2(gff_file, 3), Constants.INITIAL_LINES_GFF)
+        print rtc.task.output_files[2]
+        f = h5py.File(rtc.task.output_files[2])
+        #
 
 
 @unittest.skipUnless(os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),
@@ -85,7 +90,7 @@ class TestIpdSummaryChunk(TestIpdSummary):
 
     def run_after(self, rtc, output_dir):
         gff_file = os.path.join(output_dir, rtc.task.output_files[0])
-        csv_file = os.path.splitext(gff_filw)[0] + ".csv"
+        csv_file = os.path.splitext(gff_file)[0] + ".csv"
         logging.critical(gff_file)
         logging.critical("%s %s" % (csv_file, os.path.getsize(csv_file)))
         with open(csv_file) as f:

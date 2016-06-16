@@ -68,6 +68,8 @@ revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
 changeNum = int(__p4change__.strip("$").split(":")[-1])
 __version__ = "2.2"
 
+log = logging.getLogger(__name__)
+
 class Constants(object):
     TOOL_ID = "kinetics_tools.tasks.ipd_summary"
     TOOL_NAME = "ipdSummary"
@@ -78,7 +80,7 @@ class Constants(object):
     MAX_LENGTH_DEFAULT = int(3e12)
     METHYL_FRACTION_ID = "kinetics_tools.task_options.compute_methyl_fraction"
     IDENTIFY_ID = "kinetics_tools.task_options.identify"
-    WRITE_CSV_ID = "kinetics_Tools.task_options.write_csv"
+    WRITE_CSV_ID = "kinetics_tools.task_options.write_csv"
 
 def _getResourcePath():
     return resource_filename(Requirement.parse('kineticsTools'),'kineticsTools/resources')
@@ -755,6 +757,7 @@ def resolved_tool_contract_runner(resolved_contract):
         args.extend([
             "--identify", rc.task.options[Constants.IDENTIFY_ID],
         ])
+    log.info("Converted arguments: ipdSummary {c}".format(c=" ".join(args)))
     args_ = get_parser().arg_parser.parser.parse_args(args)
     return args_runner(args_)
 
