@@ -139,7 +139,8 @@ def get_parser():
         default_name="basemods")
     tcp.add_output_file_type(FileTypes.H5, "csv_h5",
         name="HDF5 file containing per-base information",
-        description="HDF5 equivalent of CSV output")
+        description="HDF5 equivalent of CSV output",
+        default_name="basemods")
     argp.add_argument("--gff", action="store", default=None,
         help="Output GFF file of modified bases")
     argp.add_argument("--csv", action="store", default=None,

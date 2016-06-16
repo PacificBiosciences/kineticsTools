@@ -1,18 +1,32 @@
 
+import logging
+import sys
+
+import h5py
+
+from pbcoretools.chunking.gather import get_datum_from_chunks_by_chunk_key
+from pbcommand.pb_io.common import load_pipeline_chunks_from_json
+from pbcommand.cli import pbparser_runner
+from pbcommand.models import get_gather_pbparser, FileTypes
+from pbcommand.utils import setup_log
+
+log = logging.getLogger(__name__)
+
 
 class Constants(object):
     TASK_ID = "kinetics_tools.tasks.gather_kinetics_h5"
+    VERSION = "0.1.0"
     DRIVER_EXE = "python -m kineticsTools.tasks.gather_kinetics_h5 --resolved-tool-contract "
     CHUNK_KEY = "$chunk.h5_id"
     OPT_CHUNK_KEY = "kinetics_tools.tasks.gather_h5_chunk_key"
 
 
 def get_parser():
-    p = get_gather_pbparser(Constants.TOOL_ID,
+    p = get_gather_pbparser(Constants.TASK_ID,
                             Constants.VERSION,
                             "Dev Kinetics HDF5 Gather",
                             "General Chunk Kinetics HDF5 Gather",
-                            Constants.DRIVER,
+                            Constants.DRIVER_EXE,
                             is_distributed=True)
     p.add_input_file_type(FileTypes.CHUNK, "cjson_in", "GCHUNK Json",
                           "Gathered CHUNK Json with BigWig chunk key")
@@ -38,19 +52,23 @@ def gather_kinetics_h5(chunked_files, output_file):
     chunkSize = min(dataLength, 8192 * 2)
     datasets = {}
     for key in first.keys():
-        ds = grp.create_dataset(key, (dataLength,),
+        ds = out.create_dataset(key, (dataLength,),
                                 dtype=first[key].dtype,
                                 compression="gzip",
                                 chunks=(chunkSize,),
                                 compression_opts=2)
         datasets[key] = ds
+    print output_file
     for file_name in chunked_files:
-        f = f5py.File(file_name)
-        mask = f['base'].__array__() == ''
+        print file_name
+        chunk = h5py.File(file_name)
+        # FIXME this is insanely inefficient
+        mask = chunk['base'].__array__() != ''
         for key in datasets.keys():
-            datasets[key].__array__()[mask] = f[key].__array__()[mask]
+            datasets[key][mask] = chunk[key][mask]
+        del mask
     out.close()
-    return f
+    return 0
 
 
 def _run_main(chunk_input_json, output_file, chunk_key):
