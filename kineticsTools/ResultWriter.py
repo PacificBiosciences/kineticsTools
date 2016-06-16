@@ -193,23 +193,6 @@ class KineticsWriter(ResultCollectorProcess):
         except Exception as e:
             print e
 
-    @consumer
-    def hdf5CsvConsumer(self, filename):
-
-        grp = h5py.File(filename, "w")
-
-        y = [int(ref.Length) for ref in self.refInfo]
-        dataLength = sum(y)
-        y.append(8192)
-        chunkSize = min(dataLength, 8192 * 2)
-        # print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
-
-        refIdDataset = grp.create_dataset('refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        tplDataset = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        strandDataset = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-
-
-
 
     @consumer
     def csvConsumer(self, filename):
@@ -398,7 +381,6 @@ class KineticsWriter(ResultCollectorProcess):
 
                 start = min(x['tpl'] for x in chunk)
                 end = min(max(x['tpl'] for x in chunk), tplDataset.shape[0] - 1)
-
                 arrLen = end - start + 1
 
                 refId = np.empty(arrLen, dtype="u4")
@@ -419,6 +401,7 @@ class KineticsWriter(ResultCollectorProcess):
                 # Fill out the ipd observations into the dataset
                 for x in chunk:
                     # offset into the current chunk
+                    # FIXME I think this wipes out the forward strand!
                     idx = x['tpl'] - start
 
                     # Data points past the end of the reference can make it through -- filter them out here

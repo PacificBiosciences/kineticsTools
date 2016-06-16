@@ -137,6 +137,9 @@ def get_parser():
         name="BigWig file encoding base IpdRatios",
         description="Compressed binary format containing the IpdRatios for every base (both strands)",
         default_name="basemods")
+    tcp.add_output_file_type(FileTypes.H5, "csv_h5",
+        name="HDF5 file containing per-base information",
+        description="HDF5 equivalent of CSV output")
     argp.add_argument("--gff", action="store", default=None,
         help="Output GFF file of modified bases")
     argp.add_argument("--csv", action="store", default=None,
@@ -726,11 +729,13 @@ def resolved_tool_contract_runner(resolved_contract):
     reference_path = rc.task.input_files[1]
     gff_path = rc.task.output_files[0]
     bigwig_path = rc.task.output_files[1]
+    h5_path = rc.task.output_files[2]
     args = [
         alignment_path,
         "--reference", reference_path,
         "--gff", gff_path,
         "--bigwig", bigwig_path,
+        "--csv_h5", h5_path,
         "--numWorkers", str(rc.task.nproc),
         "--pvalue", str(rc.task.options[Constants.PVALUE_ID]),
         "--alignmentSetRefWindows",
