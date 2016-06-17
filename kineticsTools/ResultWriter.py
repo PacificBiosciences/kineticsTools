@@ -385,7 +385,7 @@ class KineticsWriter(ResultCollectorProcess):
 
                 start = min(2*x['tpl'] for x in chunk)
                 end = min(max(2*x['tpl'] for x in chunk), tplDataset.shape[0] - 1)
-                arrLen = end - start + 1
+                arrLen = end - start + 2
 
                 refId = np.empty(arrLen, dtype="u4")
                 tpl = np.zeros(arrLen, dtype="u4")
@@ -431,20 +431,20 @@ class KineticsWriter(ResultCollectorProcess):
                                 fracLow[idx] = np.nan
                                 fracUp[idx] = np.nan
 
-                refIdDataset[start:(end + 1)] = refId
-                tplDataset[start:(end + 1)] = tpl
-                strandDataset[start:(end + 1)] = strand
-                baseDataset[start:(end + 1)] = base
-                scoreDataset[start:(end + 1)] = score
-                tMeanDataset[start:(end + 1)] = tMean
-                tErrDataset[start:(end + 1)] = tErr
-                modelPredictionDataset[start:(end + 1)] = modelPrediction
-                ipdRatioDataset[start:(end + 1)] = ipdRatio
-                coverageDataset[start:(end + 1)] = coverage
+                refIdDataset[start:(end + 2)] = refId
+                tplDataset[start:(end + 2)] = tpl
+                strandDataset[start:(end + 2)] = strand
+                baseDataset[start:(end + 2)] = base
+                scoreDataset[start:(end + 2)] = score
+                tMeanDataset[start:(end + 2)] = tMean
+                tErrDataset[start:(end + 2)] = tErr
+                modelPredictionDataset[start:(end + 2)] = modelPrediction
+                ipdRatioDataset[start:(end + 2)] = ipdRatio
+                coverageDataset[start:(end + 2)] = coverage
                 if self.options.methylFraction:
-                    fracDataset[start:(end + 1)] = frac
-                    fracLowDataset[start:(end + 1)] = fracLow
-                    fracUpDataset[start:(end + 1)] = fracUp
+                    fracDataset[start:(end + 2)] = frac
+                    fracLowDataset[start:(end + 2)] = fracLow
+                    fracUpDataset[start:(end + 2)] = fracUp
 
         except GeneratorExit:
             # Close down the h5 file

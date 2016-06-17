@@ -388,6 +388,11 @@ def _get_more_options(parser):
                         default=None,
                         help="Random seed (for development and debugging purposes only)")
 
+    parser.add_argument("--referenceStride", action="store", type=int,
+                        default=1000,
+                        help="Size of reference window in internal "+
+                             "parallelization.  For testing purposes only.")
+
     return parser
 
 
@@ -666,7 +671,7 @@ class KineticsToolsRunner(object):
         # Iterate over references
         for window in self.referenceWindows:
             logging.info('Processing window/contig: %s' % (window,))
-            for chunk in ReferenceUtils.enumerateChunks(1000, window):
+            for chunk in ReferenceUtils.enumerateChunks(self.args.referenceStride, window):
                 self._workQueue.put((self.workChunkCounter, chunk))
                 self.workChunkCounter += 1
 
