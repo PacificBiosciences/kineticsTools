@@ -19,11 +19,14 @@ REF_DIR = "/pbi/dept/secondary/siv/references/Helicobacter_pylori_J99"
 ALIGNMENTS = os.path.join(DATA_DIR, "Hpyl_1_5000.xml")
 REFERENCE = os.path.join(REF_DIR, "sequence", "Helicobacter_pylori_J99.fasta")
 
-
-@unittest.skipUnless(os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),
+skip_if_no_data = unittest.skipUnless(
+    os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),
     "%s or %s not available" % (DATA_DIR, REF_DIR))
+
+@skip_if_no_data
 class TestOutputs(unittest.TestCase):
 
+    @skip_if_no_data
     @classmethod
     def setUpClass(cls):
         prefix = tempfile.NamedTemporaryFile().name
