@@ -62,6 +62,12 @@ class TestOutputs(unittest.TestCase):
         self.assertEqual(bases[0], "A")
         self.assertEqual(bases[100], "T")
         self.assertEqual(list(bases[0:400] != "").count(True), 400)
+        seqh_fwd = ''.join([f['base'][x*2] for x in range(200)])
+        seqc_fwd = ''.join([self.csv_records[x*2][3] for x in range(200)])
+        self.assertEqual(seqh_fwd, seqc_fwd)
+        seqh_rev = ''.join([f['base'][(x*2)+1] for x in range(200)])
+        seqc_rev = ''.join([self.csv_records[(x*2)+1][3] for x in range(200)])
+        self.assertEqual(seqh_rev, seqc_rev)
 
     def test_csv_output(self):
         self.assertEqual(len(self.csv_records), 400)

@@ -80,7 +80,6 @@ class Constants(object):
     MAX_LENGTH_DEFAULT = int(3e12)
     METHYL_FRACTION_ID = "kinetics_tools.task_options.compute_methyl_fraction"
     IDENTIFY_ID = "kinetics_tools.task_options.identify"
-    WRITE_CSV_ID = "kinetics_tools.task_options.write_csv"
 
 def _getResourcePath():
     return resource_filename(Requirement.parse('kineticsTools'),'kineticsTools/resources')
@@ -191,13 +190,6 @@ def get_parser():
                     "fraction, along with 95% confidence interval bounds.")
     argp.add_argument("--methylFraction", action="store_true",
         help=_DESC)
-    tcp.add_boolean(Constants.WRITE_CSV_ID,
-        option_str="writeCsv",
-        default=False,
-        name="Write CSV file of per-base metrics (warning: large file)",
-        description="Enables CSV output of all metrics used to locate "+
-                    "modified bases.  This may consume hundreds of gigabytes "+
-                    "for large genomes.")
     _get_more_options(argp)
     return p
 
@@ -748,8 +740,6 @@ def resolved_tool_contract_runner(resolved_contract):
         "--pvalue", str(rc.task.options[Constants.PVALUE_ID]),
         "--alignmentSetRefWindows",
     ]
-    if rc.task.options[Constants.WRITE_CSV_ID]:
-        args.extend(["--csv", os.path.splitext(gff_path)[0] + ".csv"])
     if not "PACBIO_TEST_ENV" in os.environ:
         args.append("--verbose") # we need this for pbsmrtpipe debugging
     if rc.task.options[Constants.MAX_LENGTH_ID]:
