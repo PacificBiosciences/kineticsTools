@@ -4,7 +4,6 @@ import sys
 
 import h5py
 
-from pbcoretools.chunking.gather import get_datum_from_chunks_by_chunk_key
 from pbcommand.pb_io.common import load_pipeline_chunks_from_json
 from pbcommand.cli import pbparser_runner
 from pbcommand.models import get_gather_pbparser, FileTypes
@@ -73,7 +72,12 @@ def gather_kinetics_h5(chunked_files, output_file):
 
 def _run_main(chunk_input_json, output_file, chunk_key):
     chunks = load_pipeline_chunks_from_json(chunk_input_json)
-    chunked_files = get_datum_from_chunks_by_chunk_key(chunks, chunk_key)
+    chunked_files = []
+    for chunk in chunks:
+        if chunk_key in chunk.chunk_keys:
+            chunked_files.append(chunk.chunk_d[chunk_key])
+        else:
+            raise KeyError("Unable to find chunk key '{i}' in {p}".format(i=chunk_key, p=chunk))
     return gather_kinetics_h5(chunked_files, output_file)
 
 
