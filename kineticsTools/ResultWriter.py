@@ -48,6 +48,8 @@ FRAC = 'frac'
 FRAClow = 'fracLow'
 FRACup = 'fracUp'
 
+log = logging.getLogger(__name__)
+
 
 class ResultCollectorProcess(Process):
 
@@ -62,7 +64,7 @@ class ResultCollectorProcess(Process):
         self._resultsQueue = resultsQueue
 
     def _run(self):
-        logging.info("Process %s (PID=%d) started running" % (self.name, self.pid))
+        log.info("Process %s (PID=%d) started running" % (self.name, self.pid))
 
         self.onStart()
 
@@ -95,7 +97,7 @@ class ResultCollectorProcess(Process):
 
                     nextChunkId += 1
 
-        logging.info("Result thread shutting down...")
+        log.info("Result thread shutting down...")
         self.onFinish()
 
     def run(self):
@@ -192,23 +194,6 @@ class KineticsWriter(ResultCollectorProcess):
             return
         except Exception as e:
             print e
-
-    @consumer
-    def hdf5CsvConsumer(self, filename):
-
-        grp = h5py.File(filename, "w")
-
-        y = [int(ref.Length) for ref in self.refInfo]
-        dataLength = sum(y)
-        y.append(8192)
-        chunkSize = min(dataLength, 8192 * 2)
-        # print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
-
-        refIdDataset = grp.create_dataset('refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        tplDataset = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        strandDataset = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-
-
 
 
     @consumer
@@ -338,18 +323,20 @@ class KineticsWriter(ResultCollectorProcess):
                 ends.append(rec_plus.pos + 1)
                 ipd_enc.append(rec_minus.ipd + 65536 * rec_plus.ipd)
                 k += 2
-            logging.info("Writing records for {n} bases".format(n=len(seqids)))
+            log.info("Writing records for {n} bases".format(n=len(seqids)))
             bw.addEntries(seqids, starts, ends=ends, values=ipd_enc)
             bw.close()
             return
 
     @consumer
     def hdf5CsvConsumer(self, filename):
-
+        """
+        Write records to an HDF5 file equivalent to the CSV output, with +/-
+        bases adjacent in the arrays.
+        """
         grp = h5py.File(filename, "w")
-
         y = [int(ref.Length) for ref in self.refInfo]
-        dataLength = sum(y)
+        dataLength = 2 * sum(y)
         y.append(8192)
         chunkSize = min(dataLength, 8192 * 2)
         # print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
@@ -396,10 +383,9 @@ class KineticsWriter(ResultCollectorProcess):
                     fracUpDataset = grp[FRACup]
                 '''
 
-                start = min(x['tpl'] for x in chunk)
-                end = min(max(x['tpl'] for x in chunk), tplDataset.shape[0] - 1)
-
-                arrLen = end - start + 1
+                start = min(2*x['tpl'] for x in chunk)
+                end = min(max(2*x['tpl'] for x in chunk), tplDataset.shape[0] - 1)
+                arrLen = end - start + 2
 
                 refId = np.empty(arrLen, dtype="u4")
                 tpl = np.zeros(arrLen, dtype="u4")
@@ -419,13 +405,15 @@ class KineticsWriter(ResultCollectorProcess):
                 # Fill out the ipd observations into the dataset
                 for x in chunk:
                     # offset into the current chunk
-                    idx = x['tpl'] - start
+                    _strand = int(x['strand'])
+                    idx = (2 * x['tpl']) - start + _strand
 
-                    # Data points past the end of the reference can make it through -- filter them out here
+                    # Data points past the end of the reference can make it
+                    # through -- filter them out here
                     if idx < arrLen:
                         refId[idx] = int(x['refId'])
                         tpl[idx] = int(x['tpl'])
-                        strand[idx] = int(x['strand'])
+                        strand[idx] = _strand
                         base[idx] = x['base']
                         score[idx] = int(x['score'])
                         tMean[idx] = float(x['tMean'])
@@ -443,31 +431,31 @@ class KineticsWriter(ResultCollectorProcess):
                                 fracLow[idx] = np.nan
                                 fracUp[idx] = np.nan
 
-                refIdDataset[start:(end + 1)] = refId
-                tplDataset[start:(end + 1)] = tpl
-                strandDataset[start:(end + 1)] = strand
-                baseDataset[start:(end + 1)] = base
-                scoreDataset[start:(end + 1)] = score
-                tMeanDataset[start:(end + 1)] = tMean
-                tErrDataset[start:(end + 1)] = tErr
-                modelPredictionDataset[start:(end + 1)] = modelPrediction
-                ipdRatioDataset[start:(end + 1)] = ipdRatio
-                coverageDataset[start:(end + 1)] = coverage
+                refIdDataset[start:(end + 2)] = refId
+                tplDataset[start:(end + 2)] = tpl
+                strandDataset[start:(end + 2)] = strand
+                baseDataset[start:(end + 2)] = base
+                scoreDataset[start:(end + 2)] = score
+                tMeanDataset[start:(end + 2)] = tMean
+                tErrDataset[start:(end + 2)] = tErr
+                modelPredictionDataset[start:(end + 2)] = modelPrediction
+                ipdRatioDataset[start:(end + 2)] = ipdRatio
+                coverageDataset[start:(end + 2)] = coverage
                 if self.options.methylFraction:
-                    fracDataset[start:(end + 1)] = frac
-                    fracLowDataset[start:(end + 1)] = fracLow
-                    fracUpDataset[start:(end + 1)] = fracUp
+                    fracDataset[start:(end + 2)] = frac
+                    fracLowDataset[start:(end + 2)] = fracLow
+                    fracUpDataset[start:(end + 2)] = fracUp
 
         except GeneratorExit:
             # Close down the h5 file
             grp.close()
             return
 
-    # an alternative version that collects data into groups according to reference:
     @consumer
     def alt_hdf5CsvConsumer(self, filename):
         """
-        Similar to csv consumer but writing to hdf5 format.
+        Alternative HDF5 output that collects data into groups according to
+        reference (not currently enabled).
         """
 
         f = h5py.File(filename, "w")
@@ -545,6 +533,7 @@ class KineticsWriter(ResultCollectorProcess):
 
                 # Fill out the ipd observations into the dataset
                 for x in chunk:
+                    # FIXME this is insensitive to strand
                     # offset into the current chunk
                     idx = x['tpl'] - start
 
@@ -610,7 +599,7 @@ class KineticsWriter(ResultCollectorProcess):
 
         for ref in self.refInfo:
             # FIXME -- create with good chunk parameters, activate compression
-            logging.info("Creating IpdRatio dataset w/ name: %s, Size: %d" % (str(ref.Name), ref.Length))
+            log.info("Creating IpdRatio dataset w/ name: %s, Size: %d" % (str(ref.Name), ref.Length))
 
             chunkSize = min(ref.Length, 8192)
 

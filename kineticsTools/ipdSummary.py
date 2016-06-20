@@ -68,6 +68,8 @@ revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
 changeNum = int(__p4change__.strip("$").split(":")[-1])
 __version__ = "2.2"
 
+log = logging.getLogger(__name__)
+
 class Constants(object):
     TOOL_ID = "kinetics_tools.tasks.ipd_summary"
     TOOL_NAME = "ipdSummary"
@@ -132,9 +134,13 @@ def get_parser():
         name="GFF file",
         description="GFF file of modified bases",
         default_name="basemods")
-    tcp.add_output_file_type(FileTypes.CSV, "csv",
-        name="CSV file",
-        description="CSV file of per-nucleotide information",
+    tcp.add_output_file_type(FileTypes.BIGWIG, "bigwig",
+        name="BigWig file encoding base IpdRatios",
+        description="Compressed binary format containing the IpdRatios for every base (both strands)",
+        default_name="basemods")
+    tcp.add_output_file_type(FileTypes.H5, "csv_h5",
+        name="HDF5 file containing per-base information",
+        description="HDF5 equivalent of CSV output",
         default_name="basemods")
     argp.add_argument("--gff", action="store", default=None,
         help="Output GFF file of modified bases")
@@ -373,6 +379,11 @@ def _get_more_options(parser):
                         type=int,
                         default=None,
                         help="Random seed (for development and debugging purposes only)")
+
+    parser.add_argument("--referenceStride", action="store", type=int,
+                        default=1000,
+                        help="Size of reference window in internal "+
+                             "parallelization.  For testing purposes only.")
 
     return parser
 
@@ -652,7 +663,7 @@ class KineticsToolsRunner(object):
         # Iterate over references
         for window in self.referenceWindows:
             logging.info('Processing window/contig: %s' % (window,))
-            for chunk in ReferenceUtils.enumerateChunks(1000, window):
+            for chunk in ReferenceUtils.enumerateChunks(self.args.referenceStride, window):
                 self._workQueue.put((self.workChunkCounter, chunk))
                 self.workChunkCounter += 1
 
@@ -717,12 +728,14 @@ def resolved_tool_contract_runner(resolved_contract):
     alignment_path = rc.task.input_files[0]
     reference_path = rc.task.input_files[1]
     gff_path = rc.task.output_files[0]
-    csv_path = rc.task.output_files[1]
+    bigwig_path = rc.task.output_files[1]
+    h5_path = rc.task.output_files[2]
     args = [
         alignment_path,
         "--reference", reference_path,
         "--gff", gff_path,
-        "--csv", csv_path,
+        "--bigwig", bigwig_path,
+        "--csv_h5", h5_path,
         "--numWorkers", str(rc.task.nproc),
         "--pvalue", str(rc.task.options[Constants.PVALUE_ID]),
         "--alignmentSetRefWindows",
@@ -739,6 +752,7 @@ def resolved_tool_contract_runner(resolved_contract):
         args.extend([
             "--identify", rc.task.options[Constants.IDENTIFY_ID],
         ])
+    log.info("Converted arguments: ipdSummary {c}".format(c=" ".join(args)))
     args_ = get_parser().arg_parser.parser.parse_args(args)
     return args_runner(args_)
 
