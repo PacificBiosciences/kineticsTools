@@ -26,8 +26,8 @@ skip_if_no_data = unittest.skipUnless(
 @skip_if_no_data
 class TestOutputs(unittest.TestCase):
 
-    @skip_if_no_data
     @classmethod
+    @skip_if_no_data
     def setUpClass(cls):
         prefix = tempfile.NamedTemporaryFile().name
         cls.h5_file = "{p}.h5".format(p=prefix)
