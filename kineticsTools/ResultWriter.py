@@ -307,8 +307,11 @@ class KineticsWriter(ResultCollectorProcess):
         except GeneratorExit:
             records.sort(lambda a, b: cmp(a.pos, b.pos))
             records.sort(lambda a, b: cmp(a.seqid, b.seqid))
-            bw = pyBigWig.open(filename, "w")
             regions = [(s, ranges[s][1]) for s in sorted(ranges.keys())]
+            if len(regions) == 0:
+                with open(filename, "wb") as _:
+                    return
+            bw = pyBigWig.open(filename, "w")
             bw.addHeader(regions)
             k = 0
             seqids = []
