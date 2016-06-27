@@ -28,7 +28,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import cProfile
 import logging
 import os.path
@@ -282,6 +282,7 @@ class KineticsWriter(ResultCollectorProcess):
     def bigWigConsumer(self, filename):
         import pyBigWig
         records = []
+        records_by_pos = defaultdict(list)
         ranges = {}
         BaseInfo = namedtuple("BaseInfo", ("seqid", "pos", "sense", "ipd"))
         try:
@@ -296,11 +297,13 @@ class KineticsWriter(ResultCollectorProcess):
                     ranges.setdefault(seqid, (sys.maxint, 0))
                     ranges[seqid] = (min(ranges[seqid][0], pos),
                                      max(ranges[seqid][1], pos+1))
-                    records.append(BaseInfo(
+                    rec = BaseInfo(
                         seqid=seqid,
                         pos=pos,
                         sense=int(x['strand']),
-                        ipd=float(x['ipdRatio'])))
+                        ipd=float(x['ipdRatio']))
+                    records.append(rec)
+                    records_by_pos[(rec.seqid, rec.pos)].append(rec)
         except GeneratorExit:
             records.sort(lambda a, b: cmp(a.pos, b.pos))
             records.sort(lambda a, b: cmp(a.seqid, b.seqid))
@@ -312,17 +315,29 @@ class KineticsWriter(ResultCollectorProcess):
             starts = []
             ends = []
             ipd_enc = []
-            # XXX is it safe to assume that both strands will always be
-            # represented equally?
-            while k < len(records):
-                rec_plus = records[k] if records[k].sense else records[k + 1]
-                rec_minus = records[k + 1] if records[k].sense else records[k]
-                assert rec_plus.pos == rec_minus.pos, (rec_plus, rec_minus)
-                seqids.append(rec_plus.seqid)
-                starts.append(rec_plus.pos)
-                ends.append(rec_plus.pos + 1)
-                ipd_enc.append(rec_minus.ipd + 65536 * rec_plus.ipd)
-                k += 2
+            # records are not necessarily consecutive or two per base!
+            have_pos = set()
+            for rec in records:
+                if (rec.seqid, rec.pos) in have_pos:
+                    continue
+                have_pos.add((rec.seqid, rec.pos))
+                strand_records = records_by_pos[(rec.seqid, rec.pos)]
+                if len(strand_records) == 2:
+                    rec_plus = strand_records[k] if strand_records[k].sense else strand_records[k + 1]
+                    rec_minus = strand_records[k + 1] if strand_records[k].sense else strand_records[k]
+                    assert rec_plus.pos == rec_minus.pos, (rec_plus, rec_minus)
+                    seqids.append(rec_plus.seqid)
+                    starts.append(rec_plus.pos)
+                    ends.append(rec_plus.pos + 1)
+                    ipd_enc.append(rec_minus.ipd + 65536 * rec_plus.ipd)
+                else:
+                    seqids.append(rec.seqid)
+                    starts.append(rec.pos)
+                    ends.append(rec.pos + 1)
+                    if rec.sense == 0:
+                        ipd_enc.append(65536 * rec.ipd)
+                    else:
+                        ipd_enc.append(rec.ipd)
             log.info("Writing records for {n} bases".format(n=len(seqids)))
             bw.addEntries(seqids, starts, ends=ends, values=ipd_enc)
             bw.close()
