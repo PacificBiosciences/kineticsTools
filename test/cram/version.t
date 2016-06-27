@@ -28,7 +28,7 @@ A simple test of the version and help options:
                     [-W REFERENCEWINDOWSASSTRING]
                     [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
                     [--alignmentSetRefWindows] [--threaded] [--profile] [--pdb]
-                    [--seed RANDOMSEED]
+                    [--seed RANDOMSEED] [--referenceStride REFERENCESTRIDE]
                     alignment_set
   ipdSummary: error: too few arguments
   [2]
