@@ -21,7 +21,7 @@ setup(
         'h5py >= 1.3.0',
         'scipy >= 0.9.0',
         'pbcommand >= 0.3.22',
-        'pyBigWig'
+        #'pyBigWig'
     ],
     entry_points={'console_scripts': [
         "ipdSummary = kineticsTools.ipdSummary:main",
