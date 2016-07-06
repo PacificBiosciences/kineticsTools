@@ -178,7 +178,7 @@ def get_parser():
         name="GFF file",
         description="Alignment summary GFF")
     p.add_output_file_type(FileTypes.GFF, "gff_out",
-        name="GFF file",
+        name="Alignment summary with basemods",
         description="Modified alignment summary file",
         default_name="alignment_summary_with_basemods")
     return p
