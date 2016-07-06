@@ -131,7 +131,7 @@ def get_parser():
         type=validateFile, help="Fasta or Reference DataSet")
     # XXX GFF and CSV are "option" for arg parser, not tool contract
     tcp.add_output_file_type(FileTypes.GFF, "gff",
-        name="GFF file",
+        name="Modified bases GFF",
         description="GFF file of modified bases",
         default_name="basemods")
     tcp.add_output_file_type(FileTypes.BIGWIG, "bigwig",
