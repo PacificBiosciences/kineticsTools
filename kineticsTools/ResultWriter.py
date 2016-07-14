@@ -292,7 +292,7 @@ class KineticsWriter(ResultCollectorProcess):
                     continue
                 # Fill out the ipd observations into the dataset
                 for x in chunk:
-                    pos = int(x['tpl'])
+                    pos = int(x['tpl']) + 1
                     seqid = x['refName']
                     ranges.setdefault(seqid, (sys.maxint, 0))
                     ranges[seqid] = (min(ranges[seqid][0], pos),
@@ -307,7 +307,7 @@ class KineticsWriter(ResultCollectorProcess):
         except GeneratorExit:
             records.sort(lambda a, b: cmp(a.pos, b.pos))
             records.sort(lambda a, b: cmp(a.seqid, b.seqid))
-            regions = [(s, ranges[s][1]) for s in sorted(ranges.keys())]
+            regions = [(s, ranges[s][1]-1) for s in sorted(ranges.keys())]
             if len(regions) == 0:
                 with open(filename, "wb") as _:
                     return
@@ -320,27 +320,30 @@ class KineticsWriter(ResultCollectorProcess):
             ipd_enc = []
             # records are not necessarily consecutive or two per base!
             have_pos = set()
+            def encode_ipds(plus, minus):
+                enc = lambda x: min(65535, int(round(100*x)))
+                return float(enc(minus) + 65536*enc(plus))
             for rec in records:
                 if (rec.seqid, rec.pos) in have_pos:
                     continue
                 have_pos.add((rec.seqid, rec.pos))
                 strand_records = records_by_pos[(rec.seqid, rec.pos)]
                 if len(strand_records) == 2:
-                    rec_plus = strand_records[k] if strand_records[k].sense else strand_records[k + 1]
-                    rec_minus = strand_records[k + 1] if strand_records[k].sense else strand_records[k]
+                    rec_minus = strand_records[k] if strand_records[k].sense else strand_records[k + 1]
+                    rec_plus = strand_records[k + 1] if strand_records[k].sense else strand_records[k]
                     assert rec_plus.pos == rec_minus.pos, (rec_plus, rec_minus)
                     seqids.append(rec_plus.seqid)
-                    starts.append(rec_plus.pos)
-                    ends.append(rec_plus.pos + 1)
-                    ipd_enc.append(rec_minus.ipd + 65536 * rec_plus.ipd)
+                    starts.append(rec_plus.pos-1)
+                    ends.append(rec_plus.pos)
+                    ipd_enc.append(encode_ipds(rec_plus.ipd, rec_minus.ipd))
                 else:
                     seqids.append(rec.seqid)
-                    starts.append(rec.pos)
-                    ends.append(rec.pos + 1)
+                    starts.append(rec.pos-1)
+                    ends.append(rec.pos)
                     if rec.sense == 0:
-                        ipd_enc.append(65536 * rec.ipd)
+                        ipd_enc.append(encode_ipds(rec.ipd, 0))
                     else:
-                        ipd_enc.append(rec.ipd)
+                        ipd_enc.append(encode_ipds(0, rec.ipd))
             log.info("Writing records for {n} bases".format(n=len(seqids)))
             bw.addEntries(seqids, starts, ends=ends, values=ipd_enc)
             bw.close()
@@ -430,7 +433,7 @@ class KineticsWriter(ResultCollectorProcess):
                     # through -- filter them out here
                     if idx < arrLen:
                         refId[idx] = int(x['refId'])
-                        tpl[idx] = int(x['tpl'])
+                        tpl[idx] = int(x['tpl']) + 1 # 'tpl' is 0-based
                         strand[idx] = _strand
                         base[idx] = x['base']
                         score[idx] = int(x['score'])
