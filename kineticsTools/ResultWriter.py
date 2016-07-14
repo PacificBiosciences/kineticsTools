@@ -329,8 +329,8 @@ class KineticsWriter(ResultCollectorProcess):
                 have_pos.add((rec.seqid, rec.pos))
                 strand_records = records_by_pos[(rec.seqid, rec.pos)]
                 if len(strand_records) == 2:
-                    rec_plus = strand_records[k] if strand_records[k].sense else strand_records[k + 1]
-                    rec_minus = strand_records[k + 1] if strand_records[k].sense else strand_records[k]
+                    rec_minus = strand_records[k] if strand_records[k].sense else strand_records[k + 1]
+                    rec_plus = strand_records[k + 1] if strand_records[k].sense else strand_records[k]
                     assert rec_plus.pos == rec_minus.pos, (rec_plus, rec_minus)
                     seqids.append(rec_plus.seqid)
                     starts.append(rec_plus.pos-1)

@@ -95,7 +95,7 @@ class TestOutputs(unittest.TestCase):
             s = int(f.values(seqid, tpl, tpl+1)[0])
             ipd_minus = (s % 65536) / 100.0
             ipd_plus = (s >> 16) / 100.0
-            if rec[2] == "0":
+            if rec[2] == "1":
                 self.assertAlmostEqual(ipd_minus, float(rec[8]), places=1)
             else:
                 self.assertAlmostEqual(ipd_plus, float(rec[8]), places=1)
