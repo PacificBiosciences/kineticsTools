@@ -73,6 +73,11 @@ class TestOutputs(unittest.TestCase):
         self.assertEqual(seqh_rev, seqc_rev)
         tpl_fwd = [f['tpl'][x*2] for x in range(200)]
         self.assertEqual(tpl_fwd, range(1, 201))
+        f = h5py.File(self.h5_file)
+        for i_rec, rec in enumerate(self.csv_records):
+            self.assertEqual(str(f['tpl'][i_rec]), self.csv_records[i_rec][1])
+            self.assertEqual("%.3f"%f['ipdRatio'][i_rec],
+                             self.csv_records[i_rec][8])
 
     def test_csv_output(self):
         self.assertEqual(len(self.csv_records), 400)
