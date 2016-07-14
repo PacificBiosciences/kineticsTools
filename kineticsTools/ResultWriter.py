@@ -430,7 +430,7 @@ class KineticsWriter(ResultCollectorProcess):
                     # through -- filter them out here
                     if idx < arrLen:
                         refId[idx] = int(x['refId'])
-                        tpl[idx] = int(x['tpl'])
+                        tpl[idx] = int(x['tpl']) + 1 # 'tpl' is 0-based
                         strand[idx] = _strand
                         base[idx] = x['base']
                         score[idx] = int(x['score'])
