@@ -61,12 +61,7 @@ from kineticsTools.ResultWriter import KineticsWriter
 from kineticsTools.ipdModel import IpdModel
 from kineticsTools.ReferenceUtils import ReferenceUtils
 
-# Version info
-__p4revision__ = "$Revision: #1 $"
-__p4change__ = "$Change: 100972 $"
-revNum = int(__p4revision__.strip("$").split(" ")[1].strip("#"))
-changeNum = int(__p4change__.strip("$").split(":")[-1])
-__version__ = "2.2"
+__version__ = "2.3"
 
 log = logging.getLogger(__name__)
 
