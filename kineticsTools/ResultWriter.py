@@ -466,7 +466,17 @@ class KineticsWriter(ResultCollectorProcess):
                     fracDataset[start:(end + 2)] = frac
                     fracLowDataset[start:(end + 2)] = fracLow
                     fracUpDataset[start:(end + 2)] = fracUp
-
+                grp.flush()
+                del refId
+                del tpl
+                del strand
+                del base
+                del score
+                del tMean
+                del tErr
+                del modelPrediction
+                del ipdRatio
+                del coverage
         except GeneratorExit:
             # Close down the h5 file
             grp.close()
@@ -484,25 +494,26 @@ class KineticsWriter(ResultCollectorProcess):
 
         for ref in self.refInfo:
             # Each reference group will house a collection of datasets:
-            chunkSize = min(ref.Length, 8192)
+            dataLength = ref.Length * 2
+            chunkSize = min(dataLength, 8192)
 
             # Create a group for each reference:
             grp = f.create_group(str(ref.Name))
 
-            ds = grp.create_dataset('tpl', (ref.Length,), dtype="u4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('strand', (ref.Length,), dtype="u1", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('base', (ref.Length,), dtype="a1", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('score', (ref.Length,), dtype="u4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('tMean', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('tErr', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('modelPrediction', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('ipdRatio', (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('coverage', (ref.Length,), dtype="u4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('base', (dataLength,), dtype="a1", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('score', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('tMean', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('tErr', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('modelPrediction', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('ipdRatio', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('coverage', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
 
             if self.options.methylFraction:
-                ds = grp.create_dataset(FRAC, (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-                ds = grp.create_dataset(FRAClow, (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-                ds = grp.create_dataset(FRACup, (ref.Length,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+                ds = grp.create_dataset(FRAC, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+                ds = grp.create_dataset(FRAClow, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+                ds = grp.create_dataset(FRACup, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
 
             # Maintain a dictionary of group paths?
             dsDict[ref.ID] = grp
@@ -533,10 +544,10 @@ class KineticsWriter(ResultCollectorProcess):
                     fracLowDataset = grp[FRAClow]
                     fracUpDataset = grp[FRACup]
 
-                start = min(x['tpl'] for x in chunk)
-                end = min(max(x['tpl'] for x in chunk), tplDataset.shape[0] - 1)
+                start = min(2*x['tpl'] for x in chunk)
+                end = min(max(2*x['tpl'] for x in chunk), tplDataset.shape[0] - 1)
 
-                arrLen = end - start + 1
+                arrLen = end - start + 2
 
                 tpl = np.zeros(arrLen, dtype="u4")
                 strand = np.zeros(arrLen, dtype="u1")
@@ -554,13 +565,13 @@ class KineticsWriter(ResultCollectorProcess):
 
                 # Fill out the ipd observations into the dataset
                 for x in chunk:
-                    # FIXME this is insensitive to strand
                     # offset into the current chunk
-                    idx = x['tpl'] - start
+                    _strand = int(x['strand'])
+                    idx = (2 * x['tpl']) - start + _strand
 
                     # Data points past the end of the reference can make it through -- filter them out here
                     if idx < arrLen:
-                        tpl[idx] += int(x['tpl'])
+                        tpl[idx] += int(x['tpl']) + 1
                         strand[idx] += int(x['strand'])
                         base[idx] = x['base']
                         score[idx] += int(x['score'])
@@ -580,20 +591,20 @@ class KineticsWriter(ResultCollectorProcess):
                                 fracUp[idx] = np.nan
 
                 # Write our chunk into the main dataset
-                tplDataset[start:(end + 1)] = tpl
-                strandDataset[start:(end + 1)] = strand
-                baseDataset[start:(end + 1)] = base
-                scoreDataset[start:(end + 1)] = score
-                tMeanDataset[start:(end + 1)] = tMean
-                tErrDataset[start:(end + 1)] = tErr
-                modelPredictionDataset[start:(end + 1)] = modelPrediction
-                ipdRatioDataset[start:(end + 1)] = ipdRatio
-                coverageDataset[start:(end + 1)] = coverage
+                tplDataset[start:(end + 2)] = tpl
+                strandDataset[start:(end + 2)] = strand
+                baseDataset[start:(end + 2)] = base
+                scoreDataset[start:(end + 2)] = score
+                tMeanDataset[start:(end + 2)] = tMean
+                tErrDataset[start:(end + 2)] = tErr
+                modelPredictionDataset[start:(end + 2)] = modelPrediction
+                ipdRatioDataset[start:(end + 2)] = ipdRatio
+                coverageDataset[start:(end + 2)] = coverage
                 if self.options.methylFraction:
-                    fracDataset[start:(end + 1)] = frac
-                    fracLowDataset[start:(end + 1)] = fracLow
-                    fracUpDataset[start:(end + 1)] = fracUp
-
+                    fracDataset[start:(end + 2)] = frac
+                    fracLowDataset[start:(end + 2)] = fracLow
+                    fracUpDataset[start:(end + 2)] = fracUp
+                f.flush()
         except GeneratorExit:
             # Close down the h5 file
             f.close()
@@ -900,7 +911,7 @@ class KineticsWriter(ResultCollectorProcess):
             ('ms_csv', 'ms.csv', self.msCsvConsumer),
             ('pickle', 'pickle', self.csvConsumer),
             ('summary_h5', 'summary.h5', self.ipdRatioH5Consumer),
-            ('csv_h5', 'h5', self.hdf5CsvConsumer)
+            ('csv_h5', 'h5', self.alt_hdf5CsvConsumer)
         ]
 
         sinkList = []

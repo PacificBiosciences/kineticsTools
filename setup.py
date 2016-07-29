@@ -4,11 +4,11 @@ import sys
 
 setup(
     name='kineticsTools',
-    version='0.5.3',
+    version='0.6.0',
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license=open('LICENSES.txt').read(),
-    packages=["kineticsTools"],
+    packages=find_packages("."),
     package_data={'kineticsTools': ['resources/*.h5']},
     ext_modules=[Extension('kineticsTools/tree_predict', ['kineticsTools/tree_predict.c'],
                            extra_compile_args=["-O3", "-shared", "-std=c99"],

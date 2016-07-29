@@ -1,4 +1,10 @@
 
+"""
+pbsmrtpipe task to gather chunked hdf5 files containing raw kinetics data.
+"""
+
+
+from collections import defaultdict
 import logging
 import sys
 
@@ -26,7 +32,8 @@ def get_parser():
                             "Dev Kinetics HDF5 Gather",
                             "General Chunk Kinetics HDF5 Gather",
                             Constants.DRIVER_EXE,
-                            is_distributed=True)
+                            is_distributed=True,
+                            default_level=logging.INFO)
     p.add_input_file_type(FileTypes.CHUNK, "cjson_in", "GCHUNK Json",
                           "Gathered CHUNK Json with BigWig chunk key")
 
@@ -45,11 +52,24 @@ def get_parser():
 
 
 def gather_kinetics_h5(chunked_files, output_file):
+    """
+    Gather a set of 'flat' kinetics hdf5 chunks.  This will not scale well for
+    large (i.e. non-bacterial) genomes.
+    """
+    log.info("creating {f}...".format(f=output_file))
     out = h5py.File(output_file, "w")
     first = h5py.File(chunked_files[0])
     dataLength = len(first[first.keys()[0]])
-    chunkSize = min(dataLength, 8192 * 2)
+    chunkSize = min(dataLength, 8192 * 8)
     datasets = {}
+    def _add_chunk(chunk):
+        # FIXME this is insanely inefficient
+        log.debug("  getting mask")
+        mask = chunk['base'].__array__() != ''
+        for key in datasets.keys():
+            log.debug("  copying '{k}'".format(k=key))
+            datasets[key][mask] = chunk[key][mask]
+        del mask
     for key in first.keys():
         ds = out.create_dataset(key, (dataLength,),
                                 dtype=first[key].dtype,
@@ -57,15 +77,65 @@ def gather_kinetics_h5(chunked_files, output_file):
                                 chunks=(chunkSize,),
                                 compression_opts=2)
         datasets[key] = ds
-    print output_file
-    for file_name in chunked_files:
-        print file_name
+    log.info("adding first chunk in {f}".format(f=chunked_files[0]))
+    _add_chunk(first)
+    out.flush()
+    for file_name in chunked_files[1:]:
+        #out = h5py.File(output_file, "r+")
         chunk = h5py.File(file_name)
-        # FIXME this is insanely inefficient
-        mask = chunk['base'].__array__() != ''
-        for key in datasets.keys():
-            datasets[key][mask] = chunk[key][mask]
-        del mask
+        log.info("adding chunk in {f}".format(f=file_name))
+        _add_chunk(chunk)
+    out.close()
+    return 0
+
+
+def gather_kinetics_h5_byref(chunked_files, output_file):
+    """
+    Gather a set of hdf5 files containing with per-reference datasets.  This
+    implementation sacrifices some computational efficiency to limit the
+    memory overhead.
+    """
+    log.info("creating {f}...".format(f=output_file))
+    out = h5py.File(output_file, "w")
+    first = h5py.File(chunked_files[0])
+    refs_by_file = defaultdict(list)
+    ds_types = {}
+    ref_sizes = {}
+    for file_name in chunked_files:
+        chunk = h5py.File(file_name)
+        for rname in chunk.keys():
+            refs_by_file[rname].append(file_name)
+            grp = chunk[rname]
+            for ds_id in grp.keys():
+                if not ds_id in ds_types:
+                    ds_types[ds_id] = grp[ds_id].dtype
+                else:
+                    assert ds_types[ds_id] == grp[ds_id].dtype
+                if not rname in ref_sizes:
+                    ref_sizes[rname] = len(grp[ds_id])
+                else:
+                    assert ref_sizes[rname] == len(grp[ds_id])
+        chunk.close()
+    for ref_name, file_names in refs_by_file.iteritems():
+        log.info("creating group {r} (dataset length {s})".format(
+                 r=ref_name,
+                 s=ref_sizes[ref_name]))
+        grp = out.create_group(ref_name)
+        dataLength = ref_sizes[ref_name]
+        chunkSize = min(dataLength, 8192)
+        for ds_id, ds_type in ds_types.iteritems():
+            log.debug("  dataset {i} ({t})".format(i=ds_id, t=ds_type))
+            ds = grp.create_dataset(ds_id, (dataLength,), dtype=ds_type,
+                                    compression="gzip", chunks=(chunkSize,))
+            for file_name in file_names:
+                log.debug("    reading from {f}".format(f=file_name))
+                chunk = h5py.File(file_name)
+                grp_chk = chunk[ref_name]
+                mask = grp_chk['base'].__array__() != ''
+                ds[mask] = grp_chk[ds_id][mask]
+                del mask
+                chunk.close()
+        out.flush()
     out.close()
     return 0
 
@@ -78,7 +148,7 @@ def _run_main(chunk_input_json, output_file, chunk_key):
             chunked_files.append(chunk.chunk_d[chunk_key])
         else:
             raise KeyError("Unable to find chunk key '{i}' in {p}".format(i=chunk_key, p=chunk))
-    return gather_kinetics_h5(chunked_files, output_file)
+    return gather_kinetics_h5_byref(chunked_files, output_file)
 
 
 def args_runner(args):
