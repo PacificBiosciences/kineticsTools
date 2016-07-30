@@ -21,11 +21,6 @@ REF_DIR = "/pbi/dept/secondary/siv/references/Helicobacter_pylori_J99"
 
 class Constants(object):
     N_LINES_GFF = 338
-    N_LINES_CSV = 13357
-    INITIAL_LINES_CSV = """\
-refName,tpl,strand,base,score,tMean,tErr,modelPrediction,ipdRatio,coverage
-"gi|12057207|gb|AE001439.1|",1,0,A,10,2.387,0.464,1.710,1.396,29
-"gi|12057207|gb|AE001439.1|",1,1,T,1,0.492,0.075,0.602,0.817,57"""
     INITIAL_LINES_GFF = """\
 gi|12057207|gb|AE001439.1|\tkinModCall\tm6A\t35\t35\t187\t-\t.\tcoverage=118;context=TTTAAGGGCGTTTTATGCCTAAATTTAAAAAATGATGCTGT;IPDRatio=5.68;identificationQv=196
 gi|12057207|gb|AE001439.1|\tkinModCall\tm4C\t60\t60\t49\t-\t.\tcoverage=112;context=AAAAAGCTCGCTCAAAAACCCTTGATTTAAGGGCGTTTTAT;IPDRatio=2.58;identificationQv=33
@@ -64,8 +59,9 @@ class TestIpdSummary(pbcommand.testkit.PbTestApp):
             return "\n".join(out)
         self.assertEqual(head2(gff_file, 3), Constants.INITIAL_LINES_GFF)
         f = h5py.File(rtc.task.output_files[2])
-        seqh_fwd = ''.join([f['base'][x*2] for x in range(5000)])
-        seqh_rev = ''.join([f['base'][(x*2)+1] for x in range(5000)])
+        g = f[f.keys()[0]]
+        seqh_fwd = ''.join([g['base'][x*2] for x in range(5000)])
+        seqh_rev = ''.join([g['base'][(x*2)+1] for x in range(5000)])
         self.assertEqual(len(seqh_fwd), 5000)
         self.assertEqual(len(seqh_rev), 5000)
 

@@ -63,22 +63,23 @@ class TestOutputs(unittest.TestCase):
 
     def test_h5_output(self):
         f = h5py.File(self.h5_file)
-        bases = f['base'].__array__()
+        g = f[f.keys()[0]] # just one group in this file
+        bases = g['base'].__array__()
         self.assertEqual(bases[0], "A")
         self.assertEqual(bases[100], "T")
         self.assertEqual(list(bases[0:400] != "").count(True), 400)
-        seqh_fwd = ''.join([f['base'][x*2] for x in range(200)])
+        seqh_fwd = ''.join([g['base'][x*2] for x in range(200)])
         seqc_fwd = ''.join([self.csv_records[x*2][3] for x in range(200)])
         self.assertEqual(seqh_fwd, seqc_fwd)
-        seqh_rev = ''.join([f['base'][(x*2)+1] for x in range(200)])
+        seqh_rev = ''.join([g['base'][(x*2)+1] for x in range(200)])
         seqc_rev = ''.join([self.csv_records[(x*2)+1][3] for x in range(200)])
         self.assertEqual(seqh_rev, seqc_rev)
-        tpl_fwd = [f['tpl'][x*2] for x in range(200)]
+        tpl_fwd = [g['tpl'][x*2] for x in range(200)]
         self.assertEqual(tpl_fwd, range(1, 201))
         f = h5py.File(self.h5_file)
         for i_rec, rec in enumerate(self.csv_records):
-            self.assertEqual(str(f['tpl'][i_rec]), self.csv_records[i_rec][1])
-            self.assertEqual("%.3f"%f['ipdRatio'][i_rec],
+            self.assertEqual(str(g['tpl'][i_rec]), self.csv_records[i_rec][1])
+            self.assertEqual("%.3f"%g['ipdRatio'][i_rec],
                              self.csv_records[i_rec][8])
 
     def test_csv_output(self):

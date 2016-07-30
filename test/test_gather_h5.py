@@ -1,4 +1,6 @@
 
+# TODO test with more than one simulated reference contig
+
 import unittest
 import tempfile
 
@@ -9,7 +11,8 @@ import pbcommand.testkit.core
 from pbcommand.models import PipelineChunk
 from pbcommand.pb_io.common import write_pipeline_chunks
 
-from kineticsTools.tasks.gather_kinetics_h5 import gather_kinetics_h5
+from kineticsTools.tasks.gather_kinetics_h5 import (gather_kinetics_h5,
+                                                    gather_kinetics_h5_byref)
 
 class SetUpHDF5(object):
     DATALENGTH = 10000
@@ -20,16 +23,24 @@ class SetUpHDF5(object):
     ]
 
     @classmethod
+    def get_base_group_input(cls, f):
+        return f.create_group("chr1")
+
+    def get_base_group_output(self, f):
+        return f[f.keys()[0]]
+
+    @classmethod
     def makeInputs(cls):
         for k, ifn in enumerate(cls.CHUNKED_FILES):
             f = h5py.File(cls.CHUNKED_FILES[k], "w")
-            a = f.create_dataset("base", (cls.DATALENGTH,),
+            g = cls.get_base_group_input(f)
+            a = g.create_dataset("base", (cls.DATALENGTH,),
                                  dtype="a1", compression="gzip",
                                  chunks=(cls.CHUNKSIZE,), compression_opts=2)
-            b = f.create_dataset("score", (cls.DATALENGTH,),
+            b = g.create_dataset("score", (cls.DATALENGTH,),
                                  dtype="u4", compression="gzip",
                                  chunks=(cls.CHUNKSIZE,), compression_opts=2)
-            c = f.create_dataset("tMean", (cls.DATALENGTH,),
+            c = g.create_dataset("tMean", (cls.DATALENGTH,),
                                  dtype="f4", compression="gzip",
                                  chunks=(cls.CHUNKSIZE,), compression_opts=2)
             start = k * (cls.DATALENGTH / 2)
@@ -46,16 +57,33 @@ class TestGatherHDF5(unittest.TestCase, SetUpHDF5):
     def setUpClass(cls):
         cls.makeInputs()
 
+    def _gather(self, ofn):
+        gather_kinetics_h5_byref(self.CHUNKED_FILES, ofn)
+
     def test_gather_kinetics_h5(self):
         ofn = tempfile.NamedTemporaryFile(suffix=".h5").name
-        gather_kinetics_h5(self.CHUNKED_FILES, ofn)
+        self._gather(ofn)
         f = h5py.File(ofn)
-        self.assertTrue(all(f['base'].__array__() == 'A'))
-        self.assertTrue(all(f['score'].__array__() > 0))
-        self.assertEqual(f['score'].__array__().mean(), 3)
-        self.assertTrue(all(f['tMean'].__array__() > 0))
-        d = np.round(f['tMean'].__array__() ** 2).astype("u4")
+        g = self.get_base_group_output(f)
+        self.assertTrue(all(g['base'].__array__() == 'A'))
+        self.assertTrue(all(g['score'].__array__() > 0))
+        self.assertEqual(g['score'].__array__().mean(), 3)
+        self.assertTrue(all(g['tMean'].__array__() > 0))
+        d = np.round(g['tMean'].__array__() ** 2).astype("u4")
         self.assertTrue(all(d == np.array(range(1, self.DATALENGTH+1))))
+
+
+class TestGatherHDF5Flat(TestGatherHDF5):
+
+    @classmethod
+    def get_base_group_input(cls, f):
+        return f
+
+    def get_base_group_output(self, f):
+        return f
+
+    def _gather(self, ofn):
+        gather_kinetics_h5(self.CHUNKED_FILES, ofn)
 
 
 class TestGatherH5ToolContract(pbcommand.testkit.core.PbTestGatherApp, SetUpHDF5):
