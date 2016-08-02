@@ -15,6 +15,8 @@ from pbcommand.cli import pbparser_runner
 from pbcommand.models import get_gather_pbparser, FileTypes
 from pbcommand.utils import setup_log
 
+from kineticsTools.ResultWriter import DEFAULT_NCHUNKS
+
 log = logging.getLogger(__name__)
 
 
@@ -122,7 +124,7 @@ def gather_kinetics_h5_byref(chunked_files, output_file):
                  s=ref_sizes[ref_name]))
         grp = out.create_group(ref_name)
         dataLength = ref_sizes[ref_name]
-        chunkSize = min(dataLength, 8192)
+        chunkSize = min(dataLength, DEFAULT_NCHUNKS)
         for ds_id, ds_type in ds_types.iteritems():
             log.debug("  dataset {i} ({t})".format(i=ds_id, t=ds_type))
             ds = grp.create_dataset(ds_id, (dataLength,), dtype=ds_type,

@@ -42,7 +42,7 @@ import sys
 from kineticsTools.pipelineTools import consumer
 import math
 
-
+DEFAULT_NCHUNKS = 256
 # Labels for modified fraction:
 FRAC = 'frac'
 FRAClow = 'fracLow'
@@ -359,24 +359,23 @@ class KineticsWriter(ResultCollectorProcess):
         y = [int(ref.Length) for ref in self.refInfo]
         dataLength = 2 * sum(y)
         y.append(8192)
-        chunkSize = min(dataLength, 8192 * 2)
-        # print "dataLength = ", dataLength, " chunkSize = ", chunkSize, " y = ", y
+        nChunks = min(dataLength, DEFAULT_NCHUNKS)
 
-        refIdDataset = grp.create_dataset('refId', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        tplDataset = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        strandDataset = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        baseDataset = grp.create_dataset('base', (dataLength,), dtype="a1", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        scoreDataset = grp.create_dataset('score', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        tMeanDataset = grp.create_dataset('tMean', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        tErrDataset = grp.create_dataset('tErr', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        modelPredictionDataset = grp.create_dataset('modelPrediction', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        ipdRatioDataset = grp.create_dataset('ipdRatio', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-        coverageDataset = grp.create_dataset('coverage', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+        refIdDataset = grp.create_dataset('refId', (dataLength,), dtype="u4", compression="gzip", chunks=(nChunks,), compression_opts=2)
+        tplDataset = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(nChunks,), compression_opts=2)
+        strandDataset = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(nChunks,), compression_opts=2)
+        baseDataset = grp.create_dataset('base', (dataLength,), dtype="a1", compression="gzip", chunks=(nChunks,), compression_opts=2)
+        scoreDataset = grp.create_dataset('score', (dataLength,), dtype="u4", compression="gzip", chunks=(nChunks,), compression_opts=2)
+        tMeanDataset = grp.create_dataset('tMean', (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,), compression_opts=2)
+        tErrDataset = grp.create_dataset('tErr', (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,), compression_opts=2)
+        modelPredictionDataset = grp.create_dataset('modelPrediction', (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,), compression_opts=2)
+        ipdRatioDataset = grp.create_dataset('ipdRatio', (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,), compression_opts=2)
+        coverageDataset = grp.create_dataset('coverage', (dataLength,), dtype="u4", compression="gzip", chunks=(nChunks,), compression_opts=2)
 
         if self.options.methylFraction:
-            fracDataset = grp.create_dataset(FRAC, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-            fracLowDataset = grp.create_dataset(FRAClow, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
-            fracUpDataset = grp.create_dataset(FRACup, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,), compression_opts=2)
+            fracDataset = grp.create_dataset(FRAC, (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,), compression_opts=2)
+            fracLowDataset = grp.create_dataset(FRAClow, (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,), compression_opts=2)
+            fracUpDataset = grp.create_dataset(FRACup, (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,), compression_opts=2)
 
         try:
             while True:
@@ -495,25 +494,25 @@ class KineticsWriter(ResultCollectorProcess):
         for ref in self.refInfo:
             # Each reference group will house a collection of datasets:
             dataLength = ref.Length * 2
-            chunkSize = min(dataLength, 8192)
+            nChunks = min(dataLength, DEFAULT_NCHUNKS)
 
             # Create a group for each reference:
             grp = f.create_group(str(ref.Name))
 
-            ds = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('base', (dataLength,), dtype="a1", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('score', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('tMean', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('tErr', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('modelPrediction', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('ipdRatio', (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-            ds = grp.create_dataset('coverage', (dataLength,), dtype="u4", compression="gzip", chunks=(chunkSize,))
+            ds = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(nChunks,))
+            ds = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(nChunks,))
+            ds = grp.create_dataset('base', (dataLength,), dtype="a1", compression="gzip", chunks=(nChunks,))
+            ds = grp.create_dataset('score', (dataLength,), dtype="u4", compression="gzip", chunks=(nChunks,))
+            ds = grp.create_dataset('tMean', (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,))
+            ds = grp.create_dataset('tErr', (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,))
+            ds = grp.create_dataset('modelPrediction', (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,))
+            ds = grp.create_dataset('ipdRatio', (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,))
+            ds = grp.create_dataset('coverage', (dataLength,), dtype="u4", compression="gzip", chunks=(nChunks,))
 
             if self.options.methylFraction:
-                ds = grp.create_dataset(FRAC, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-                ds = grp.create_dataset(FRAClow, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
-                ds = grp.create_dataset(FRACup, (dataLength,), dtype="f4", compression="gzip", chunks=(chunkSize,))
+                ds = grp.create_dataset(FRAC, (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,))
+                ds = grp.create_dataset(FRAClow, (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,))
+                ds = grp.create_dataset(FRACup, (dataLength,), dtype="f4", compression="gzip", chunks=(nChunks,))
 
             # Maintain a dictionary of group paths?
             dsDict[ref.ID] = grp
@@ -633,12 +632,12 @@ class KineticsWriter(ResultCollectorProcess):
             # FIXME -- create with good chunk parameters, activate compression
             log.info("Creating IpdRatio dataset w/ name: %s, Size: %d" % (str(ref.Name), ref.Length))
 
-            chunkSize = min(ref.Length, 8192)
+            nChunks = min(ref.Length, DEFAULT_NCHUNKS)
 
             ds = f.create_dataset(str(ref.Name), (ref.Length,),
                                   dtype="u4",
                                   compression='gzip',
-                                  chunks=(chunkSize,))
+                                  chunks=(nChunks,))
 
             dsDict[ref.ID] = ds
 
