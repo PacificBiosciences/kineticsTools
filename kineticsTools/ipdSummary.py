@@ -386,7 +386,7 @@ def _get_more_options(parser):
 class KineticsToolsRunner(object):
     def __init__(self, args):
         self.args = args
-        self._sharedAlignmentSet = None
+        self.alignments = None
 
     def start(self):
         self.validateArgs()
@@ -516,7 +516,7 @@ class KineticsToolsRunner(object):
         for i in xrange(self.options.numWorkers):
             p = WorkerType(self.options, self._workQueue, self._resultsQueue,
                 self.ipdModel,
-                sharedAlignmentSet=self._sharedAlignmentSet)
+                sharedAlignmentSet=self.alignments)
             self._workers.append(p)
             p.start()
         logging.info("Launched worker processes.")
@@ -540,11 +540,11 @@ class KineticsToolsRunner(object):
         pass
 
     def loadReferenceAndModel(self, referencePath):
-        assert self._sharedAlignmentSet is not None
+        assert self.alignments is not None and self.referenceWindows is not None
         # Load the reference contigs - annotated with their refID from the cmp.h5
         logging.info("Loading reference contigs %s" % referencePath)
         contigs = ReferenceUtils.loadReferenceContigs(referencePath,
-            alignmentSet=self._sharedAlignmentSet)
+            alignmentSet=self.alignments, windows=self.referenceWindows)
 
         # There are three different ways the ipdModel can be loaded.
         # In order of precedence they are:
@@ -566,8 +566,7 @@ class KineticsToolsRunner(object):
                 logging.error("Params path doesn't exist: %s" % self.args.paramsPath)
                 sys.exit(1)
 
-            majorityChem = ReferenceUtils.loadAlignmentChemistry(
-                self._sharedAlignmentSet)
+            majorityChem = ReferenceUtils.loadAlignmentChemistry(self.alignments)
             ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
             if majorityChem == 'unknown':
                 logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")
@@ -588,11 +587,11 @@ class KineticsToolsRunner(object):
         """
         logging.info("Reading AlignmentSet: %s" % cmpH5Filename)
         logging.info("           reference: %s" % self.args.reference)
-        self._sharedAlignmentSet = AlignmentSet(cmpH5Filename,
-            referenceFastaFname=self.args.reference)
+        self.alignments = AlignmentSet(cmpH5Filename,
+                                       referenceFastaFname=self.args.reference)
         # XXX this should ensure that the file(s) get opened, including any
         # .pbi indices - but need to confirm this
-        self.refInfo = self._sharedAlignmentSet.referenceInfoTable
+        self.refInfo = self.alignments.referenceInfoTable
 
     def _mainLoop(self):
         """
@@ -611,31 +610,16 @@ class KineticsToolsRunner(object):
         # interpreter crashes sometimes.  See Bug 19704.  Since we
         # don't leak garbage cycles, disabling the cyclic GC is
         # essentially harmless.
-        gc.disable()
+        #gc.disable()
 
-        # Load a copy of the cmpH5 alignment index to share with the slaves
         self.loadSharedAlignmentSet(self.args.alignment_set)
-
-        # Load reference and IpdModel
-        self.loadReferenceAndModel(self.args.reference)
-        
-        # Spawn workers
-        self._launchSlaveProcesses()
-
-        # WARNING -- cmp.h5 file must be opened AFTER worker processes have been spawned
-        # cmp.h5 we're using -- use this to orchestrate the work
-        self.cmph5 = self._sharedAlignmentSet
-        logging.info('Generating kinetics summary for [%s]' % self.args.alignment_set)
-
-        #self.referenceMap = self.cmph5['/RefGroup'].asDict('RefInfoID', 'ID')
-        #self.alnInfo = self.cmph5['/AlnInfo'].asRecArray()
 
         # Resolve the windows that will be visited.
         if self.args.referenceWindowsAsString is not None:
             self.referenceWindows = []
             for s in self.args.referenceWindowsAsString.split(","):
                 try:
-                    win = ReferenceUtils.parseReferenceWindow(s, self.cmph5.referenceInfo)
+                    win = ReferenceUtils.parseReferenceWindow(s, self.alignments.referenceInfo)
                     self.referenceWindows.append(win)
                 except:
                     if self.args.skipUnrecognizedContigs:
@@ -643,10 +627,24 @@ class KineticsToolsRunner(object):
                     else:
                         raise Exception, "Unrecognized contig!"
         elif self.args.referenceWindowsFromAlignment:
-            self.referenceWindows = ReferenceUtils.referenceWindowsFromAlignment(self._sharedAlignmentSet, self.cmph5.referenceInfo)
+            self.referenceWindows = ReferenceUtils.referenceWindowsFromAlignment(self.alignments, self.alignments.referenceInfo)
+            refNames = set([rw.refName for rw in self.referenceWindows])
+            # limit output to contigs that overlap with reference windows
+            self.refInfo = [r for r in self.refInfo if r.Name in refNames]
         else:
             self.referenceWindows = ReferenceUtils.createReferenceWindows(
                 self.refInfo)
+
+        # Load reference and IpdModel
+        self.loadReferenceAndModel(self.args.reference)
+
+        # Spawn workers
+        self._launchSlaveProcesses()
+
+        logging.info('Generating kinetics summary for [%s]' % self.args.alignment_set)
+
+        #self.referenceMap = self.alignments['/RefGroup'].asDict('RefInfoID', 'ID')
+        #self.alnInfo = self.alignments['/AlnInfo'].asRecArray()
 
         # Main loop -- we loop over ReferenceGroups in the cmp.h5.  For each contig we will:
         # 1. Load the sequence into the main memory of the parent process
@@ -675,7 +673,7 @@ class KineticsToolsRunner(object):
         self._resultsQueue.join()
         self._resultCollectorProcess.join()
         logging.info("ipdSummary.py finished. Exiting.")
-        del self.cmph5
+        self.alignments.close()
         return 0
 
 

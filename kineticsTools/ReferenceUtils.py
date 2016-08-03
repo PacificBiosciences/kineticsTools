@@ -46,7 +46,7 @@ ReferenceWindow = namedtuple("ReferenceWindow", ["refId", "refName", "start", "e
 class ReferenceUtils():
 
     @staticmethod
-    def loadReferenceContigs(referencePath, alignmentSet):
+    def loadReferenceContigs(referencePath, alignmentSet, windows=None):
         # FIXME we should get rid of this entirely, but I think it requires
         # fixing the inconsistency in how contigs are referenced here versus in
         # pbcore.io
@@ -58,7 +58,14 @@ class ReferenceUtils():
 
         # Read contigs from FASTA file (or XML dataset)
         refReader = ReferenceSet(referencePath)
-        contigs = [x for x in refReader]
+        contigs = []
+        if windows is not None:
+            refNames = set([rw.refName for rw in windows])
+            for contig in refReader:
+                if contig.id in refNames:
+                    contigs.append(contig)
+        else:
+            contigs.extend([x for x in refReader])
         contigDict = dict([(x.id, x) for x in contigs])
 
         # initially each contig has an id of None -- this will be overwritten with the id from the cmp.h5, if there are any
