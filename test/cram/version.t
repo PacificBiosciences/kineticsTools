@@ -1,7 +1,7 @@
 A simple test of the version and help options:
 
   $ ipdSummary --version
-  2.2
+  2.3
 
   $ ipdSummary
   usage: ipdSummary [-h] [--version] [--emit-tool-contract]
