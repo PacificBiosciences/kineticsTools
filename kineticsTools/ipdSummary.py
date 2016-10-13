@@ -126,16 +126,16 @@ def get_parser():
         type=validateFile, help="Fasta or Reference DataSet")
     # XXX GFF and CSV are "option" for arg parser, not tool contract
     tcp.add_output_file_type(FileTypes.GFF, "gff",
-        name="Modified bases GFF",
-        description="GFF file of modified bases",
+        name="Modified Bases Summary",
+        description="Summary of analysis results for each kinModCall",
         default_name="basemods")
     tcp.add_output_file_type(FileTypes.BIGWIG, "bigwig",
-        name="BigWig file encoding base IpdRatios",
-        description="Compressed binary format containing the IpdRatios for every base (both strands)",
+        name="Base IpdRatios",
+        description="BigWig file encoding base IpdRatios",
         default_name="basemods")
     tcp.add_output_file_type(FileTypes.H5, "csv_h5",
-        name="HDF5 file containing per-base information",
-        description="HDF5 equivalent of CSV output",
+        name="Per-Base Information",
+        description="HDF5 file containing per-base information",
         default_name="basemods")
     argp.add_argument("--gff", action="store", default=None,
         help="Output GFF file of modified bases")
