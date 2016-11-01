@@ -567,6 +567,17 @@ class KineticsToolsRunner(object):
                 sys.exit(1)
 
             majorityChem = ReferenceUtils.loadAlignmentChemistry(self.alignments)
+
+            # Temporary solution for Sequel chemistries: we do not
+            # have trained kinetics models in hand yet for Sequel
+            # chemistries.  However we have observed that the P5-C3
+            # training seems to yield fairly good results on Sequel
+            # chemistries to date.  So for the moment, we will use
+            # that model for Sequel data.
+            if majorityChem.startswith("S/"):
+                logging.info("No trained model available yet for Sequel chemistries; modeling as P5-C3")
+                majorityChem = "P5-C3"
+
             ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
             if majorityChem == 'unknown':
                 logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")
