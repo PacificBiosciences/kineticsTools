@@ -4,7 +4,7 @@ import sys
 
 setup(
     name='kineticsTools',
-    version='0.6.0',
+    version='0.6.1',
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license=open('LICENSES.txt').read(),
