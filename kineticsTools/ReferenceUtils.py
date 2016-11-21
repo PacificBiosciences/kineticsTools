@@ -75,7 +75,8 @@ class ReferenceUtils():
 
         # Mark each contig with it's ID from the cmp.h5 - match them up using MD5s
         for x in alignmentSet.referenceInfoTable:
-            contigDict[x.FullName].cmph5ID = x.ID
+            if x.FullName in contigDict:
+                contigDict[x.FullName].cmph5ID = x.ID
 
         return contigs
 
