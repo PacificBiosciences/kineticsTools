@@ -1,13 +1,11 @@
 cython
-numpy
+numpy >= 1.6.0
 h5py >= 1.3.0
 jinja2
 networkx
+pysam
 jsonschema
 xmlbuilder
 functools32
-pyxb
 pyBigWig
-# Install from github
--e git://github.com/PacificBiosciences/pbcore.git@master#egg=pbcore
--e git://github.com/PacificBiosciences/pbcommand.git#egg=pbcommand
+scipy >= 0.9.0
