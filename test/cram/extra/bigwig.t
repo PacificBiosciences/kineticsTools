@@ -10,6 +10,6 @@ Load in data:
 
 Run basic ipdSummary:
 
-  $ ipdSummary --log-level=WARNING --bigwig tmp1.bw --numWorkers 12 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
+  $ ipdSummary --log-level=WARNING --bigwig tmp1.bw --numWorkers 4 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
   $ ls tmp1.bw
   tmp1.bw
