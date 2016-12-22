@@ -23,16 +23,19 @@ clean:
 
 test: tests
 check: tests
-tests: cram-tests unit-tests
+tests: cram-tests unit-tests extra-tests
 
 cram-tests:
-	cram test/cram/*.t
+	cram --xunit-file=cramtests.xml test/cram/*.t
 
 long-tests:
 	cram test/cram/long_running/*.t
 
 unit-tests:
-	nosetests -s -v test/*.py
+	nosetests -s -v --with-xunit test/*.py
+
+extra-tests:
+	cram --xunit-file=cramtests-extra.xml test/cram/extra/*.t
 
 pip-install:
 	@which pip > /dev/null
