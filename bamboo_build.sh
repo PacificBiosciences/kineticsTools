@@ -9,9 +9,9 @@ mkdir -p tmp
 source tmp/venv/bin/activate
 
 (cd repos/pbcommand && make install)
-#(cd .circleci && bash installHDF5.sh)
 export HDF5_DIR=/mnt/software/h/hdf5-tools/1.8.11
-#$PWD/.circleci/prefix
+export PIP_CACHE=$PWD/.pip_cache
+find $PIP_CACHE -name '*-linux_x86_64.whl' -delete
 pip install -r requirements-ci.txt
 pip install -r requirements-dev.txt
 (cd repos/pbcore && make install)
