@@ -11,7 +11,7 @@ source tmp/venv/bin/activate
 (cd repos/pbcommand && make install)
 export HDF5_DIR=/mnt/software/h/hdf5-tools/1.8.11
 export PIP_CACHE=$PWD/.pip_cache
-find $PIP_CACHE -name '*-linux_x86_64.whl' -delete
+find $PIP_CACHE -name '*-linux_x86_64.whl' -delete || true
 pip install -r requirements-ci.txt
 pip install -r requirements-dev.txt
 (cd repos/pbcore && make install)
