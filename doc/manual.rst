@@ -100,6 +100,9 @@ The following output options are available:
   - ``--csv_h5 FILENAME``: compact binary equivalent of CSV in HDF5 format
   - ``--bigwig FILENAME``: BigWig file (mostly only useful for SMRTView)
 
+If you are running base modification analysis through SMRT Link or a pbsmrtpipe
+pipeline, the GFF, HDF5, and BigWig outputs are automatically generated.
+
 
 modifications.gff
 -----------------
@@ -131,7 +134,8 @@ modifications.csv
 The modifications.csv file contains one row for each (reference position, strand) pair that appeared in the dataset with coverage at least x.
 x defaults to 3, but is configurable with '--minCoverage' flag to ipdSummary.py. The reference position index is 1-based for compatibility with the gff file the R environment.  Note that this output type scales poorly and is not
 recommended for large genomes; the HDF5 output should perform much better in
-these cases.
+these cases.  We have preserved the CSV option to support legacy applications
+but this is no longer produce by the pipelines in SMRT Link/pbsmrtpipe.
 
 
 modifications.h5
