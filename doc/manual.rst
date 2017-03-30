@@ -100,6 +100,9 @@ The following output options are available:
   - ``--csv_h5 FILENAME``: compact binary equivalent of CSV in HDF5 format
   - ``--bigwig FILENAME``: BigWig file (mostly only useful for SMRTView)
 
+If you are running base modification analysis through SMRT Link or a pbsmrtpipe
+pipeline, the GFF, HDF5, and BigWig outputs are automatically generated.
+
 
 modifications.gff
 -----------------
@@ -125,13 +128,58 @@ phase                   Not applicable
 attributes              Extra fields relevant to base mods. IPDRatio is traditional IPDRatio, context is the reference sequence -20bp to +20bp around the modification, and coverage level is the number of IPD observations used after Mapping QV filtering and accuracy filtering. If the row results from an identified modification we also include an identificationQv tag with the from the modification identification procedure. identificationQv is the phred-transformed probability of an incorrect identification, for bases that were identified as having a particular modification. frac, fracLow, fracUp are the estimated fraction of molecules carrying the modification, and the 5% confidence intervals of the estimate. The methylated fraction estimation is a beta-level feature, and should only be used for exploratory purposes.
 ================  ===========
 
-
 modifications.csv
 -----------------
+
 The modifications.csv file contains one row for each (reference position, strand) pair that appeared in the dataset with coverage at least x.
 x defaults to 3, but is configurable with '--minCoverage' flag to ipdSummary.py. The reference position index is 1-based for compatibility with the gff file the R environment.  Note that this output type scales poorly and is not
 recommended for large genomes; the HDF5 output should perform much better in
-these cases.
+these cases.  We have preserved the CSV option to support legacy applications
+but this is no longer produce by the pipelines in SMRT Link/pbsmrtpipe.
+
+
+modifications.h5
+----------------
+
+The HDF5 output largely mirrors the CSV output in content, but is structured
+slightly differently.  Each contig in the reference has its own group in the
+file, keyed by FASTA ID.  For each group, the columns in the CSV file are
+represented as arrays::
+
+  modifications.h5
+    --> refName
+      --> tpl
+      --> strand
+      --> base
+      --> score
+      --> tMean
+      --> tErr
+      --> modelPrediction
+      --> ipdRatio
+      --> coverage
+
+For example, the following code to iterate over the CSV file::
+
+    import csv
+    with open("modifications.csv") as f:
+        for rec in csv.reader(f):
+          process_record(rec)
+
+translates approximately to this code for reading the HDF5::
+
+    import h5py
+    COLUMNS="refName,tpl,strand,base,score,tMean,tErr,modelPrediction,ipdRatio,coverage".split(",")
+    with h5py.File(file_name) as f:
+        for ctg_id in sorted(f.keys()):
+            values = f[ctg_id]
+            for i in range(len(values["tpl"])):
+                rec = [ctg_id] + [fmt(values[k][i]) for k in COLUMNS[1:]]
+                process_record(rec)
+
+Note that the exact columns present in both files may vary depending on how
+kineticsTools was run; however, the example above is valid for the results of
+the pbsmrtpipe base modification analysis pipelines.
+
 
 Output columns
 --------------
