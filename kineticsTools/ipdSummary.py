@@ -561,6 +561,7 @@ class KineticsToolsRunner(object):
             # By default, use built-in model
             ipdModel = None
         else:
+            logging.info("ipdModel filename is derived from paramsPath ({!r})".format(self.args.paramsPath))
             majorityChem = ReferenceUtils.loadAlignmentChemistry(self.alignments)
 
             # Temporary solution for Sequel chemistries: we do not
@@ -575,9 +576,8 @@ class KineticsToolsRunner(object):
             if majorityChem == 'unknown':
                 logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")
                 sys.exit(1)
-            logging.info("Using Chemistry matched IPD model: {!r}".format(ipdModel))
-            logging.info("ipdModel filename is derived from paramsPath ({!r})".format(self.args.paramsPath))
             ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
+            logging.info("Using Chemistry matched IPD model: {!r}".format(ipdModel))
         return ipdModel
 
     def loadReferenceAndModel(self, referencePath, ipdModelFilename):
