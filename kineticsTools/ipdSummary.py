@@ -547,7 +547,7 @@ class KineticsToolsRunner(object):
         winEnd = refWindow.end
         pass
 
-    def getIpdModelFilename():
+    def getIpdModelFilename(self):
         # In order of precedence they are:
         # 1. Explicit path passed to --ipdModel
         # 2. Path to parameter bundles given by SMRT_CHEMISTRY_BUNDLE_DIR if defined.
