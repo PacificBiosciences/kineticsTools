@@ -549,8 +549,10 @@ class KineticsToolsRunner(object):
         # There are three different ways the ipdModel can be loaded.
         # In order of precedence they are:
         # 1. Explicit path passed to --ipdModel
-        # 2. Path to parameter bundle, model selected using the cmp.h5's sequencingChemistry tags
-        # 3. Fall back to built-in model.
+        # 2. Path to parameter bundles given by SMRT_CHEMISTRY_BUNDLE_DIR if it exists,
+        #    but only if the provided parameter bundles path is just the default.
+        # 3. Path to parameter bundle, model selected using the cmp.h5's sequencingChemistry tags
+        # 4. Fall back to built-in model.
 
         # By default, use built-in model
         ipdModel = None
@@ -578,7 +580,15 @@ class KineticsToolsRunner(object):
                 logging.info("No trained model available yet for Sequel chemistries; modeling as P5-C3")
                 majorityChem = "P5-C3"
 
-            ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
+            smrtChemBundlePath = os.environ.get("SMRT_CHEMISTRY_BUNDLE_DIR", None)
+            if smrtChemBundlePath and self.args.paramsPath == _getResourcePath():
+                logging.info("Attempting to load updated model from SMRT_CHEMISTRY_BUNDLE_DIR")
+                ipdModel = os.path.join(smrtChemBundlePath, "kineticsTools", majorityChem + ".h5")
+
+            # if we still don't have a model by now:
+            if not ipdModel or not os.path.exists(ipdModel):
+                ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
+
             if majorityChem == 'unknown':
                 logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")
                 sys.exit(1)
