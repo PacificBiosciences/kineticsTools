@@ -252,11 +252,19 @@ def _get_more_options(parser):
 
     # Parameter options:
 
+    smrtChemBundlePath = os.environ.get("SMRT_CHEMISTRY_BUNDLE_DIR", None)
+    if smrtChemBundlePath:
+        logging.info("paramsPath default comes from env-var: SMRT_CHEMISTRY_BUNDLE_DIR")
+        default_paramsPath = os.path.join(smrtChemBundlePath, "kineticsTools")
+        extra_help = 'which it is'
+    else:
+        default_paramsPath = _getResourcePath()
+        extra_help = 'which it is not'
     parser.add_argument('--paramsPath',
                         dest='paramsPath',
-                        default=_getResourcePath(),
+                        default=default_paramsPath,
                         type=validateNoneOrDir,
-                        help='Directory containing in-silico trained model for each chemistry')
+                        help='Directory containing in-silico trained model for each chemistry (default is "${SMRT_CHEMISTRY_BUNDLE_DIR}/kineticsTools/" if defined (%s), otherwise a standard resource-path). Totally ignored if --ipdModel is set.' %extra_help)
 
     parser.add_argument('--minCoverage',
                         dest='minCoverage',
@@ -539,35 +547,20 @@ class KineticsToolsRunner(object):
         winEnd = refWindow.end
         pass
 
-    def loadReferenceAndModel(self, referencePath):
-        assert self.alignments is not None and self.referenceWindows is not None
-        # Load the reference contigs - annotated with their refID from the cmp.h5
-        logging.info("Loading reference contigs %s" % referencePath)
-        contigs = ReferenceUtils.loadReferenceContigs(referencePath,
-            alignmentSet=self.alignments, windows=self.referenceWindows)
-
-        # There are three different ways the ipdModel can be loaded.
+    def getIpdModelFilename():
         # In order of precedence they are:
         # 1. Explicit path passed to --ipdModel
-        # 2. Path to parameter bundles given by SMRT_CHEMISTRY_BUNDLE_DIR if it exists,
-        #    but only if the provided parameter bundles path is just the default.
+        # 2. Path to parameter bundles given by SMRT_CHEMISTRY_BUNDLE_DIR if defined.
         # 3. Path to parameter bundle, model selected using the cmp.h5's sequencingChemistry tags
         # 4. Fall back to built-in model.
-
-        # By default, use built-in model
-        ipdModel = None
 
         if self.args.ipdModel:
             ipdModel = self.args.ipdModel
             logging.info("Using passed in ipd model: %s" % self.args.ipdModel)
-            if not os.path.exists(self.args.ipdModel):
-                logging.error("Couldn't find model file: %s" % self.args.ipdModel)
-                sys.exit(1)
-        elif self.args.paramsPath:
-            if not os.path.exists(self.args.paramsPath):
-                logging.error("Params path doesn't exist: %s" % self.args.paramsPath)
-                sys.exit(1)
-
+        elif not self.args.paramsPath:
+            # By default, use built-in model
+            ipdModel = None
+        else:
             majorityChem = ReferenceUtils.loadAlignmentChemistry(self.alignments)
 
             # Temporary solution for Sequel chemistries: we do not
@@ -579,26 +572,24 @@ class KineticsToolsRunner(object):
             if majorityChem.startswith("S/"):
                 logging.info("No trained model available yet for Sequel chemistries; modeling as P5-C3")
                 majorityChem = "P5-C3"
-
-            smrtChemBundlePath = os.environ.get("SMRT_CHEMISTRY_BUNDLE_DIR", None)
-            if smrtChemBundlePath and self.args.paramsPath == _getResourcePath():
-                logging.info("Attempting to load updated model from SMRT_CHEMISTRY_BUNDLE_DIR")
-                ipdModel = os.path.join(smrtChemBundlePath, "kineticsTools", majorityChem + ".h5")
-
-            # if we still don't have a model by now:
-            if not ipdModel or not os.path.exists(ipdModel):
-                ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
-
             if majorityChem == 'unknown':
                 logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")
                 sys.exit(1)
-            elif not os.path.exists(ipdModel):
-                logging.error("Aborting, no kinetics model available for this chemistry: %s" % ipdModel)
-                sys.exit(1)
-            else:
-                logging.info("Using Chemistry matched IPD model: %s" % ipdModel)
+            logging.info("Using Chemistry matched IPD model: {!r}".format(ipdModel))
+            logging.info("ipdModel filename is derived from paramsPath ({!r})".format(self.args.paramsPath))
+            ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
+        return ipdModel
 
-        self.ipdModel = IpdModel(contigs, ipdModel, self.args.modelIters)
+    def loadReferenceAndModel(self, referencePath, ipdModelFilename):
+        assert self.alignments is not None and self.referenceWindows is not None
+        # Load the reference contigs - annotated with their refID from the cmp.h5
+        logging.info("Loading reference contigs {!r}".format(referencePath))
+        contigs = ReferenceUtils.loadReferenceContigs(referencePath,
+            alignmentSet=self.alignments, windows=self.referenceWindows)
+        if not os.path.exists(ipdModelFilename):
+            logging.error("Couldn't find model file: {!r}".format(ipdModelFilename))
+            sys.exit(1)
+        self.ipdModel = IpdModel(contigs, ipdModelFilename, self.args.modelIters)
 
     def loadSharedAlignmentSet(self, cmpH5Filename):
         """
@@ -657,7 +648,8 @@ class KineticsToolsRunner(object):
                 self.refInfo)
 
         # Load reference and IpdModel
-        self.loadReferenceAndModel(self.args.reference)
+        ipdModelFilename = self.getIpdModelFilename()
+        self.loadReferenceAndModel(self.args.reference, ipdModelFilename)
 
         # Spawn workers
         self._launchSlaveProcesses()
