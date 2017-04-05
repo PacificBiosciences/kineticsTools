@@ -104,7 +104,7 @@ def _validateNoneOrResource(func, p):
         return _validateResource(func, p)
 
 
-def _validateNoneOrPathSpec(ps):
+def validateNoneOrPathSpec(ps):
     """
     Handle optional values. If a pathspec is explicitly provided, then
     it will be validated.
