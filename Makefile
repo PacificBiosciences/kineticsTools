@@ -32,7 +32,8 @@ long-tests:
 	cram test/cram/long_running/*.t
 
 unit-tests:
-	nosetests -s -v --with-xunit test/*.py
+	#nosetests -s -v --with-xunit test/*.py
+	py.test -s -v --junit-xml=nosetests.xml test/*.py
 
 extra-tests:
 	cram --xunit-file=cramtests-extra.xml test/cram/extra/*.t
