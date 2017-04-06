@@ -37,7 +37,7 @@ import math
 import re
 import os
 
-from pbcore.io import AlignmentSet, ReferenceSet
+from pbcore.io import ReferenceSet
 
 # FIXME pbcore keys contigs by name, but kineticsTools usually keys by ID
 ReferenceWindow = namedtuple("ReferenceWindow", ["refId", "refName", "start", "end"])
