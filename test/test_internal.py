@@ -14,6 +14,7 @@ def test_basic():
         B.getIpdModelFilename(None, 'foo', [])
     assert 'No kinetics model available for this chemistry' in str(excinfo.value)
 
+
 def test_path(monkeypatch):
     def isfile(fn):
         if fn in ('path1/foo.h5', 'path2/foo.h5'):
@@ -23,17 +24,44 @@ def test_path(monkeypatch):
         raise Exception('Called! {!r}'.format(fn))
     monkeypatch.setattr(os.path, 'isfile', isfile)
 
-    expected = 'path1/foo.h5'
-    assert expected == B.getIpdModelFilename(None, 'foo', ['path1'])
+    chem = 'foo'
 
     expected = 'path1/foo.h5'
-    assert expected == B.getIpdModelFilename(None, 'foo', ['pathmissing', 'path1'])
+    assert expected == B.getIpdModelFilename(None, chem, ['path1'])
 
     expected = 'path1/foo.h5'
-    assert expected == B.getIpdModelFilename(None, 'foo', ['path1', 'pathmissing'])
+    assert expected == B.getIpdModelFilename(None, chem, ['pathmissing', 'path1'])
 
     expected = 'path1/foo.h5'
-    assert expected == B.getIpdModelFilename(None, 'foo', ['path1', 'path2'])
+    assert expected == B.getIpdModelFilename(None, chem, ['path1', 'pathmissing'])
+
+    expected = 'path1/foo.h5'
+    assert expected == B.getIpdModelFilename(None, chem, ['path1', 'path2'])
+
+
+def test_path_with_prefixed_chem(monkeypatch):
+    def isfile(fn):
+        if fn in ('path1/P5-C3.h5', 'path2/P5-C3.h5'):
+            return True
+        if fn == 'pathmissing/P5-C3.h5':
+            return False
+        raise Exception('Called! {!r}'.format(fn))
+    monkeypatch.setattr(os.path, 'isfile', isfile)
+
+    chem = 'S/foo' # S/ prefix is weird for now.
+
+    expected = 'path1/P5-C3.h5'
+    assert expected == B.getIpdModelFilename(None, chem, ['path1'])
+
+    expected = 'path1/P5-C3.h5'
+    assert expected == B.getIpdModelFilename(None, chem, ['pathmissing', 'path1'])
+
+    expected = 'path1/P5-C3.h5'
+    assert expected == B.getIpdModelFilename(None, chem, ['path1', 'pathmissing'])
+
+    expected = 'path1/P5-C3.h5'
+    assert expected == B.getIpdModelFilename(None, chem, ['path1', 'path2'])
+
 
 def test_getResourcePathSpec(monkeypatch):
     monkeypatch.setenv('SMRT_CHEMISTRY_BUNDLE_DIR', 'foo')
