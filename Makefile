@@ -1,5 +1,8 @@
 SHELL = /bin/bash -e
 
+utest:
+	PYTHONPATH=.:${PYTHONPATH} py.test -s -v test/test_internal.py
+
 all: build install
 
 build:
@@ -23,7 +26,7 @@ clean:
 
 test: tests
 check: tests
-tests: cram-tests unit-tests extra-tests
+tests: cram-tests py-tests extra-tests
 
 cram-tests:
 	cram --xunit-file=cramtests.xml test/cram/*.t
@@ -31,7 +34,7 @@ cram-tests:
 long-tests:
 	cram test/cram/long_running/*.t
 
-unit-tests:
+py-tests:
 	#nosetests -s -v --with-xunit test/*.py
 	py.test -s -v --junit-xml=nosetests.xml test/*.py
 

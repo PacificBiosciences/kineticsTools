@@ -61,6 +61,8 @@ from kineticsTools.ResultWriter import KineticsWriter
 from kineticsTools.ipdModel import IpdModel
 from kineticsTools.ReferenceUtils import ReferenceUtils
 
+from .internal import basic
+
 __version__ = "2.3"
 
 log = logging.getLogger(__name__)
@@ -77,13 +79,8 @@ class Constants(object):
     IDENTIFY_ID = "kinetics_tools.task_options.identify"
 
 def _getResourcePathSpec():
-    pths = []
-    smrtChemBundlePath = os.environ.get("SMRT_CHEMISTRY_BUNDLE_DIR", None)
-    if smrtChemBundlePath:
-        logging.info("found SMRT_CHEMISTRY_BUNDLE_DIR, prepending to default paramsPath")
-        pths.append(os.path.join(smrtChemBundlePath, "kineticsTools"))
-    pths.append(resource_filename(Requirement.parse('kineticsTools'), 'kineticsTools/resources'))
-    return ':'.join(pths)
+    default_dir = resource_filename(Requirement.parse('kineticsTools'), 'kineticsTools/resources')
+    return basic.getResourcePathSpec(default_dir)
 
 def _validateResource(func, p):
     """Basic func for validating files, dirs, etc..."""
@@ -659,7 +656,9 @@ class KineticsToolsRunner(object):
                 self.refInfo)
 
         # Load reference and IpdModel
-        ipdModelFilename = self.getIpdModelFilename()
+        ipdModelFilename = basic.getIpdModelFilename(
+                self.args.ipdModel, ReferenceUtils.loadAlignmentChemistry(self.alignments),
+                self.args.paramsPath)
         self.loadReferenceAndModel(self.args.reference, ipdModelFilename)
 
         # Spawn workers
