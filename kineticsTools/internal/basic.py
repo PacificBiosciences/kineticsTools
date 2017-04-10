@@ -7,7 +7,7 @@ LOG = logging.getLogger(__name__)
 
 
 #majorityChem = ReferenceUtils.loadAlignmentChemistry(self.alignments)
-def getIpdModelFilename(self, ipdModel, majorityChem):
+def getIpdModelFilename(ipdModel, majorityChem, paramsPath):
     """
     ipdModel: str
     majorityChem: str
@@ -35,12 +35,26 @@ def getIpdModelFilename(self, ipdModel, majorityChem):
         raise Exception(msg)
 
     # go through each paramsPath in-order, checking if the model exists there or no
-    for paramsPath in self.args.paramsPath:
+    for paramsPath in paramsPath:
         ipdModel = os.path.join(paramsPath, majorityChem + ".h5")
         if os.path.isfile(ipdModel):
             logging.info("Using chemistry-matched kinetics model: {!r}".format(ipdModel))
             return ipdModel
 
-    msg = "Aborting, no kinetics model available for this chemistry: {!r}".format(ipdModel)
+    msg = "No kinetics model available for this chemistry ({!r}) on paramsPath {!r}".format(
+            ipdModel, paramsPath)
     logging.error(msg)
     raise Exception(msg)
+
+
+def getResourcePathSpec(default_dir):
+    """Create list of [${SMRT_CHEMISTRY_BUNDLE_DIR}/kineticsTools, {default_dir}].
+    Return colon-separated string.
+    """
+    pths = []
+    smrtChemBundlePath = os.environ.get("SMRT_CHEMISTRY_BUNDLE_DIR", None)
+    if smrtChemBundlePath:
+        logging.info("found SMRT_CHEMISTRY_BUNDLE_DIR, prepending to default paramsPath")
+        pths.append(os.path.join(smrtChemBundlePath, "kineticsTools"))
+    pths.append(default_dir)
+    return ':'.join(pths)
