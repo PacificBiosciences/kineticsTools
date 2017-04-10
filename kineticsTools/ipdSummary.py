@@ -589,7 +589,7 @@ class KineticsToolsRunner(object):
             ipdModel = os.path.join(paramsPath, majorityChem + ".h5")
             if os.path.isfile(ipdModel):
                 logging.info("Using chemistry-matched kinetics model: {!r}".format(ipdModel))
-            return ipdModel
+                return ipdModel
 
         logging.error("Aborting, no kinetics model available for this chemistry: %s" % ipdModel)
         sys.exit(1)
