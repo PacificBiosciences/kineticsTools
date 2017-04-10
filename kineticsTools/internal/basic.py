@@ -17,7 +17,7 @@ def getIpdModelFilename(ipdModel, majorityChem, paramsPath):
     # 2. In-order through each directory listed in --paramsPath
 
     if ipdModel:
-        logging.info("Using passed-in kinetics model: {!r}".format(ipdModel))
+        LOG.info("Using passed-in kinetics model: {!r}".format(ipdModel))
         return ipdModel
 
     # Temporary solution for Sequel chemistries: we do not
@@ -27,23 +27,23 @@ def getIpdModelFilename(ipdModel, majorityChem, paramsPath):
     # chemistries to date.  So for the moment, we will use
     # that model for Sequel data.
     if majorityChem.startswith("S/"):
-        logging.info("No trained model available yet for Sequel chemistries; modeling as P5-C3")
+        LOG.info("No trained model available yet for Sequel chemistries; modeling as P5-C3")
         majorityChem = "P5-C3"
     if majorityChem == 'unknown':
         msg = "Chemistry cannot be identified---cannot perform kinetic analysis"
-        logging.error(msg)
+        LOG.error(msg)
         raise Exception(msg)
 
     # go through each paramsPath in-order, checking if the model exists there or no
     for paramsPath in paramsPath:
         ipdModel = os.path.join(paramsPath, majorityChem + ".h5")
         if os.path.isfile(ipdModel):
-            logging.info("Using chemistry-matched kinetics model: {!r}".format(ipdModel))
+            LOG.info("Using chemistry-matched kinetics model: {!r}".format(ipdModel))
             return ipdModel
 
     msg = "No kinetics model available for this chemistry ({!r}) on paramsPath {!r}".format(
             ipdModel, paramsPath)
-    logging.error(msg)
+    LOG.error(msg)
     raise Exception(msg)
 
 
@@ -54,7 +54,7 @@ def getResourcePathSpec(default_dir):
     pths = []
     smrtChemBundlePath = os.environ.get("SMRT_CHEMISTRY_BUNDLE_DIR", None)
     if smrtChemBundlePath:
-        logging.info("found SMRT_CHEMISTRY_BUNDLE_DIR, prepending to default paramsPath")
+        LOG.info("found SMRT_CHEMISTRY_BUNDLE_DIR, prepending to default paramsPath")
         pths.append(os.path.join(smrtChemBundlePath, "kineticsTools"))
     pths.append(default_dir)
     return ':'.join(pths)
