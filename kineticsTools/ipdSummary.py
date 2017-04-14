@@ -61,6 +61,8 @@ from kineticsTools.ResultWriter import KineticsWriter
 from kineticsTools.ipdModel import IpdModel
 from kineticsTools.ReferenceUtils import ReferenceUtils
 
+from .internal import basic
+
 __version__ = "2.3"
 
 log = logging.getLogger(__name__)
@@ -76,8 +78,9 @@ class Constants(object):
     METHYL_FRACTION_ID = "kinetics_tools.task_options.compute_methyl_fraction"
     IDENTIFY_ID = "kinetics_tools.task_options.identify"
 
-def _getResourcePath():
-    return resource_filename(Requirement.parse('kineticsTools'),'kineticsTools/resources')
+def _getResourcePathSpec():
+    default_dir = resource_filename(Requirement.parse('kineticsTools'), 'kineticsTools/resources')
+    return basic.getResourcePathSpec(default_dir)
 
 def _validateResource(func, p):
     """Basic func for validating files, dirs, etc..."""
@@ -96,6 +99,21 @@ def _validateNoneOrResource(func, p):
         return p
     else:
         return _validateResource(func, p)
+
+
+def validateNoneOrPathSpec(ps):
+    """
+    Handle optional values. If a pathspec is explicitly provided, then
+    it will be validated.
+    """
+    if ps is None:
+        return ps
+    pths = []
+    for p in ps.split(':'):
+        pths.append(_validateResource(os.path.isdir, p))
+    if not pths:
+        raise ValueError("Empty pathspec!")
+    return pths
 
 
 validateFile = functools.partial(_validateResource, os.path.isfile)
@@ -251,12 +269,12 @@ def _get_more_options(parser):
 
 
     # Parameter options:
-
+    defaultParamsPathSpec = _getResourcePathSpec()
     parser.add_argument('--paramsPath',
                         dest='paramsPath',
-                        default=_getResourcePath(),
-                        type=validateNoneOrDir,
-                        help='Directory containing in-silico trained model for each chemistry')
+                        default=defaultParamsPathSpec,
+                        type=validateNoneOrPathSpec,
+                        help='List of :-delimited directory paths containing in-silico trained models (default is "%s")' % defaultParamsPathSpec)
 
     parser.add_argument('--minCoverage',
                         dest='minCoverage',
@@ -283,6 +301,7 @@ def _get_more_options(parser):
     parser.add_argument('--ipdModel',
                         dest='ipdModel',
                         default=None,
+                        type=validateNoneOrFile,
                         help='Alternate synthetic IPD model HDF5 file')
 
     parser.add_argument('--modelIters',
@@ -539,56 +558,46 @@ class KineticsToolsRunner(object):
         winEnd = refWindow.end
         pass
 
-    def loadReferenceAndModel(self, referencePath):
-        assert self.alignments is not None and self.referenceWindows is not None
-        # Load the reference contigs - annotated with their refID from the cmp.h5
-        logging.info("Loading reference contigs %s" % referencePath)
-        contigs = ReferenceUtils.loadReferenceContigs(referencePath,
-            alignmentSet=self.alignments, windows=self.referenceWindows)
-
-        # There are three different ways the ipdModel can be loaded.
+    def getIpdModelFilename(self):
         # In order of precedence they are:
         # 1. Explicit path passed to --ipdModel
-        # 2. Path to parameter bundle, model selected using the cmp.h5's sequencingChemistry tags
-        # 3. Fall back to built-in model.
-
-        # By default, use built-in model
-        ipdModel = None
+        # 2. In-order through each directory listed in --paramsPath
 
         if self.args.ipdModel:
-            ipdModel = self.args.ipdModel
-            logging.info("Using passed in ipd model: %s" % self.args.ipdModel)
-            if not os.path.exists(self.args.ipdModel):
-                logging.error("Couldn't find model file: %s" % self.args.ipdModel)
-                sys.exit(1)
-        elif self.args.paramsPath:
-            if not os.path.exists(self.args.paramsPath):
-                logging.error("Params path doesn't exist: %s" % self.args.paramsPath)
-                sys.exit(1)
+            logging.info("Using passed-in kinetics model: %s" % self.args.ipdModel)
+            return self.args.ipdModel
 
-            majorityChem = ReferenceUtils.loadAlignmentChemistry(self.alignments)
+        majorityChem = ReferenceUtils.loadAlignmentChemistry(self.alignments)
+        # Temporary solution for Sequel chemistries: we do not
+        # have trained kinetics models in hand yet for Sequel
+        # chemistries.  However we have observed that the P5-C3
+        # training seems to yield fairly good results on Sequel
+        # chemistries to date.  So for the moment, we will use
+        # that model for Sequel data.
+        if majorityChem.startswith("S/"):
+            logging.info("No trained model available yet for Sequel chemistries; modeling as P5-C3")
+            majorityChem = "P5-C3"
+        if majorityChem == 'unknown':
+            logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")
+            sys.exit(1)
 
-            # Temporary solution for Sequel chemistries: we do not
-            # have trained kinetics models in hand yet for Sequel
-            # chemistries.  However we have observed that the P5-C3
-            # training seems to yield fairly good results on Sequel
-            # chemistries to date.  So for the moment, we will use
-            # that model for Sequel data.
-            if majorityChem.startswith("S/"):
-                logging.info("No trained model available yet for Sequel chemistries; modeling as P5-C3")
-                majorityChem = "P5-C3"
+        # go through each paramsPath in-order, checking if the model exists there or no
+        for paramsPath in self.args.paramsPath:
+            ipdModel = os.path.join(paramsPath, majorityChem + ".h5")
+            if os.path.isfile(ipdModel):
+                logging.info("Using chemistry-matched kinetics model: {!r}".format(ipdModel))
+                return ipdModel
 
-            ipdModel = os.path.join(self.args.paramsPath, majorityChem + ".h5")
-            if majorityChem == 'unknown':
-                logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")
-                sys.exit(1)
-            elif not os.path.exists(ipdModel):
-                logging.error("Aborting, no kinetics model available for this chemistry: %s" % ipdModel)
-                sys.exit(1)
-            else:
-                logging.info("Using Chemistry matched IPD model: %s" % ipdModel)
+        logging.error("Aborting, no kinetics model available for this chemistry: %s" % ipdModel)
+        sys.exit(1)
 
-        self.ipdModel = IpdModel(contigs, ipdModel, self.args.modelIters)
+    def loadReferenceAndModel(self, referencePath, ipdModelFilename):
+        assert self.alignments is not None and self.referenceWindows is not None
+        # Load the reference contigs - annotated with their refID from the cmp.h5
+        logging.info("Loading reference contigs {!r}".format(referencePath))
+        contigs = ReferenceUtils.loadReferenceContigs(referencePath,
+            alignmentSet=self.alignments, windows=self.referenceWindows)
+        self.ipdModel = IpdModel(contigs, ipdModelFilename, self.args.modelIters)
 
     def loadSharedAlignmentSet(self, cmpH5Filename):
         """
@@ -647,7 +656,10 @@ class KineticsToolsRunner(object):
                 self.refInfo)
 
         # Load reference and IpdModel
-        self.loadReferenceAndModel(self.args.reference)
+        ipdModelFilename = basic.getIpdModelFilename(
+                self.args.ipdModel, ReferenceUtils.loadAlignmentChemistry(self.alignments),
+                self.args.paramsPath)
+        self.loadReferenceAndModel(self.args.reference, ipdModelFilename)
 
         # Spawn workers
         self._launchSlaveProcesses()
