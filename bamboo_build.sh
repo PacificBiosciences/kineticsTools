@@ -1,24 +1,27 @@
 #!/bin/bash -ex
 
-source /mnt/software/Modules/current/init/bash
-mkdir -p tmp
-/opt/python-2.7.9/bin/python /mnt/software/v/virtualenv/13.0.1/virtualenv.py tmp/venv
-PIP_CACHE=$PWD/.pip_cache
-find $PIP_CACHE -name '*-linux_x86_64.whl' -delete || true
+NX3PBASEURL=http://nexus/repository/unsupported/pitchfork/gcc-4.9.2
+export PATH=$PWD/build/bin:/mnt/software/a/anaconda2/4.2.0/bin:$PATH
+export PYTHONUSERBASE=$PWD/build
+export CFLAGS="-I/mnt/software/a/anaconda2/4.2.0/include"
+PIP="pip --cache-dir=$bamboo_build_working_directory/.pip"
+type module >& /dev/null || . /mnt/software/Modules/current/init/bash
+module load gcc/4.9.2
 
-source tmp/venv/bin/activate
+rm -rf   build
+mkdir -p build/bin build/lib build/include build/share
+$PIP install --user \
+  iso8601
+$PIP install --user \
+  $NX3PBASEURL/pythonpkgs/xmlbuilder-1.0-cp27-none-any.whl \
+  $NX3PBASEURL/pythonpkgs/tabulate-0.7.5-cp27-none-any.whl \
+  $NX3PBASEURL/pythonpkgs/pysam-0.9.1.4-cp27-cp27mu-linux_x86_64.whl \
+  $NX3PBASEURL/pythonpkgs/avro-1.7.7-cp27-none-any.whl
 
-rsync -avx /mnt/software/a/anaconda2/4.2.0/pkgs/mkl-11.3.3-0/lib/             tmp/venv/lib/
-rsync -avx /mnt/software/a/anaconda2/4.2.0/pkgs/numpy-1.11.1-py27_0/bin/      tmp/venv/bin/
-rsync -avx /mnt/software/a/anaconda2/4.2.0/pkgs/numpy-1.11.1-py27_0/lib/      tmp/venv/lib/
-rsync -avx /mnt/software/a/anaconda2/4.2.0/pkgs/scipy-0.18.1-np111py27_0/lib/ tmp/venv/lib/
+$PIP install --user -e repos/pbcommand
+$PIP install --user -e repos/pbcore
+$PIP install --user -r requirements-ci.txt
+$PIP install --user -r requirements-dev.txt
+$PIP install --no-index --install-option="--install-scripts=$PWD/build/bin" --user -e ./
 
-module load hdf5-tools/1.8.11
-export HDF5_DIR=/mnt/software/h/hdf5-tools/1.8.11
-(cd repos/pbcommand && make install)
-pip --cache-dir=$PIP_CACHE install -r requirements-ci.txt
-pip --cache-dir=$PIP_CACHE install -r requirements-dev.txt
-(cd repos/pbcore && make install)
-
-pip install --no-index --install-option="--install-scripts=$PWD/tmp/venv/bin" ./
 make test
