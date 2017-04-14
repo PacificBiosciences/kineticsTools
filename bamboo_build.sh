@@ -22,6 +22,6 @@ $PIP install --user -e repos/pbcommand
 $PIP install --user -e repos/pbcore
 $PIP install --user -r requirements-ci.txt
 $PIP install --user -r requirements-dev.txt
-$PIP install --no-index --install-option="--install-scripts=$PWD/build/bin" --user -e ./
+$PIP install --user --no-index --install-option="--install-scripts=$PWD/build/bin" -e ./
 
 make test
