@@ -175,7 +175,7 @@ def get_parser():
     p.add_int(Constants.MAX_LENGTH_ID,
         option_str="maxLength",
         default=Constants.MAX_LENGTH_DEFAULT,
-        name="Max sequence length",
+        name="Maximum sequence length",
         description="Maximum number of bases to process per contig")
     tcp.add_str(Constants.IDENTIFY_ID,
         option_str="identify",
