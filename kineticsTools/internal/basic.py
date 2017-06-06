@@ -20,19 +20,13 @@ def getIpdModelFilename(ipdModel, majorityChem, paramsPath):
         LOG.info("Using passed-in kinetics model: {!r}".format(ipdModel))
         return ipdModel
 
-    # Temporary solution for Sequel chemistries: we do not
-    # have trained kinetics models in hand yet for Sequel
-    # chemistries.  However we have observed that the P5-C3
-    # training seems to yield fairly good results on Sequel
-    # chemistries to date.  So for the moment, we will use
-    # that model for Sequel data.
-    if majorityChem.startswith("S/"):
-        LOG.info("No trained model available yet for Sequel chemistries; modeling as P5-C3")
-        majorityChem = "P5-C3"
     if majorityChem == 'unknown':
         msg = "Chemistry cannot be identified---cannot perform kinetic analysis"
         LOG.error(msg)
         raise Exception(msg)
+
+    # '/' is not a valid character in a file, unescaped--remove it
+    majorityChem = majorityChem.replace("/", "")
 
     # go through each paramsPath in-order, checking if the model exists there or no
     for paramsPath in paramsPath:
