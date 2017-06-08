@@ -558,35 +558,6 @@ class KineticsToolsRunner(object):
         winEnd = refWindow.end
         pass
 
-    def getIpdModelFilename(self):
-        # In order of precedence they are:
-        # 1. Explicit path passed to --ipdModel
-        # 2. In-order through each directory listed in --paramsPath
-
-        if self.args.ipdModel:
-            logging.info("Using passed-in kinetics model: %s" % self.args.ipdModel)
-            return self.args.ipdModel
-
-        majorityChem = ReferenceUtils.loadAlignmentChemistry(self.alignments)
-
-        # Route any sequel chemistries to seabsicuit training (for now)
-        if majorityChem.startswith("S/"):
-            majorityChem = "SP2-C2"
-
-        if majorityChem == 'unknown':
-            logging.error("Chemistry cannot be identified---cannot perform kinetic analysis")
-            sys.exit(1)
-
-        # go through each paramsPath in-order, checking if the model exists there or no
-        for paramsPath in self.args.paramsPath:
-            ipdModel = os.path.join(paramsPath, majorityChem + ".h5")
-            if os.path.isfile(ipdModel):
-                logging.info("Using chemistry-matched kinetics model: {!r}".format(ipdModel))
-                return ipdModel
-
-        logging.error("Aborting, no kinetics model available for this chemistry: %s" % ipdModel)
-        sys.exit(1)
-
     def loadReferenceAndModel(self, referencePath, ipdModelFilename):
         assert self.alignments is not None and self.referenceWindows is not None
         # Load the reference contigs - annotated with their refID from the cmp.h5
