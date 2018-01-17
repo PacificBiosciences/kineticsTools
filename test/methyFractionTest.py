@@ -1,3 +1,4 @@
+from __future__ import print_function
 import logging
 import os
 import platform
@@ -38,7 +39,7 @@ class TestMethylFraction(TestSetup):
         self.kw._prepForReferenceWindow(referenceWindow)
         kinetics = self.kw._summarizeReferenceRegion(bounds, True, True)
         mods = self.kw._decodePositiveControl(kinetics, bounds)
-        print mods
+        print(mods)
 
         # Verify that we detect m6A mods at 14982 and 14991
         m6AMods = [x for x in mods if x['modification'] == 'm6A' and x['tpl'] in (14982, 14991)]

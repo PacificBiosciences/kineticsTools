@@ -30,6 +30,7 @@
 #################################################################################
 
 
+from __future__ import print_function
 import cProfile
 from pbcore.io import GffReader, Gff3Record
 import os
@@ -132,13 +133,13 @@ class IpdRatioSummaryWriter(PBToolRunner):
                 if field == 'sequence-header':
                     [internalTag, delim, externalTag] = value.strip().partition(' ')
                     self.seqMap[internalTag] = externalTag
-                print >>summaryWriter, line.strip()
+                print(line.strip(), file=summaryWriter)
                 continue
 
             if inHeader:
                 # We are at the end of the header -- write the tool-specific headers
                 for field in headers:
-                    print >>summaryWriter, ("##%s %s" % field)
+                    print(("##%s %s" % field), file=summaryWriter)
                 inHeader = False
 
             # Parse the line
@@ -153,7 +154,7 @@ class IpdRatioSummaryWriter(PBToolRunner):
                 rec.modsfwd = strand0Hits
                 rec.modsrev = strand1Hits
 
-                print >>summaryWriter, str(rec)
+                print(str(rec), file=summaryWriter)
 
 if __name__ == "__main__":
     kt = ModificationSummary()

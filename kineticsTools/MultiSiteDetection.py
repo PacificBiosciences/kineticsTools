@@ -224,7 +224,7 @@ class MultiSiteDetection(object):
         for i in xrange(len(positions)):
             position = positions[i]
 
-            if self.rawKinetics.has_key(position):
+            if position in self.rawKinetics:
                 siteObs = self.rawKinetics[position]
                 obsMean[i] = siteObs['tMean']
                 obsErr[i] = siteObs['tErr']
@@ -288,7 +288,7 @@ class MultiSiteDetection(object):
         dnaSeq.fromstring(self.sequence)
 
         for pos in self.motifPositions:
-            if self.rawKinetics.has_key(pos):
+            if pos in self.rawKinetics:
 
                 # Fetch unmodified positions
                 nullPred = self.getRegionPredictions(pos - self.post, pos + self.pre, dnaSeq)

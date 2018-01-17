@@ -2,6 +2,7 @@
 """
 Test sanity of various output formats for a minimal real-world example.
 """
+from __future__ import print_function
 
 import subprocess
 import tempfile
@@ -49,7 +50,7 @@ class TestOutputs(unittest.TestCase):
             "--reference", REFERENCE,
             ALIGNMENTS
         ]
-        print " ".join(args)
+        print(" ".join(args))
         assert subprocess.call(args) == 0
         with open(cls.csv_file) as f:
             cls.csv_records = [l.split(",") for l in f.read().splitlines()][1:]

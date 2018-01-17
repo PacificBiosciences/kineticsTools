@@ -32,7 +32,7 @@
 def consumer(func):
     def start(*args, **kwargs):
         c = func(*args, **kwargs)
-        c.next()
+        next(c)
         return c
     return start
 
