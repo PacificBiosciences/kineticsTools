@@ -32,6 +32,7 @@
 """
 Summarizes kinetic modifications in the alignment_summary.gff file.
 """
+from __future__ import print_function
 
 import cProfile
 from itertools import groupby
@@ -124,13 +125,13 @@ class ModificationSummary(object):
                 if field == 'sequence-header':
                     [internalTag, delim, externalTag] = value.strip().partition(' ')
                     self.seqMap[internalTag] = externalTag
-                print >>summaryWriter, line.strip()
+                print(line.strip(), file=summaryWriter)
                 continue
 
             if inHeader:
                 # We are at the end of the header -- write the tool-specific headers
                 for field in headers:
-                    print >>summaryWriter, ("##%s %s" % field)
+                    print(("##%s %s" % field), file=summaryWriter)
                 inHeader = False
 
             # Parse the line
@@ -146,7 +147,7 @@ class ModificationSummary(object):
                 rec.modsfwd = ",".join([str(cFwd[x]) for x in self.knownModificationEvents])
                 rec.modsrev = ",".join([str(cRev[x]) for x in self.knownModificationEvents])
 
-                print >>summaryWriter, str(rec)
+                print(str(rec), file=summaryWriter)
         return 0
 
 

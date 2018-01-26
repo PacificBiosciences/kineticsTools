@@ -184,7 +184,7 @@ class MixtureEstimationMethods(object):
     # Bootstraps mix prop estimates to return estimate and simple bounds for 95% confidence interval
     def bootstrap(self, pos, mu0, mu1, nSamples=500):
 
-        if not self.rawKinetics.has_key(pos):
+        if pos not in self.rawKinetics:
             return np.array([float('nan'), float('nan'), float('nan')])
 
         res = np.zeros(3)

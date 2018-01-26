@@ -1,3 +1,4 @@
+from __future__ import print_function
 #################################################################################
 # Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
 #
@@ -91,7 +92,7 @@ class ResultCollectorProcess(Process):
                         del column['rawData']
 
                 # Write out all the chunks that we can
-                while chunkCache.has_key(nextChunkId):
+                while nextChunkId in chunkCache:
                     nextChunk = chunkCache.pop(nextChunkId)
                     self.onResult(nextChunk)
 
@@ -168,13 +169,13 @@ class KineticsWriter(ResultCollectorProcess):
         handlers["variance"] = fourF
         handlers["MSscore"] = lambda x: "%d" % x
 
-        print >>f, delim.join(cols)
+        print(delim.join(cols), file=f)
 
         def fmt(rowData, colName):
-            if not rowData.has_key(colName):
+            if colName not in rowData:
                 return ""
 
-            if handlers.has_key(colName):
+            if colName in handlers:
                 return handlers[colName](rowData[colName])
             else:
                 return str(rowData[colName])
@@ -185,15 +186,15 @@ class KineticsWriter(ResultCollectorProcess):
                 itemList = (yield)
 
                 for item in itemList:
-                    if item.has_key("signal"):
+                    if "signal" in item:
                         values = [fmt(item, col) for col in cols]
-                        print >>f, delim.join(values)
+                        print(delim.join(values), file=f)
 
         except GeneratorExit:
             f.close()
             return
         except Exception as e:
-            print e
+            print(e)
 
 
     @consumer
@@ -252,13 +253,13 @@ class KineticsWriter(ResultCollectorProcess):
         handlers[FRAClow] = threeF
         handlers[FRACup] = threeF
 
-        print >>f, delim.join(cols)
+        print(delim.join(cols), file=f)
 
         def fmt(rowData, colName):
-            if not rowData.has_key(colName):
+            if colName not in rowData:
                 return ""
 
-            if handlers.has_key(colName):
+            if colName in handlers:
                 return handlers[colName](rowData[colName])
             else:
                 return str(rowData[colName])
@@ -270,13 +271,13 @@ class KineticsWriter(ResultCollectorProcess):
 
                 for item in itemList:
                     values = [fmt(item, col) for col in cols]
-                    print >>f, delim.join(values)
+                    print(delim.join(values), file=f)
 
         except GeneratorExit:
             f.close()
             return
         except Exception as e:
-            print e
+            print(e)
 
     @consumer
     def bigWigConsumer(self, filename):
@@ -294,7 +295,7 @@ class KineticsWriter(ResultCollectorProcess):
                 for x in chunk:
                     pos = int(x['tpl']) + 1
                     seqid = x['refName']
-                    ranges.setdefault(seqid, (sys.maxint, 0))
+                    ranges.setdefault(seqid, (sys.maxsize, 0))
                     ranges[seqid] = (min(ranges[seqid][0], pos),
                                      max(ranges[seqid][1], pos+1))
                     rec = BaseInfo(
@@ -745,22 +746,22 @@ class KineticsWriter(ResultCollectorProcess):
         start = siteObs['tpl'] + 1
         end = siteObs['tpl'] + 1
 
-        if siteObs.has_key('motif'):
+        if 'motif' in siteObs:
             attributes.append(('motif', "%s" % siteObs['motif']))
 
-        if siteObs.has_key('id'):
+        if 'id' in siteObs:
             attributes.append(('id', "%s" % siteObs['id']))
 
-        if self.options.methylFraction and siteObs.has_key(FRAC):
+        if self.options.methylFraction and FRAC in siteObs:
             attributes.append(('frac', "%.3f" % siteObs[FRAC]))
             attributes.append(('fracLow', "%.3f" % siteObs[FRAClow]))
             attributes.append(('fracUp', "%.3f" % siteObs[FRACup]))
 
-        if siteObs.has_key('modificationScore'):
+        if 'modificationScore' in siteObs:
             # Report the QV from the modification identification module as a special tag
             attributes.append(('identificationQv', "%d" % int(round(siteObs['modificationScore']))))
 
-        if siteObs.has_key('modification'):
+        if 'modification' in siteObs:
 
             if siteObs['modification'] == '.':
                 recordType = 'modified_base'
@@ -830,11 +831,11 @@ class KineticsWriter(ResultCollectorProcess):
 
                     if siteObs['coverage'] > self.options.minCoverage:
                         # Case 1
-                        if siteObs.has_key('modification') and siteObs['modification'] != '.':
+                        if 'modification' in siteObs and siteObs['modification'] != '.':
                             gff.writeRecord(self.makeGffRecord(siteObs))
 
                         # Case 2
-                        elif siteObs['score'] > minScore and not siteObs.has_key('offTargetPeak'):
+                        elif siteObs['score'] > minScore and 'offTargetPeak' not in siteObs:
                             gff.writeRecord(self.makeGffRecord(siteObs))
 
                     # FIXME: Try not filtering:
@@ -888,7 +889,7 @@ class KineticsWriter(ResultCollectorProcess):
                 siteObsList = (yield)
 
                 for siteObs in siteObsList:
-                    if siteObs.has_key('Ca5C') and siteObs['strand'] == 0:
+                    if 'Ca5C' in siteObs and siteObs['strand'] == 0:
                         gff.writeRecord( self.makeM5CgffRecord( siteObs ) )
 
         except GeneratorExit:

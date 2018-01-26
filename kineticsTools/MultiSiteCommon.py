@@ -124,7 +124,7 @@ class MultiSiteCommon(object):
         return lPx
 
     def singleScore(self, position, context):
-        if self.rawKinetics.has_key(position):
+        if position in self.rawKinetics:
             siteObs = self.rawKinetics[position]
 
             # mu of model, error in model
@@ -153,11 +153,11 @@ class MultiSiteCommon(object):
         # Handle the prior for a modification at the current base here
         # unmodified bases get a prior of 0, modified bases get a prior less than 0.
         prior = 0.0
-        if self.modPriors.has_key(context[self.pre]):
+        if context[self.pre] in self.modPriors:
             prior = self.modPriors[context[self.pre]]
 
         # Handle positions where we don't have enough coverage
-        if not self.rawKinetics.has_key(position):
+        if position not in self.rawKinetics:
             return prior
 
         ll = self.singleScore(position, context)
@@ -169,7 +169,7 @@ class MultiSiteCommon(object):
         meanVector = []
         for pos in xrange(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
-            if self.contextMeanTable.has_key(ctx):
+            if ctx in self.contextMeanTable:
                 meanVector.append(self.contextMeanTable[ctx])
             else:
                 meanVector.append(self.gbmModel.getPredictions([ctx]))

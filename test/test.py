@@ -1,3 +1,4 @@
+from __future__ import print_function
 import logging
 import os
 import platform
@@ -72,14 +73,14 @@ class TestBasic(TestSetup):
         snippetFunc = self.ipdModel.snippetFunc(1, 10, 10)
         snip = snippetFunc(0, 0)
 
-        print "Got snippet at pos 0: %s" % snip
-        print "First 10 bases of lambda: %s" % (contig[0:10])
+        print("Got snippet at pos 0: %s" % snip)
+        print("First 10 bases of lambda: %s" % (contig[0:10]))
 
         lastPos = len(contig) - 1
         snip = snippetFunc(lastPos, 0)
 
-        print "Got snippet at pos %d: %s" % (lastPos, snip)
-        print "Last 10 bases of lambda: %s" % contig[-10:]
+        print("Got snippet at pos %d: %s" % (lastPos, snip))
+        print("Last 10 bases of lambda: %s" % contig[-10:])
 
     def _testSpeed(self):
 
@@ -105,44 +106,44 @@ class TestBasic(TestSetup):
         for (pos, tplStrand) in [(3, 0), (10, 0), (20, 0), (30, 0), (31, 0), (32, 0), (33, 0), (34, 0)]:
             snip = snippetFunc(pos, tplStrand)
 
-            print "Pos: %d, TplStrand: %d" % (pos, tplStrand)
-            print "Got ctx: %s" % snip
+            print("Pos: %d, TplStrand: %d" % (pos, tplStrand))
+            print("Got ctx: %s" % snip)
             #print "From lambda: %s" % (contig[(pos - 4):(pos + 11)])
 
-            print "Lut prediction: %f" % ipdFunc(pos, tplStrand)
+            print("Lut prediction: %f" % ipdFunc(pos, tplStrand))
 
             gbmPred = self.ipdModel.gbmModel.getPredictionsSlow([snip])[0]
-            print "Gbm prediction: %f" % gbmPred
+            print("Gbm prediction: %f" % gbmPred)
 
             gbmPred = self.ipdModel.gbmModel.getPredictions([snip])[0]
-            print "Gbm prediction fast: %f" % gbmPred
+            print("Gbm prediction fast: %f" % gbmPred)
 
             gbmSnippetPred = ipdModelFunc(pos, tplStrand)
-            print "Gbm pred via predictIpdFuncModel: %f" % gbmSnippetPred
+            print("Gbm pred via predictIpdFuncModel: %f" % gbmSnippetPred)
 
             if snip[4] == 'A':
                 snip2 = snip[0:4] + 'H' + snip[5:]
                 snip3 = snip[0:9] + 'H' + snip[10:]
                 gbmPred = self.ipdModel.gbmModel.getPredictionsSlow([snip2, snip3])
-                print "Methylated prediction: %s ->  %f" % (snip2, gbmPred[0])
-                print "Methylated prediction: %s ->  %f" % (snip3, gbmPred[1])
+                print("Methylated prediction: %s ->  %f" % (snip2, gbmPred[0]))
+                print("Methylated prediction: %s ->  %f" % (snip3, gbmPred[1]))
 
                 gbmPred = self.ipdModel.gbmModel.getPredictions([snip2, snip3])
-                print "Methylated prediction fast: %s ->  %f" % (snip2, gbmPred[0])
-                print "Methylated prediction fast: %s ->  %f" % (snip3, gbmPred[1])
+                print("Methylated prediction fast: %s ->  %f" % (snip2, gbmPred[0]))
+                print("Methylated prediction fast: %s ->  %f" % (snip3, gbmPred[1]))
 
             if snip[4] == 'C':
                 snip2 = snip[0:4] + 'J' + snip[5:]
                 snip3 = snip[0:9] + 'J' + snip[10:]
                 gbmPred = self.ipdModel.gbmModel.getPredictionsSlow([snip2, snip3])
-                print "Methylated prediction: %s ->  %f" % (snip2, gbmPred[0])
-                print "Methylated prediction: %s ->  %f" % (snip3, gbmPred[1])
+                print("Methylated prediction: %s ->  %f" % (snip2, gbmPred[0]))
+                print("Methylated prediction: %s ->  %f" % (snip3, gbmPred[1]))
 
                 gbmPred = self.ipdModel.gbmModel.getPredictions([snip2, snip3])
-                print "Methylated prediction fast: %s ->  %f" % (snip2, gbmPred[0])
-                print "Methylated prediction fast: %s ->  %f" % (snip3, gbmPred[1])
+                print("Methylated prediction fast: %s ->  %f" % (snip2, gbmPred[0]))
+                print("Methylated prediction fast: %s ->  %f" % (snip3, gbmPred[1]))
 
-            print ""
+            print("")
 
     def testSmallDecode(self):
         """
@@ -161,7 +162,7 @@ class TestBasic(TestSetup):
         self.kw._prepForReferenceWindow(referenceWindow)
         kinetics = self.kw._summarizeReferenceRegion(bounds, False, True)
         mods = self.kw._decodePositiveControl(kinetics, bounds)
-        print mods
+        print(mods)
 
         # Verify that we detect m6A mods at 14982 and 14991
         m6AMods = [x for x in mods if x['modification'] == 'm6A' and x['tpl'] in (14982, 14991)]
