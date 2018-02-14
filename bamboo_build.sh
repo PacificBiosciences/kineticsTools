@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-NX3PBASEURL=http://nexus/repository/unsupported/pitchfork/gcc-4.9.2
+NX3PBASEURL=http://nexus/repository/unsupported/pitchfork/gcc-6.4.0
 export PATH=$PWD/build/bin:/mnt/software/a/anaconda2/4.2.0/bin:$PWD/bin:$PATH
 export PYTHONUSERBASE=$PWD/build
 export CFLAGS="-I/mnt/software/a/anaconda2/4.2.0/include"
@@ -15,7 +15,7 @@ $PIP install --user \
 $PIP install --user \
   $NX3PBASEURL/pythonpkgs/xmlbuilder-1.0-cp27-none-any.whl \
   $NX3PBASEURL/pythonpkgs/tabulate-0.7.5-cp27-none-any.whl \
-  $NX3PBASEURL/pythonpkgs/pysam-0.9.1.4-cp27-cp27mu-linux_x86_64.whl \
+  $NX3PBASEURL/pythonpkgs/pysam-0.13-cp27-cp27mu-linux_x86_64.whl \
   $NX3PBASEURL/pythonpkgs/avro-1.7.7-cp27-none-any.whl
 
 $PIP install --user -e repos/pbcommand
