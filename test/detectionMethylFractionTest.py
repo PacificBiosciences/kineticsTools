@@ -1,3 +1,4 @@
+from __future__ import print_function
 import logging
 import os
 import platform
@@ -41,8 +42,8 @@ class TestDetectionMethylFraction(TestSetup):
 
         # Verify that we detect m6A mods at 14982 and 14991
         m6AMods = [{'frac': x['frac'], 'fracLow': x['fracLow'], 'fracUp': x['fracUp'], 'tpl': x['tpl'], 'strand': x['strand']}
-                   for x in kinetics if x.has_key('frac') and x['tpl'] in (14982, 14991)]
-        print m6AMods
+                   for x in kinetics if 'frac' in x and x['tpl'] in (14982, 14991)]
+        print(m6AMods)
 
         for mod in m6AMods:
             self.assertGreater(mod["frac"], 0.5)

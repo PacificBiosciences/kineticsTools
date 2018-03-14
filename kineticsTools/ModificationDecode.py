@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 #################################################################################
 # Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
 #
@@ -38,8 +39,8 @@ from scipy.special import gammaln as gamln
 from numpy import log, pi, log10, e, log1p, exp
 import numpy as np
 
-from MultiSiteCommon import MultiSiteCommon, canonicalBaseMap, modNames, ModificationPeakMask, FRAC, FRAClow, FRACup, log10e
-from MixtureEstimationMethods import MixtureEstimationMethods
+from .MultiSiteCommon import MultiSiteCommon, canonicalBaseMap, modNames, ModificationPeakMask, FRAC, FRAClow, FRACup, log10e
+from .MixtureEstimationMethods import MixtureEstimationMethods
 
 
 class ModificationDecode(MultiSiteCommon):
@@ -274,7 +275,7 @@ class ModificationDecode(MultiSiteCommon):
             modScore = self.scoreRegion(pos - self.post, pos + self.pre, modSeq)
             modScores = self.getRegionScores(pos - self.post, pos + self.pre, modSeq)
 
-            if self.methylFractionFlag and self.rawKinetics.has_key(pos):
+            if self.methylFractionFlag and pos in self.rawKinetics:
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
                     modifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
 
@@ -283,7 +284,7 @@ class ModificationDecode(MultiSiteCommon):
             noModScore = self.scoreRegion(pos - self.post, pos + self.pre, modSeq)
             noModScores = self.getRegionScores(pos - self.post, pos + self.pre, modSeq)
 
-            if self.methylFractionFlag and self.rawKinetics.has_key(pos):
+            if self.methylFractionFlag and pos in self.rawKinetics:
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
                     unModifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
 
@@ -306,7 +307,7 @@ class ModificationDecode(MultiSiteCommon):
             #         if self.rawKinetics[pos].has_key('Ca5C'):
             #             llr = -self.rawKinetics[pos]['Ca5C']
             #             qModScore = 100 * llr * log10e + 100*log1p(exp(-llr))*log10e
-            if self.methylFractionFlag and self.rawKinetics.has_key(pos):
+            if self.methylFractionFlag and pos in self.rawKinetics:
 
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
 
@@ -333,7 +334,7 @@ class ModificationDecode(MultiSiteCommon):
         sc = 0.0
         for pos in xrange(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
-            if self.scores.has_key(pos):
+            if pos in self.scores:
                 sc += self.scores[pos][ctx]
 
         return sc
@@ -343,7 +344,7 @@ class ModificationDecode(MultiSiteCommon):
 
         for pos in xrange(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
-            if self.scores.has_key(pos):
+            if pos in self.scores:
                 scores[pos - start] = self.scores[pos][ctx]
 
         return scores
@@ -358,7 +359,7 @@ class ModificationDecode(MultiSiteCommon):
             # Add a neighboring peak to the mask if
             # a) it has a single-site qv > 20
             # b) the observed IPDs are somewhat more likely under the modified hypothesis than the unmodified hypothesis
-            if self.rawKinetics.has_key(i) and self.rawKinetics[i]["score"] > 20:
+            if i in self.rawKinetics and self.rawKinetics[i]["score"] > 20:
                 if modScores[i - start] - noModScores[i - start] > 1.0:
                     maskPos.append(i - pos)
 

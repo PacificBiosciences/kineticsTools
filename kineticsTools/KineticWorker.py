@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 #################################################################################
 # Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
 #
@@ -38,18 +40,18 @@ import numpy as np
 import scipy.stats.mstats as mstats
 import sys
 
-from MixtureEstimationMethods import MixtureEstimationMethods
-from MultiSiteCommon import MultiSiteCommon, canonicalBaseMap, modNames, ModificationPeakMask, FRAC, FRAClow, FRACup, log10e
+from .MixtureEstimationMethods import MixtureEstimationMethods
+from .MultiSiteCommon import MultiSiteCommon, canonicalBaseMap, modNames, ModificationPeakMask, FRAC, FRAClow, FRACup, log10e
 
-from MultiSiteDetection import *
+from .MultiSiteDetection import *
 
-from MedakaLdaEnricher import MedakaLdaEnricher
-from BasicLdaEnricher import BasicLdaEnricher
-from PositiveControlEnricher import PositiveControlEnricher
+from .MedakaLdaEnricher import MedakaLdaEnricher
+from .BasicLdaEnricher import BasicLdaEnricher
+from .PositiveControlEnricher import PositiveControlEnricher
 
 from kineticsTools.ModificationDecode import ModificationDecode, ModificationPeakMask
 
-from WorkerProcess import WorkerProcess, WorkerThread
+from .WorkerProcess import WorkerProcess, WorkerThread
 import pdb
 import traceback
 
@@ -145,13 +147,13 @@ class KineticWorker(object):
 
                     # Only convert to positive control call if we actually have enough
                     # coverage on the cognate base!
-                    if siteDict.has_key(mod['tpl']):
+                    if mod['tpl'] in siteDict:
 
                         # Copy mod identification data
                         siteDict[mod['tpl']]['modificationScore'] = mod['QMod']
                         siteDict[mod['tpl']]['modification'] = mod['modification']
 
-                        if self.options.methylFraction and mod.has_key(FRAC):
+                        if self.options.methylFraction and FRAC in mod:
                             siteDict[mod['tpl']][FRAC] = mod[FRAC]
                             siteDict[mod['tpl']][FRAClow] = mod[FRAClow]
                             siteDict[mod['tpl']][FRACup] = mod[FRACup]
@@ -161,7 +163,7 @@ class KineticWorker(object):
                         for nk in newKeys:
                             siteDict[mod['tpl']][nk] = mod[nk]
 
-                    if mod.has_key('Mask'):
+                    if 'Mask' in mod:
                         # The decoder should supply the off-target peak mask
                         mask = mod['Mask']
                         mask.append(0)  # make sure we always mask the cognate position
@@ -173,7 +175,7 @@ class KineticWorker(object):
                     # Mask out neighbor peaks that may have been caused by this mod
                     for offset in mask:
                         shadowPos = mod['tpl'] + strandSign * offset
-                        if siteDict.has_key(shadowPos):
+                        if shadowPos in siteDict:
                             siteDict[shadowPos]['offTargetPeak'] = True
 
                 finalCalls.extend(siteDict.values())
@@ -518,11 +520,11 @@ class KineticWorker(object):
             return 0.1
 
         if np.isnan(rawIpds).any():
-            print "got nan: %s" % str(rawIpds)
+            print("got nan: %s" % str(rawIpds))
 
         if rawIpds.mean() < 0.0001:
-            print "small"
-            print "got small: %s" % str(rawIpds)
+            print("small")
+            print("got small: %s" % str(rawIpds))
 
         capValue = min(10, np.percentile(rawIpds, 99))
         capIpds = np.minimum(rawIpds, capValue)

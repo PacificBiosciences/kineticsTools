@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # Try to implement method used in Morishita et al.'s Medaka fish genome paper here
 
 from collections import defaultdict, Counter
@@ -13,7 +15,7 @@ from scipy.special import gammaln as gamln
 from numpy import log, pi, log10, e, log1p, exp
 import numpy as np
 
-from MultiSiteCommon import MultiSiteCommon
+from .MultiSiteCommon import MultiSiteCommon
 
 
 class MedakaLdaEnricher(MultiSiteCommon):
@@ -32,7 +34,7 @@ class MedakaLdaEnricher(MultiSiteCommon):
     def useLDAmodel(self, kinetics, pos, model, up, down ):
         """ Test out LDA model """
 
-        print "From use LDA model.\n"
+        print("From use LDA model.\n")
 
         res = np.zeros((up + down + 1, 6))
         ind = 0
@@ -57,7 +59,7 @@ class MedakaLdaEnricher(MultiSiteCommon):
 
     def callLDAstrand(self, kinetics, strand, model, up, down):
 
-        print "From callLDAstrand.\n"
+        print("From callLDAstrand.\n")
       
         tmp = [d for d in kinetics if d["strand"] == strand]
         tmp.sort(key=lambda x: x["tpl"])
@@ -75,18 +77,18 @@ class MedakaLdaEnricher(MultiSiteCommon):
 
     def aggregate(self, dataset, group_by_key, sum_value_key):
 
-        print "From aggregate.\n"
+        print("From aggregate.\n")
         emp = {}
         for item in dataset:
-            if item.has_key( sum_value_key ):
-                if emp.has_key( item[group_by_key] ):
+            if sum_value_key in item:
+                if item[group_by_key] in emp:
                     emp[ item[group_by_key] ] += item[sum_value_key]
                 else:
                     emp[ item[group_by_key] ] = item[sum_value_key]
 
         # Need to go back over the set again?
         for item in dataset:
-            if item.has_key( sum_value_key ):
+            if sum_value_key in item:
                 item[ sum_value_key ] = emp[ item[group_by_key] ]
 
         return dataset
@@ -95,7 +97,7 @@ class MedakaLdaEnricher(MultiSiteCommon):
 
     def callEnricherFunction(self, kinetics, up=10, down=10):
 
-        print "From callEnricher function.\n"
+        print("From callEnricher function.\n")
 
         fwd = self.callLDAstrand(kinetics, 0, self.fwd_model, up, down) 
         rev = self.callLDAstrand(kinetics, 1, self.rev_model, up, down)

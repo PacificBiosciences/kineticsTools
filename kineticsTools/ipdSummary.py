@@ -612,7 +612,7 @@ class KineticsToolsRunner(object):
                     if self.args.skipUnrecognizedContigs:
                         continue
                     else:
-                        raise Exception, "Unrecognized contig!"
+                        raise Exception("Unrecognized contig!")
         elif self.args.referenceWindowsFromAlignment:
             self.referenceWindows = ReferenceUtils.referenceWindowsFromAlignment(self.alignments, self.alignments.referenceInfo)
             refNames = set([rw.refName for rw in self.referenceWindows])
