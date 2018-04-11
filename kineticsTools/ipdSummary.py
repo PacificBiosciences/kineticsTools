@@ -179,14 +179,14 @@ def get_parser():
         description="Maximum number of bases to process per contig")
     tcp.add_str(Constants.IDENTIFY_ID,
         option_str="identify",
-        default="",
+        default="m6A,m4C",
         name="Identify basemods",
         description="Specific modifications to identify (comma-separated "+\
             "list).  Currrent options are m6A and/or m4C.")
     argp.add_argument(
         "--identify",
         action="store",
-        default="",
+        default="m6A,m4C",
         help="Specific modifications to identify (comma-separated "+\
             "list).  Currrent options are m6A, m4C, m5C_TET.  Cannot be "+\
             "used with --control.")
