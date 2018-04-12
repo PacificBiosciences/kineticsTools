@@ -188,8 +188,8 @@ def get_parser():
         action="store",
         default="m6A,m4C",
         help="Specific modifications to identify (comma-separated "+\
-            "list).  Currrent options are m6A, m4C, m5C_TET.  Cannot be "+\
-            "used with --control.")
+            "list).  Currrent options are m6A, m4C, m5C_TET.  Using --control "+\
+            "overrides this option.")
     _DESC = "In the --identify mode, add --methylFraction to "+\
             "command line to estimate the methylated fraction, along with "+\
             "95%% confidence interval bounds."
@@ -419,8 +419,9 @@ class KineticsToolsRunner(object):
         if not os.path.exists(self.args.alignment_set):
             parser.error('Input AlignmentSet file provided does not exist')
 
-        if self.args.identify and self.args.control:
-            parser.error('--control and --identify are mutally exclusive. Please choose one or the other')
+        # Over-ride --identify if --control was specified
+        if self.args.control:
+            self.args.identify = ""
 
         if self.args.useLDA:
             if self.args.m5Cclassifier is None:
