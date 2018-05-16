@@ -63,7 +63,7 @@ from kineticsTools.ReferenceUtils import ReferenceUtils
 
 from .internal import basic
 
-__version__ = "2.3"
+__version__ = "2.4"
 
 log = logging.getLogger(__name__)
 

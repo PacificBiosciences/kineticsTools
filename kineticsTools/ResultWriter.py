@@ -36,12 +36,16 @@ import os.path
 import os
 from multiprocessing import Process
 import cPickle
+import sys
+import math
+import re
+
 import h5py
 import numpy as np
+
 from pbcore.io import GffWriter, Gff3Record
-import sys
+
 from kineticsTools.pipelineTools import consumer
-import math
 
 DEFAULT_NCHUNKS = 256
 # Labels for modified fraction:
@@ -498,7 +502,8 @@ class KineticsWriter(ResultCollectorProcess):
             nChunks = min(dataLength, DEFAULT_NCHUNKS)
 
             # Create a group for each reference:
-            grp = f.create_group(str(ref.Name))
+            group_name = re.sub("\/", "__", str(ref.Name))
+            grp = f.create_group(group_name)
 
             ds = grp.create_dataset('tpl', (dataLength,), dtype="u4", compression="gzip", chunks=(nChunks,))
             ds = grp.create_dataset('strand', (dataLength,), dtype="u1", compression="gzip", chunks=(nChunks,))
