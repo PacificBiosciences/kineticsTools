@@ -25,9 +25,12 @@ def getIpdModelFilename(ipdModel, majorityChem, paramsPath):
         LOG.error(msg)
         raise Exception(msg)
 
-    # Route any sequel chemistries to seabsicuit training (for now)
-    if majorityChem.startswith("S/"):
+    # Route any pre-Kiwi / pre-SSB Sequel chemistries to Seabiscuit training
+    if majorityChem.startswith("S/P1") or majorityChem.startswith("S/P2"):
         majorityChem = "SP2-C2"
+    # Route any post-SSB Sequel chemistries to Kiwi training (for now)
+    elif majorityChem.startswith("S/"):
+        majorityChem = "SP3-C3"
 
     # '/' is not a valid character in a file, unescaped--remove it
     majorityChem = majorityChem.replace("/", "")
