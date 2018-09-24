@@ -222,7 +222,7 @@ def _get_more_options(parser):
         help='Name of output GFF file containing m5C scores')
 
     # FIXME: Make sure that this is specified if --useLDA flag is set.
-    parser.add_argument('--m5Cclassifer',
+    parser.add_argument('--m5Cclassifier',
                         dest='m5Cclassifier',
                         default=None,
                         help='Specify csv file containing a 127 x 2 matrix')
