@@ -12,7 +12,7 @@ A simple test of the version and help options:
                     [--bigwig BIGWIG] [--numWorkers NUMWORKERS]
                     [--pvalue PVALUE] [--maxLength MAXLENGTH]
                     [--identify IDENTIFY] [--methylFraction] [--outfile OUTFILE]
-                    [--m5Cgff M5CGFF] [--m5Cclassifer M5CCLASSIFIER]
+                    [--m5Cgff M5CGFF] [--m5Cclassifier M5CCLASSIFIER]
                     [--csv_h5 CSV_H5] [--pickle PICKLE]
                     [--summary_h5 SUMMARY_H5] [--ms_csv MS_CSV]
                     [--control CONTROL] [--useLDA] [--paramsPath PARAMSPATH]
