@@ -69,9 +69,12 @@ def _openFiles(self, refFile=None, sharedIndices=None):
                          f=location))
             resource = openAlignmentFile(location,
                                         referenceFastaFname=refFile)
-        if not resource:
-            raise IOError("{f} fails to open".format(f=location))
-        self._openReaders.append(resource)
+        if len(resource) == 0:
+            log.warn("{f} has no mapped reads".format(f=location))
+        else:
+            self._openReaders.append(resource)
+    if len(self._openReaders) == 0:
+        raise IOError("No mapped reads found")
     log.debug("Done opening resources")
 
 def _reopen (self):
