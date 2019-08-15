@@ -6,8 +6,8 @@ module purge
 #module load gcc
 #module load ccache
 module load python/2
-#module load htslib
-#module load hdf5-tools  # for h5ls
+module load htslib
+module load hdf5-tools  # for h5ls
 set -vex
 
 which gcc
@@ -33,16 +33,21 @@ export WHEELHOUSE
 
 rm -rf   build
 mkdir -p build/{bin,lib,include,share}
-#PIP_INSTALL="${PIP} install --no-index --find-links=${WHEELHOUSE}"
-PIP_INSTALL="${PIP} install"
-$PIP_INSTALL --user pyBigWig
+PIP_INSTALL="${PIP} install --no-index --find-links=${WHEELHOUSE}"
+#PIP_INSTALL="${PIP} install -v"
 
-#${PIP} install --user pysam  # Try to avoid shared lib problem.
-#${PIP} install --user scipy # TODO: Delete this line when in our wheelhouse.
+#$PIP_INSTALL --user pysam==0.15.2
+#python -c 'import pysam as p; print(p)'
+#$PIP_INSTALL --user pyBigWig
+#python -c 'import pysam as p; print(p)'
+
 $PIP_INSTALL --user -r requirements-ci.txt
+python -c 'import pysam as p; print(p)'
 $PIP_INSTALL --user -r requirements-dev.txt
+python -c 'import pysam as p; print(p)'
 #iso8601 xmlbuilder tabulate pysam avro?
 $PIP install --user ./
+python -c 'import pysam as p; print(p)'
 
 # Sanity-test for linkage errors.
 ipdSummary -h
