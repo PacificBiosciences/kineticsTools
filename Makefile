@@ -35,8 +35,8 @@ long-tests:
 	cram test/cram/long_running/*.t
 
 py-tests:
-	#nosetests -s -v --with-xunit test/*.py
-	py.test -s -v --junit-xml=nosetests.xml test/*.py
+	# pytest --cov=kineticsTools  # does not quite work since we run in test/ dir.
+	cd test/; pytest -s -v -n auto --dist=loadscope --durations=20 --junitxml=../nosetests.xml --cov-report=xml:../coverage.xml test_*.py
 
 extra-tests:
 	cram --xunit-file=cramtests-extra.xml test/cram/extra/*.t
