@@ -47,4 +47,6 @@ $PIP install --user ./
 # Sanity-test for linkage errors.
 ipdSummary -h
 
+$PIP_INSTALL --user pytest-xdist pytest-cov
+
 make test
