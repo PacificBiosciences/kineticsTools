@@ -1,27 +1,42 @@
-#!/bin/bash -ex
+#!/bin/bash
 
-NX3PBASEURL=http://nexus/repository/unsupported/pitchfork/gcc-6.4.0
-export PATH=$PWD/build/bin:/mnt/software/a/anaconda2/4.2.0/bin:$PWD/bin:$PATH
-export PYTHONUSERBASE=$PWD/build
-export CFLAGS="-I/mnt/software/a/anaconda2/4.2.0/include"
-PIP="pip --cache-dir=$bamboo_build_working_directory/.pip"
+set +vx
 type module >& /dev/null || . /mnt/software/Modules/current/init/bash
+module purge
 module load gcc
+module load ccache
+module load python/2
+module load hdf5-tools  # for h5ls
+set -vex
+
+which gcc
+gcc --version
+which python
+python --version
+
+export PYTHONUSERBASE=$PWD/build
+export PATH=${PYTHONUSERBASE}/bin:${PATH}
+
+#PIP="pip --cache-dir=$bamboo_build_working_directory/.pip"
+PIP=pip
+if [[ -z ${bamboo_repository_branch_name+x} ]]; then
+  WHEELHOUSE=/mnt/software/p/python/wheelhouse/develop
+elif [[ ${bamboo_repository_branch_name} == develop ]]; then
+  WHEELHOUSE=/mnt/software/p/python/wheelhouse/develop
+elif [[ ${bamboo_repository_branch_name} == master ]]; then
+  WHEELHOUSE=/mnt/software/p/python/wheelhouse/master
+else
+  WHEELHOUSE=/mnt/software/p/python/wheelhouse/develop
+fi
+export WHEELHOUSE
 
 rm -rf   build
-mkdir -p build/bin build/lib build/include build/share
-$PIP install --user \
-  iso8601
-$PIP install --user \
-  $NX3PBASEURL/pythonpkgs/xmlbuilder-1.0-cp27-none-any.whl \
-  $NX3PBASEURL/pythonpkgs/tabulate-0.7.5-cp27-none-any.whl \
-  $NX3PBASEURL/pythonpkgs/pysam-0.13-cp27-cp27mu-linux_x86_64.whl \
-  $NX3PBASEURL/pythonpkgs/avro-1.7.7-cp27-none-any.whl
-
-$PIP install --user -e repos/pbcommand
-$PIP install --user -e repos/pbcore
-$PIP install --user -r requirements-ci.txt
-$PIP install --user -r requirements-dev.txt
-$PIP install --user --no-index $PWD
+mkdir -p build/{bin,lib,include,share}
+PIP_INSTALL="${PIP} install --no-index --find-links=${WHEELHOUSE}"
+#${PIP} install --user scipy # TODO: Delete this line when in our wheelhouse.
+$PIP_INSTALL --user -r requirements-ci.txt
+$PIP_INSTALL --user -r requirements-dev.txt
+#iso8601 xmlbuilder tabulate pysam avro?
+$PIP install --user ./
 
 make test
