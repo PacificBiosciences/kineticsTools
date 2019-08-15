@@ -58,4 +58,4 @@ ipdSummary -h
 
 $PIP_INSTALL --user pytest-xdist pytest-cov
 
-make test
+make -j3 test
