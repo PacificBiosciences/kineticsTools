@@ -172,7 +172,7 @@ class GbmContextModel(object):
             if os.path.exists(DLL_PATH):
                 self._lib = np.ctypeslib.load_library("tree_predict.so", DLL_PATH)
             else:
-                raise Exception("can't find tree_predict.so")
+                raise Exception("can't find tree_predict.so at '{}'".format(DLL_PATH))
 
         lpb = self._lib
 
@@ -360,7 +360,7 @@ class IpdModel:
                 continue
 
             rawSeq = contig.sequence[:]
-            refSeq = np.fromstring(rawSeq, dtype=byte)
+            refSeq = np.frombuffer(rawSeq, dtype=byte)
 
             # Store the reference length
             self.refLengthDict[contig.cmph5ID] = len(rawSeq)
