@@ -31,7 +31,8 @@ class TestOutputs(unittest.TestCase):
     @classmethod
     @skip_if_no_data
     def setUpClass(cls):
-        prefix = tempfile.NamedTemporaryFile().name
+        #prefix = tempfile.NamedTemporaryFile().name  # not sure of the problem, but misused anyway
+        prefix = 'TestOutputs'
         cls.h5_file = "{p}.h5".format(p=prefix)
         cls.csv_file = "{p}.csv".format(p=prefix)
         cls.gff_file = "{p}.gff".format(p=prefix)
