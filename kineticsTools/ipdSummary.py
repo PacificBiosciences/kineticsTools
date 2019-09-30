@@ -51,8 +51,7 @@ import traceback
 from pkg_resources import Requirement, resource_filename
 
 from pbcommand.common_options import add_debug_option
-from pbcommand.models import FileTypes, SymbolTypes, get_pbparser
-from pbcommand.cli import pbparser_runner
+from pbcommand.cli import get_default_argparser_with_base_opts, pacbio_args_runner
 from pbcommand.utils import setup_log
 from pbcore.io import AlignmentSet
 
@@ -63,20 +62,13 @@ from kineticsTools.ReferenceUtils import ReferenceUtils
 
 from .internal import basic
 
-__version__ = "2.4.1"
+__version__ = "3.0"
 
 log = logging.getLogger(__name__)
 
 class Constants(object):
-    TOOL_ID = "kinetics_tools.tasks.ipd_summary"
-    TOOL_NAME = "ipdSummary"
-    DRIVER_EXE = "python -m kineticsTools.ipdSummary --resolved-tool-contract"
-    PVALUE_ID = "kinetics_tools.task_options.pvalue"
     PVALUE_DEFAULT = 0.01
-    MAX_LENGTH_ID = "kinetics_tools.task_options.max_length"
     MAX_LENGTH_DEFAULT = int(3e12)
-    METHYL_FRACTION_ID = "kinetics_tools.task_options.compute_methyl_fraction"
-    IDENTIFY_ID = "kinetics_tools.task_options.identify"
 
 def _getResourcePathSpec():
     default_dir = resource_filename(Requirement.parse('kineticsTools'), 'kineticsTools/resources')
@@ -123,67 +115,36 @@ validateNoneOrFile = functools.partial(_validateNoneOrResource, os.path.isfile)
 validateNoneOrDir = functools.partial(_validateNoneOrResource, os.path.isdir)
 
 def get_parser():
-    p = get_pbparser(
-        tool_id=Constants.TOOL_ID,
+    p = get_default_argparser_with_base_opts(
         version=__version__,
-        name=Constants.TOOL_NAME,
         description=__doc__,
-        driver_exe=Constants.DRIVER_EXE,
-        is_distributed=True,
-        nproc=SymbolTypes.MAX_NPROC,
         default_level="WARN")
-    p.add_input_file_type(FileTypes.DS_ALIGN, "alignment_set",
-        "Alignment DataSet", "BAM or Alignment DataSet")
-    tcp = p.tool_contract_parser
-    # FIXME just use a positional argument...
-    tcp.add_input_file_type(FileTypes.DS_REF, "reference",
-        "Reference DataSet", "Fasta or Reference DataSet")
-    argp = p.arg_parser.parser
-    argp.add_argument("--reference", action="store",
+    p.add_argument("alignment_set", help="BAM or Alignment DataSet")
+    p.add_argument("--reference", action="store",
         required=True,
         type=validateFile, help="Fasta or Reference DataSet")
-    # XXX GFF and CSV are "option" for arg parser, not tool contract
-    tcp.add_output_file_type(FileTypes.GFF, "gff",
-        name="Modifications",
-        description="Summary of analysis results for each kinModCall",
-        default_name="basemods")
-    tcp.add_output_file_type(FileTypes.BIGWIG, "bigwig",
-        name="IPD Ratios",
-        description="BigWig file encoding base IpdRatios",
-        default_name="basemods")
-    tcp.add_output_file_type(FileTypes.H5, "csv_h5",
-        name="Full Kinetics Summary",
-        description="HDF5 file containing per-base information",
-        default_name="basemods")
-    argp.add_argument("--gff", action="store", default=None,
+    p.add_argument("--gff", action="store", default=None,
         help="Output GFF file of modified bases")
-    argp.add_argument("--csv", action="store", default=None,
+    p.add_argument("--csv", action="store", default=None,
         help="Output CSV file out per-nucleotide information")
-    argp.add_argument("--bigwig", action="store", default=None,
+    p.add_argument("--bigwig", action="store", default=None,
         help="Output BigWig file encoding IpdRatio for both strands")
     # FIXME use central --nproc option
-    argp.add_argument('--numWorkers', '-j',
+    p.add_argument('--numWorkers', '-j',
         dest='numWorkers',
         default=1,
         type=int,
         help='Number of thread to use (-1 uses all logical cpus)')
     # common options
-    p.add_float(Constants.PVALUE_ID, "pvalue",
-        default=Constants.PVALUE_DEFAULT,
-        name="P-value",
-        description="P-value cutoff")
-    p.add_int(Constants.MAX_LENGTH_ID,
-        option_str="maxLength",
-        default=Constants.MAX_LENGTH_DEFAULT,
-        name="Maximum sequence length",
-        description="Maximum number of bases to process per contig")
-    tcp.add_str(Constants.IDENTIFY_ID,
-        option_str="identify",
-        default="m6A,m4C",
-        name="Identify basemods",
-        description="Specific modifications to identify (comma-separated "+\
-            "list).  Currrent options are m6A and/or m4C.")
-    argp.add_argument(
+    p.add_argument("--pvalue",
+                   type=float,
+                   default=Constants.PVALUE_DEFAULT,
+                   help="P-value cutoff")
+    p.add_argument("--maxLength",
+                   type=int,
+                   default=Constants.MAX_LENGTH_DEFAULT,
+                   help="Maximum number of bases to process per contig")
+    p.add_argument(
         "--identify",
         action="store",
         default="m6A,m4C",
@@ -193,58 +154,43 @@ def get_parser():
     _DESC = "In the --identify mode, add --methylFraction to "+\
             "command line to estimate the methylated fraction, along with "+\
             "95%% confidence interval bounds."
-    # FIXME tool contract parser and argparser conflict
-    tcp.add_boolean(Constants.METHYL_FRACTION_ID,
-        option_str="methylFraction",
-        default=False,
-        name="Compute methyl fraction",
-        description="When identifying specific modifications (m4C and/or "+
-                    "m6A), enabling this option will estimate the methylated "+
-                    "fraction, along with 95% confidence interval bounds.")
-    argp.add_argument("--methylFraction", action="store_true",
-        help=_DESC)
-    _get_more_options(argp)
-    return p
-
-def _get_more_options(parser):
-    """
-    Advanced options that won't be exposed via tool contract interface.
-    """
-    parser.add_argument('--outfile',
+    p.add_argument("--methylFraction", action="store_true",
+                    help=_DESC)
+    p.add_argument('--outfile',
         dest='outfile',
         default=None,
         help='Use this option to generate all possible output files. Argument here is the root filename of the output files.')
 
     # FIXME: Need to add an extra check for this; it can only be used if --useLDA flag is set.
-    parser.add_argument('--m5Cgff',
+    p.add_argument('--m5Cgff',
         dest='m5Cgff',
         default=None,
         help='Name of output GFF file containing m5C scores')
 
     # FIXME: Make sure that this is specified if --useLDA flag is set.
-    parser.add_argument('--m5Cclassifier',
+    p.add_argument('--m5Cclassifier',
                         dest='m5Cclassifier',
                         default=None,
                         help='Specify csv file containing a 127 x 2 matrix')
 
 
-    parser.add_argument('--csv_h5',
+    p.add_argument('--csv_h5',
                         dest='csv_h5',
                         default=None,
                         help='Name of csv output to be written in hdf5 format.')
 
-    parser.add_argument('--pickle',
+    p.add_argument('--pickle',
                         dest='pickle',
                         default=None,
                         help='Name of output pickle file.')
 
-    parser.add_argument('--summary_h5',
+    p.add_argument('--summary_h5',
                         dest='summary_h5',
                         default=None,
                         help='Name of output summary h5 file.')
 
 
-    parser.add_argument('--ms_csv',
+    p.add_argument('--ms_csv',
                         dest='ms_csv',
                         default=None,
                         help='Multisite detection CSV file.')
@@ -253,14 +199,14 @@ def _get_more_options(parser):
     # Calculation options:
 
 
-    parser.add_argument('--control',
+    p.add_argument('--control',
                         dest='control',
                         default=None,
                         type=validateNoneOrFile,
                         help='cmph.h5 file containing a control sample. Tool will perform a case-control analysis')
 
     # Temporary addition to test LDA for Ca5C detection:
-    parser.add_argument('--useLDA',
+    p.add_argument('--useLDA',
                         action="store_true",
                         dest='useLDA',
                         default=False,
@@ -270,66 +216,66 @@ def _get_more_options(parser):
 
     # Parameter options:
     defaultParamsPathSpec = _getResourcePathSpec()
-    parser.add_argument('--paramsPath',
+    p.add_argument('--paramsPath',
                         dest='paramsPath',
                         default=defaultParamsPathSpec,
                         type=validateNoneOrPathSpec,
                         help='List of :-delimited directory paths containing in-silico trained models (default is "%s")' % defaultParamsPathSpec)
 
-    parser.add_argument('--minCoverage',
+    p.add_argument('--minCoverage',
                         dest='minCoverage',
                         default=3,
                         type=int,
                         help='Minimum coverage required to call a modified base')
 
-    parser.add_argument('--maxQueueSize',
+    p.add_argument('--maxQueueSize',
                         dest='maxQueueSize',
                         default=20,
                         type=int,
                         help='Max Queue Size')
 
-    parser.add_argument('--maxCoverage',
+    p.add_argument('--maxCoverage',
                         dest='maxCoverage',
                         type=int, default=-1,
                         help='Maximum coverage to use at each site')
 
-    parser.add_argument('--mapQvThreshold',
+    p.add_argument('--mapQvThreshold',
                         dest='mapQvThreshold',
                         type=float,
                         default=-1.0)
 
-    parser.add_argument('--ipdModel',
+    p.add_argument('--ipdModel',
                         dest='ipdModel',
                         default=None,
                         type=validateNoneOrFile,
                         help='Alternate synthetic IPD model HDF5 file')
 
-    parser.add_argument('--modelIters',
+    p.add_argument('--modelIters',
                         dest='modelIters',
                         type=int,
                         default=-1,
                         help='[Internal] Number of GBM model iteration to use')
 
-    parser.add_argument('--cap_percentile',
+    p.add_argument('--cap_percentile',
                         dest='cap_percentile',
                         type=float,
                         default=99.0,
                         help='Global IPD percentile to cap IPDs at')
 
 
-    parser.add_argument("--methylMinCov",
+    p.add_argument("--methylMinCov",
                         type=int,
                         dest='methylMinCov',
                         default=10,
                         help="Do not try to estimate methylFraction unless coverage is at least this.")
 
-    parser.add_argument("--identifyMinCov",
+    p.add_argument("--identifyMinCov",
                         type=int,
                         dest='identifyMinCov',
                         default=5,
                         help="Do not try to identify the modification type unless coverage is at least this.")
 
-    parser.add_argument("--maxAlignments",
+    p.add_argument("--maxAlignments",
                         type=int,
                         dest="maxAlignments",
                         default=1500,
@@ -338,7 +284,7 @@ def _get_more_options(parser):
 
     # Computation management options:
 
-    parser.add_argument("-w", "--referenceWindow", "--referenceWindows",
+    p.add_argument("-w", "--referenceWindow", "--referenceWindows",
                              "--refContigs", # backwards compatibility
                              type=str,
                              dest='referenceWindowsAsString',
@@ -351,55 +297,55 @@ def _get_more_options(parser):
         return ",".join(map(str.strip, open(fname).readlines()))
 
 
-    parser.add_argument("--refContigIndex", type=int, dest='refContigIndex', default=-1,
+    p.add_argument("--refContigIndex", type=int, dest='refContigIndex', default=-1,
                              help="For debugging purposes only - rather than enter a reference contig name, simply enter an index" ) 
 
-    parser.add_argument("-W", "--referenceWindowsFile",
+    p.add_argument("-W", "--referenceWindowsFile",
                         "--refContigsFile", # backwards compatibility
                         type=slurpWindowFile,
                         dest='referenceWindowsAsString',
                         default=None,
                         help="A file containing reference window designations, one per line")
 
-    parser.add_argument("--skipUnrecognizedContigs",
+    p.add_argument("--skipUnrecognizedContigs",
                         type=bool,
                         default=False,
                         help="Whether to skip, or abort, unrecognized contigs in the -w/-W flags")
     # FIXME shouldn't it always do this?
-    parser.add_argument("--alignmentSetRefWindows",
+    p.add_argument("--alignmentSetRefWindows",
         action="store_true",
         dest="referenceWindowsFromAlignment",
         help="Use refWindows in dataset")
     
     # Debugging help options:
 
-    parser.add_argument("--threaded", "-T",
+    p.add_argument("--threaded", "-T",
                         action="store_true",
                         dest="threaded",
                         default=False,
                         help="Run threads instead of processes (for debugging purposes only)")
 
-    parser.add_argument("--profile",
+    p.add_argument("--profile",
                         action="store_true",
                         dest="doProfiling",
                         default=False,
                         help="Enable Python-level profiling (using cProfile).")
 
-    add_debug_option(parser)
+    add_debug_option(p)
 
-    parser.add_argument("--seed",
+    p.add_argument("--seed",
                         action="store",
                         dest="randomSeed",
                         type=int,
                         default=None,
                         help="Random seed (for development and debugging purposes only)")
 
-    parser.add_argument("--referenceStride", action="store", type=int,
+    p.add_argument("--referenceStride", action="store", type=int,
                         default=1000,
                         help="Size of reference window in internal "+
                              "parallelization.  For testing purposes only.")
 
-    return parser
+    return p
 
 
 class KineticsToolsRunner(object):
@@ -694,63 +640,22 @@ def monitorChildProcesses(children):
             return 0
         time.sleep(1)
 
+
 def args_runner(args):
     kt = KineticsToolsRunner(args)
     return kt.start()
 
-def resolved_tool_contract_runner(resolved_contract):
-    """
-    Run ipdSummary from a resolved tool contract.  This basically just
-    translates the contract into arguments that can be passed to the argparse
-    parser and then args_runner.
-
-    :param resolved_contract:
-    :type resolved_contract: ResolvedToolContract
-    :return: Exit code
-    """
-    rc = resolved_contract
-    alignment_path = rc.task.input_files[0]
-    reference_path = rc.task.input_files[1]
-    gff_path = rc.task.output_files[0]
-    bigwig_path = rc.task.output_files[1]
-    h5_path = rc.task.output_files[2]
-    args = [
-        alignment_path,
-        "--reference", reference_path,
-        "--gff", gff_path,
-        "--bigwig", bigwig_path,
-        "--csv_h5", h5_path,
-        "--numWorkers", str(rc.task.nproc),
-        "--pvalue", str(rc.task.options[Constants.PVALUE_ID]),
-        "--alignmentSetRefWindows",
-    ]
-    if not "PACBIO_TEST_ENV" in os.environ:
-        args.append("--verbose") # we need this for pbsmrtpipe debugging
-    if rc.task.options[Constants.MAX_LENGTH_ID]:
-        args.extend([
-            "--maxLength", str(rc.task.options[Constants.MAX_LENGTH_ID]),
-        ])
-    if rc.task.options[Constants.METHYL_FRACTION_ID]:
-        args.append("--methylFraction")
-    if rc.task.options[Constants.IDENTIFY_ID]:
-        args.extend([
-            "--identify", rc.task.options[Constants.IDENTIFY_ID],
-        ])
-    log.info("Converted arguments: ipdSummary {c}".format(c=" ".join(args)))
-    args_ = get_parser().arg_parser.parser.parse_args(args)
-    return args_runner(args_)
 
 def main(argv=sys.argv, out=sys.stdout):
     setup_log_ = functools.partial(setup_log,
         str_formatter='%(asctime)s [%(levelname)s] %(message)s')
     try:
-        return pbparser_runner(
+        return pacbio_args_runner(
             argv=argv[1:],
             parser=get_parser(),
             args_runner_func=args_runner,
-            contract_runner_func=resolved_tool_contract_runner,
             alog=logging.getLogger(__name__),
-            setup_log_func=setup_log_)
+            setup_log_func=setup_log)
     # FIXME is there a more central place to deal with this?
     except Exception as e:
         type, value, tb = sys.exc_info()

@@ -41,8 +41,7 @@ import os
 import logging
 import sys
 
-from pbcommand.models import FileTypes, get_pbparser
-from pbcommand.cli import pbparser_runner
+from pbcommand.cli import get_default_argparser_with_base_opts, pacbio_args_runner
 from pbcommand.utils import setup_log
 from pbcore.io import GffReader, Gff3Record
 
@@ -157,43 +156,26 @@ def args_runner(args):
         alignmentSummary=args.alignmentSummary,
         outfile=args.outfile).run()
 
-def resolved_tool_contract_runner(resolved_tool_contract):
-    rtc = resolved_tool_contract
-    return ModificationSummary(
-        modifications=rtc.task.input_files[0],
-        alignmentSummary=rtc.task.input_files[1],
-        outfile=rtc.task.output_files[0]).run()
-
 def get_parser():
-    p = get_pbparser(
-        tool_id=Constants.TOOL_ID,
+    p = get_default_argparser_with_base_opts(
         version=__version__,
-        name=Constants.TOOL_ID,
         description=__doc__,
-        driver_exe=Constants.DRIVER_EXE,
         default_level="INFO")
-    p.add_input_file_type(FileTypes.GFF, "modifications",
-        name="GFF file",
-        description="Base modification GFF file")
-    p.add_input_file_type(FileTypes.GFF, "alignmentSummary",
-        name="GFF file",
-        description="Alignment summary GFF")
-    p.add_output_file_type(FileTypes.GFF, "gff_out",
-        name="Coverage and Base Modifications Summary",
-        description="Coverage summary for regions (bins) spanning the reference with basemod results for each region",
-        default_name="alignment_summary_with_basemods")
+    p.add_argument("modifications",
+                   help="Base modification GFF file")
+    p.add_argument("alignmentSummary", help="Alignment summary GFF")
+    p.add_argument("gff_out",
+                   help="Coverage summary for regions (bins) spanning the reference with basemod results for each region")
     return p
 
 def main(argv=sys.argv):
-    mp = get_parser()
     setup_log_ = functools.partial(setup_log,
         str_formatter='%(asctime)s [%(levelname)s] %(message)s')
-    return pbparser_runner(
+    return pacbio_args_runner(
         argv=argv[1:],
-        parser=mp,
+        parser=get_parser(),
         args_runner_func=args_runner,
-        contract_runner_func=resolved_tool_contract_runner,
-        alog=logging.getLogger(__name__),
+        alog=log,
         setup_log_func=setup_log_)
 
 if __name__ == "__main__":
