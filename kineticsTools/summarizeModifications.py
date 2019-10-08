@@ -175,7 +175,7 @@ def main(argv=sys.argv):
         argv=argv[1:],
         parser=get_parser(),
         args_runner_func=args_runner,
-        alog=log,
+        alog=logging.getLogger(__name__),
         setup_log_func=setup_log_)
 
 if __name__ == "__main__":
