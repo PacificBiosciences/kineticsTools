@@ -1,12 +1,10 @@
 A simple test of the version and help options:
 
   $ ipdSummary --version
-  2.4.1
+  3.0
 
   $ ipdSummary
-  usage: ipdSummary [-h] [--version] [--emit-tool-contract]
-                    [--resolved-tool-contract RESOLVED_TOOL_CONTRACT]
-                    [--log-file LOG_FILE]
+  usage: ipdSummary [-h] [--version] [--log-file LOG_FILE]
                     [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL} | --debug | --quiet | -v]
                     --reference REFERENCE [--gff GFF] [--csv CSV]
                     [--bigwig BIGWIG] [--numWorkers NUMWORKERS]

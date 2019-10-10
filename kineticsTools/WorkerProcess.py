@@ -85,12 +85,10 @@ def _reopen (self):
     file(s) already loaded in memory while avoiding multiprocessing
     problems related to .bam files.
     """
-    refFile = None
-    if not self.isCmpH5:
-        refFile = self._referenceFile
+    refFile = self._referenceFile
     newSet = copy.deepcopy(self)
     newSet._referenceFastaFname = refFile
-    if not self.isCmpH5 and not self.hasPbi:
+    if not self.hasPbi:
         self.close()
         newSet._openFiles(refFile=refFile)
     else:
