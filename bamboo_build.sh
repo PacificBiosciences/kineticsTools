@@ -36,7 +36,11 @@ mkdir -p build/{bin,lib,include,share}
 PIP_INSTALL="${PIP} install --no-index --find-links=${WHEELHOUSE}"
 #PIP_INSTALL="${PIP} install -v"
 
-#$PIP_INSTALL --user pysam==0.15.2
+#export HTSLIB_CONFIGURE_OPTIONS="--disable-lzma"
+#export HTSLIB_LIBRARY_DIR=/mnt/software/h/htslib/1.9/lib
+#export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
+#$PIP install -v --user pysam==0.15.3
+
 #python -c 'import pysam as p; print(p)'
 #$PIP_INSTALL --user pyBigWig
 #python -c 'import pysam as p; print(p)'
@@ -54,4 +58,4 @@ ipdSummary -h
 
 $PIP_INSTALL --user pytest-xdist pytest-cov
 
-make test
+make -j3 test
