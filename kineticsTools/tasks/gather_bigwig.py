@@ -32,7 +32,7 @@ def gather_bigwig(input_files, output_file):
             file_id = i
         bw_chunk = pyBigWig.open(file_name)
         seqids = []
-        for (seqid, length) in bw_chunk.chroms().iteritems():
+        for (seqid, length) in bw_chunk.chroms().items():
             chr_lengths.setdefault(seqid, 0)
             chr_lengths[seqid] = max(length, chr_lengths[seqid])
             seqids.append(seqid)
@@ -42,7 +42,7 @@ def gather_bigwig(input_files, output_file):
         with open(output_file, "wb") as f:
             return output_file
     bw = pyBigWig.open(output_file, "w")
-    files_info.sort(lambda a, b: cmp(a.file_id, b.file_id))
+    files_info.sort(key=lambda f: f.file_id)
     regions = OrderedDict()
     seqid_files = defaultdict(list)
     for f in files_info:
@@ -53,9 +53,9 @@ def gather_bigwig(input_files, output_file):
                                                   l=chr_lengths[seqid]))
             regions[seqid] = chr_lengths[seqid]
             seqid_files[seqid].append(f)
-    bw.addHeader([(k, v) for k, v in regions.iteritems()])
+    bw.addHeader([(k, v) for k, v in regions.items()])
     seq_chunk = namedtuple("SeqChunk", ("starts", "ends", "values"))
-    for (seqid, length) in regions.iteritems():
+    for (seqid, length) in regions.items():
         log.info("Collecting values for {i}...".format(i=seqid))
         chunks = []
         k = 0
@@ -72,7 +72,7 @@ def gather_bigwig(input_files, output_file):
                     k += 1
             chunks.append(seq_chunk(starts, ends, values))
             bw_chunk.close()
-        chunks.sort(lambda a, b: cmp(a.starts[0], b.starts[0]))
+        chunks.sort(key=lambda c: c.starts[0])
         starts = list(itertools.chain(*[x.starts for x in chunks]))
         ends = list(itertools.chain(*[x.ends for x in chunks]))
         values = list(itertools.chain(*[x.values for x in chunks]))

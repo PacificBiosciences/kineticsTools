@@ -41,6 +41,9 @@ py-tests:
 extra-tests:
 	cram --xunit-file=cramtests-extra.xml test/cram/extra/*.t
 
+pylint:
+	pylint --errors-only --extension-pkg-whitelist=numpy,scipy --ignored-modules=numpy,scipy --ignored-classes=numpy,scipy kineticsTools
+
 pip-install:
 	@which pip > /dev/null
 	@pip freeze|grep 'kineticsTools=='>/dev/null \

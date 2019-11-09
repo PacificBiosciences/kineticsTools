@@ -1,6 +1,8 @@
-from __future__ import absolute_import
-# Positive Control Enricher class
+# pylint: skip-file
+# FIXME this is currently non-functional and not used anywhere, should we
+# remove it?
 
+from __future__ import absolute_import
 from math import sqrt
 import math
 import scipy.stats as s
@@ -12,8 +14,8 @@ from numpy import *
 from numpy import log, pi, log10, e, log1p, exp
 import numpy as np
 
-from .MultiSiteCommon import MultiSiteCommon
-from .MixtureEstimationMethods import MixtureEstimationMethods
+from kineticsTools.MultiSiteCommon import MultiSiteCommon
+from kineticsTools.MixtureEstimationMethods import MixtureEstimationMethods
 
 
 class PositiveControlEnricher(MultiSiteCommon):

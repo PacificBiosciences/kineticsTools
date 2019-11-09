@@ -71,7 +71,7 @@ class _TestBase(object):
         self.contigs = ReferenceUtils.loadReferenceContigs(ref, self.ds)
         self.ipdModel = IpdModel(self.contigs, os.path.join(resourcesDir, "P6-C4.h5"))
         # Create a functional KineticWorker object that can be poked at
-        self.kw = KineticWorker(self.ipdModel)
+        self.kw = KineticWorker(self.ipdModel, None)
         # Put in our cmp.h5 - this is normally supplied by the Worker
         self.kw.caseCmpH5 = self.ds
         self.kw.controlCmpH5 = None

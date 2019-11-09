@@ -52,7 +52,7 @@ class ModificationDecode(MultiSiteCommon):
         # Extents that we will attemp to call a modification
         self.callStart = callBounds[0]
         self.callEnd = callBounds[1]
-        self.callRange = xrange(self.callStart, self.callEnd)
+        self.callRange = range(self.callStart, self.callEnd)
 
         self.methylMinCov = methylMinCov
         self.modsToCall = modsToCall
@@ -151,7 +151,7 @@ class ModificationDecode(MultiSiteCommon):
         fwdScore[start] = scores[start]
         fwdPrevState[start] = dict((x, None) for x in scores[start].keys())
 
-        for centerPos in xrange(start + 1, end):
+        for centerPos in range(start + 1, end):
 
             # Score and fwd column for current position
             scoreCol = dict()
@@ -262,12 +262,12 @@ class ModificationDecode(MultiSiteCommon):
 
         qvModCalls = dict()
 
-        modSeq = a.array('c')
+        modSeq = a.array('b')
         modSeq.fromstring(self.sequence)
 
         # Apply the found modifications to the raw sequence
         for (pos, call) in modCalls.items():
-            modSeq[pos] = call
+            modSeq[pos] = ord(call)
 
         for (pos, call) in modCalls.items():
 
@@ -280,7 +280,7 @@ class ModificationDecode(MultiSiteCommon):
                     modifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
 
             # Switch back to the unmodified base and re-score
-            modSeq[pos] = canonicalBaseMap[call]
+            modSeq[pos] = ord(canonicalBaseMap[call])
             noModScore = self.scoreRegion(pos - self.post, pos + self.pre, modSeq)
             noModScores = self.getRegionScores(pos - self.post, pos + self.pre, modSeq)
 
@@ -289,7 +289,7 @@ class ModificationDecode(MultiSiteCommon):
                     unModifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
 
             # Put back the modified base
-            modSeq[pos] = call
+            modSeq[pos] = ord(call)
 
             # Compute score difference
             llr = modScore - noModScore
@@ -332,8 +332,8 @@ class ModificationDecode(MultiSiteCommon):
     def scoreRegion(self, start, end, sequence):
 
         sc = 0.0
-        for pos in xrange(start, end + 1):
-            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
+        for pos in range(start, end + 1):
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring().decode("ascii")
             if pos in self.scores:
                 sc += self.scores[pos][ctx]
 
@@ -342,8 +342,8 @@ class ModificationDecode(MultiSiteCommon):
     def getRegionScores(self, start, end, sequence):
         scores = np.zeros(end - start + 1)
 
-        for pos in xrange(start, end + 1):
-            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
+        for pos in range(start, end + 1):
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring().decode("ascii")
             if pos in self.scores:
                 scores[pos - start] = self.scores[pos][ctx]
 
@@ -355,7 +355,7 @@ class ModificationDecode(MultiSiteCommon):
         start = pos - self.post
         end = pos + self.pre
 
-        for i in xrange(start, end + 1):
+        for i in range(start, end + 1):
             # Add a neighboring peak to the mask if
             # a) it has a single-site qv > 20
             # b) the observed IPDs are somewhat more likely under the modified hypothesis than the unmodified hypothesis

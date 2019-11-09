@@ -35,7 +35,7 @@ import logging
 import os.path
 import os
 from multiprocessing import Process
-import cPickle
+import pickle
 import sys
 import math
 import re
@@ -310,8 +310,8 @@ class KineticsWriter(ResultCollectorProcess):
                     records.append(rec)
                     records_by_pos[(rec.seqid, rec.pos)].append(rec)
         except GeneratorExit:
-            records.sort(lambda a, b: cmp(a.pos, b.pos))
-            records.sort(lambda a, b: cmp(a.seqid, b.seqid))
+            records.sort(key=lambda x: x.pos)
+            records.sort(key=lambda x: x.seqid)
             regions = [(s, ranges[s][1]-1) for s in sorted(ranges.keys())]
             if len(regions) == 0:
                 with open(filename, "wb") as _:
@@ -704,7 +704,7 @@ class KineticsWriter(ResultCollectorProcess):
         """
 
         f = open(fileName, "w")
-        pickleStream = cPickle.Pickler(f)
+        pickleStream = pickle.Pickler(f)
 
         try:
             while True:
@@ -791,7 +791,6 @@ class KineticsWriter(ResultCollectorProcess):
                           strand=strand,
                           source='kinModCall',
                           attributes=attributes)
-        return rec
 
     @consumer
     def gffConsumer(self, filename):

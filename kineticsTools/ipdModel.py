@@ -28,14 +28,20 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #################################################################################
 
+from pkg_resources import Requirement, resource_filename
 import logging
+import os.path as op
 import os
 import re
+
 import h5py
 import numpy as np
 import ctypes as C
+
 from kineticsTools.sharedArray import SharedArray
-from pkg_resources import Requirement, resource_filename
+
+# XXX can this vary?
+LINUX_SO_FILE = "tree_predict.cpython-37m-x86_64-linux-gnu.so"
 
 byte = np.dtype('byte')
 float32 = np.dtype('float32')
@@ -87,7 +93,7 @@ class GbmContextModel(object):
         def ds(name):
             return modelH5Group[name][:]
 
-        self.varNames = ds("VarNames")
+        self.varNames = [v.decode("ascii") for v in ds("VarNames")]
         self.modFeatureIdx = dict((int(self.varNames[x][1:]), x) for x in range(len(self.varNames)) if self.varNames[x][0] == 'M')
         self.canonicalFeatureIdx = dict((int(self.varNames[x][1:]), x) for x in range(len(self.varNames)) if self.varNames[x][0] == 'R')
 
@@ -134,7 +140,7 @@ class GbmContextModel(object):
 
         powOfTwo = 2 ** np.arange(self.maxCSplits)
 
-        for i in xrange(self.splitCodesCtx.shape[0]):
+        for i in range(self.splitCodesCtx.shape[0]):
 
             if flatSplitVar[i] != -1:
                 # This is a pointer to a cSplit row -- pack the csplit into a unit32, then overwirte
@@ -154,25 +160,11 @@ class GbmContextModel(object):
         Needs to be invoked lazily because the native function pointer cannot be pickled
         """
 
-        import platform
-
-        if platform.system() == "Windows":
-
-            libfn = "tree_predict.dll"
-            path = os.path.dirname(os.path.abspath(__file__))
-            windowsLib = path + os.path.sep + libfn
-
-            if os.path.exists(windowsLib):
-                self._lib = np.ctypeslib.load_library(libfn, path)
-            else:
-                raise Exception("can't find tree_predict.dll")
+        DLL_PATH = op.dirname(_getAbsPath(LINUX_SO_FILE))
+        if os.path.exists(DLL_PATH):
+            self._lib = np.ctypeslib.load_library("tree_predict", DLL_PATH)
         else:
-            DLL_PATH = _getAbsPath("tree_predict.so")
-
-            if os.path.exists(DLL_PATH):
-                self._lib = np.ctypeslib.load_library("tree_predict.so", DLL_PATH)
-            else:
-                raise Exception("can't find tree_predict.so at '{}'".format(DLL_PATH))
+            raise ImportError("can't find tree_predict.so at '{}'".format(DLL_PATH))
 
         lpb = self._lib
 
@@ -225,13 +217,13 @@ class GbmContextModel(object):
 
         n = len(ctxStrings)
 
-        mCols = [np.zeros(n, dtype=np.float32) for x in xrange(self.ctxSize)]
-        rCols = [np.zeros(n, dtype=np.float32) for x in xrange(self.ctxSize)]
+        mCols = [np.zeros(n, dtype=np.float32) for x in range(self.ctxSize)]
+        rCols = [np.zeros(n, dtype=np.float32) for x in range(self.ctxSize)]
 
-        for stringIdx in xrange(len(ctxStrings)):
+        for stringIdx in range(len(ctxStrings)):
             s = ctxStrings[stringIdx]
 
-            for i in xrange(len(s)):
+            for i in range(len(s)):
                 mCols[i][stringIdx] = baseToCode[s[i]]
                 rCols[i][stringIdx] = baseToCanonicalCode[s[i]]
 
@@ -239,7 +231,7 @@ class GbmContextModel(object):
 
         varTypes = np.zeros(2 * self.ctxSize, dtype=np.int32)
 
-        for i in xrange(self.ctxSize):
+        for i in range(self.ctxSize):
             dataPtrs[self.modFeatureIdx[i]] = mCols[i].ctypes.data_as(C.POINTER(C.c_float))
             dataPtrs[self.canonicalFeatureIdx[i]] = rCols[i].ctypes.data_as(C.POINTER(C.c_float))
 
@@ -290,11 +282,11 @@ class GbmContextModel(object):
 
         packCol = np.zeros(n, dtype=np.uint64)
 
-        for stringIdx in xrange(len(ctxStrings)):
-            s = ctxStrings[stringIdx]
+        for stringIdx in range(len(ctxStrings)):
+            s = ctxStrings[stringIdx] #.strip().strip('\x00')
             code = 0
 
-            for i in xrange(len(s)):
+            for i in range(len(s)):
                 modBits = baseToCode[s[i]]
 
                 slotForPosition = self.modFeatureIdx[i]
@@ -311,7 +303,7 @@ class GbmContextModel(object):
 
         varTypes = np.zeros(2 * self.ctxSize, dtype=np.int32)
 
-        for i in xrange(self.ctxSize):
+        for i in range(self.ctxSize):
             varTypes[self.modFeatureIdx[i]] = 8
             varTypes[self.canonicalFeatureIdx[i]] = 4
 
@@ -360,7 +352,7 @@ class IpdModel:
                 continue
 
             rawSeq = contig.sequence[:]
-            refSeq = np.frombuffer(rawSeq, dtype=byte)
+            refSeq = np.frombuffer(rawSeq.encode("utf-8"), dtype=byte)
 
             # Store the reference length
             self.refLengthDict[contig.cmph5ID] = len(rawSeq)
@@ -467,13 +459,13 @@ class IpdModel:
             if tplStrand == 0:
                 slc = refArray[(tplPos - pre):(tplPos + 1 + post)]
                 slc = np.right_shift(slc, 4)
-                return seqMapNp[slc].tostring()
+                return "".join(c for c in seqMapNp[slc])
 
             # Reverse strand
             else:
                 slc = refArray[(tplPos + pre):(tplPos - post - 1):-1]
                 slc = np.right_shift(slc, 4)
-                return seqMapComplementNp[slc].tostring()
+                return "".join(c for c in seqMapComplementNp[slc])
 
         return f
 

@@ -136,7 +136,7 @@ class ReferenceUtils():
             boundaries on multiple of stride.
             """
             def alignDown(chunk, x):
-                return (x/chunk)*chunk
+                return (x//chunk)*chunk
             def alignUp(chunk, x):
                 return int(math.ceil(float(x)/chunk)*chunk)
 
@@ -144,7 +144,7 @@ class ReferenceUtils():
             roundStart = alignDown(stride, start)
             roundEnd   = alignUp  (stride, end)
 
-            for s in xrange(roundStart, roundEnd, stride):
+            for s in range(roundStart, roundEnd, stride):
                 roundWin = (s, s + stride)
                 yield intersection(bounds, roundWin)
 
