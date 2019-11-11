@@ -31,6 +31,7 @@
 # FIXME all of this belongs somewhere else (probably either pbcore.io.dataset
 # or a future base module for resequencing apps)
 
+from __future__ import division
 from collections import namedtuple
 import itertools
 import math

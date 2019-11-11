@@ -46,7 +46,10 @@ import multiprocessing
 import time
 import threading
 import numpy as np
-import queue
+try:
+   import queue
+except ImportError:
+   import Queue as queue
 import traceback
 from pkg_resources import Requirement, resource_filename
 
