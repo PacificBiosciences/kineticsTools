@@ -1,4 +1,4 @@
-#!/usr/bin/env pytho3
+#!/usr/bin/env python3
 #################################################################################
 # Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
 #
