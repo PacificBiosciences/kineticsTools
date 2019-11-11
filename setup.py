@@ -20,6 +20,7 @@ setup(
         'h5py >= 1.3.0',
         'scipy >= 0.9.0',
         'pbcommand >= 0.3.22',
+        'future >= 0.16.0',
         'pyBigWig'
     ],
     entry_points={'console_scripts': [

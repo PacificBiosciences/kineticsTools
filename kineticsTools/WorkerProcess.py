@@ -34,9 +34,9 @@ import os.path
 import copy
 from multiprocessing import Process
 from multiprocessing.process import current_process
-from urllib.parse import urlparse
 import warnings
 
+from future.moves.urllib.parse import urlparse
 import numpy as np
 
 from pbcore.io import AlignmentSet
