@@ -6,3 +6,4 @@ kineticsTools.egg-info/
 /cramtests.xml
 /nosetests.xml
 /tree_predict.so
+test/cram/*.err

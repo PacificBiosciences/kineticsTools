@@ -76,6 +76,7 @@ def _openFiles(self, refFile=None, sharedIndices=None):
         raise IOError("No mapped reads found")
     log.debug("Done opening resources")
 
+
 def _reopen (self):
     """
     Force re-opening of underlying alignment files, preserving the
@@ -87,13 +88,9 @@ def _reopen (self):
     refFile = self._referenceFile
     newSet = copy.deepcopy(self)
     newSet._referenceFastaFname = refFile
-    if not self.hasPbi:
-        self.close()
-        newSet._openFiles(refFile=refFile)
-    else:
-        indices = [ f.index for f in self.resourceReaders() ]
-        self.close()
-        _openFiles(newSet, refFile=refFile, sharedIndices=indices)
+    indices = [ f.index for f in self.resourceReaders() ]
+    self.close()
+    _openFiles(newSet, refFile=refFile, sharedIndices=indices)
     return newSet
 
 
