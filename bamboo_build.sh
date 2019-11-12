@@ -8,6 +8,7 @@ module purge
 module load python/2
 module load htslib
 module load hdf5-tools  # for h5ls
+module load zlib
 set -vex
 
 which gcc
