@@ -33,7 +33,7 @@ export WHEELHOUSE
 
 rm -rf   build
 mkdir -p build/{bin,lib,include,share}
-PIP_INSTALL="${PIP} install --no-index --find-links=${WHEELHOUSE}"
+PIP_INSTALL="${PIP} install " #--no-index --find-links=${WHEELHOUSE}"
 #PIP_INSTALL="${PIP} install -v"
 
 #export HTSLIB_CONFIGURE_OPTIONS="--disable-lzma"
@@ -45,10 +45,6 @@ PIP_INSTALL="${PIP} install --no-index --find-links=${WHEELHOUSE}"
 #$PIP_INSTALL --user pyBigWig
 #python -c 'import pysam as p; print(p)'
 
-$PIP_INSTALL --user -r requirements-ci.txt
-python -c 'import pysam as p; print(p)'
-$PIP_INSTALL --user -r requirements-dev.txt
-python -c 'import pysam as p; print(p)'
 #iso8601 xmlbuilder tabulate pysam avro?
 $PIP install --user ./
 python -c 'import pysam as p; print(p)'
@@ -56,6 +52,6 @@ python -c 'import pysam as p; print(p)'
 # Sanity-test for linkage errors.
 ipdSummary -h
 
-$PIP_INSTALL --user pytest-xdist pytest-cov
+$PIP_INSTALL --user pytest pytest-xdist pytest-cov
 
 make -j3 test
