@@ -9,6 +9,7 @@ module load python/2
 module load htslib/1.9
 module load hdf5-tools  # for h5ls
 module load zlib
+module load cram
 set -vex
 
 which gcc
