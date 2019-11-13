@@ -47,6 +47,7 @@ export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
 #python -c 'import pysam as p; print(p)'
 
 #iso8601 xmlbuilder tabulate pysam avro?
+$PIP install --user attrs==19.1.0
 $PIP install --user ./
 python -c 'import pysam as p; print(p)'
 
