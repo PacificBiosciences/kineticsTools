@@ -9,6 +9,7 @@ module load python/2
 module load htslib/1.9
 module load hdf5-tools  # for h5ls
 module load zlib
+module load cram
 set -vex
 
 which gcc
@@ -47,12 +48,13 @@ export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
 #python -c 'import pysam as p; print(p)'
 
 #iso8601 xmlbuilder tabulate pysam avro?
-$PIP install --user ./
+$PIP_INSTALL --user ./
 python -c 'import pysam as p; print(p)'
 
 # Sanity-test for linkage errors.
 ipdSummary -h
 
+$PIP_INSTALL --user --upgrade pytest
 $PIP_INSTALL --user pytest pytest-xdist pytest-cov
 
 make -j3 test
