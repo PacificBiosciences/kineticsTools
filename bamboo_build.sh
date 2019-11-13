@@ -54,6 +54,7 @@ python -c 'import pysam as p; print(p)'
 # Sanity-test for linkage errors.
 ipdSummary -h
 
+$PIP_INSTALL --user --upgrade pytest
 $PIP_INSTALL --user pytest pytest-xdist pytest-cov
 
 make -j3 test
