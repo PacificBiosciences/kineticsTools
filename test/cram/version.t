@@ -25,7 +25,7 @@ A simple test of the version and help options:
                     [--refContigIndex REFCONTIGINDEX]
                     [-W REFERENCEWINDOWSASSTRING]
                     [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
-                    [--alignmentSetRefWindows] [--threaded] [--profile] [--pdb]
+                    [--alignmentSetRefWindows] [--profile] [--pdb]
                     [--seed RANDOMSEED] [--referenceStride REFERENCESTRIDE]
                     alignment_set
   ipdSummary: error: too few arguments
