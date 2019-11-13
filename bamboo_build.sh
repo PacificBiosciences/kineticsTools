@@ -34,7 +34,7 @@ export WHEELHOUSE
 
 rm -rf   build
 mkdir -p build/{bin,lib,include,share}
-PIP_INSTALL="${PIP} install " #--no-index --find-links=${WHEELHOUSE}"
+PIP_INSTALL="${PIP} install --no-index --find-links=${WHEELHOUSE}"
 #PIP_INSTALL="${PIP} install -v"
 
 export HTSLIB_MODE='external'
@@ -47,7 +47,6 @@ export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
 #python -c 'import pysam as p; print(p)'
 
 #iso8601 xmlbuilder tabulate pysam avro?
-$PIP install --user attrs==19.1.0
 $PIP install --user ./
 python -c 'import pysam as p; print(p)'
 
