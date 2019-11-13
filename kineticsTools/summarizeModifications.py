@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #################################################################################
 # Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
 #
@@ -103,50 +103,46 @@ class ModificationSummary(object):
         hits = [{"pos": x.start, "strand": x.strand, "seqid": x.seqid, "type": x.type}
                 for x in modReader if x.type in self.knownModificationEvents]
 
-        # Summary reader
-        summaryFile = file(self.alignmentSummary)
-
-        # Modified gff file
-        summaryWriter = file(self.outfile, "w")
-
         self.seqMap = {}
         inHeader = True
 
         # Loop through
-        for line in summaryFile:
-            # Pass any metadata line straight through
-            if line[0] == "#":
+        with open(self.alignmentSummary) as summaryFile:
+            with open(self.outfile, "w") as summaryWriter:
+                for line in summaryFile:
+                    # Pass any metadata line straight through
+                    if line[0] == "#":
 
-                # Parse headers
-                splitFields = line.replace('#', '').split(' ')
-                field = splitFields[0]
-                value = " ".join(splitFields[1:])
-                if field == 'sequence-header':
-                    [internalTag, delim, externalTag] = value.strip().partition(' ')
-                    self.seqMap[internalTag] = externalTag
-                print(line.strip(), file=summaryWriter)
-                continue
+                        # Parse headers
+                        splitFields = line.replace('#', '').split(' ')
+                        field = splitFields[0]
+                        value = " ".join(splitFields[1:])
+                        if field == 'sequence-header':
+                            [internalTag, delim, externalTag] = value.strip().partition(' ')
+                            self.seqMap[internalTag] = externalTag
+                        print(line.strip(), file=summaryWriter)
+                        continue
 
-            if inHeader:
-                # We are at the end of the header -- write the tool-specific headers
-                for field in headers:
-                    print(("##%s %s" % field), file=summaryWriter)
-                inHeader = False
+                    if inHeader:
+                        # We are at the end of the header -- write the tool-specific headers
+                        for field in headers:
+                            print(("##%s %s" % field), file=summaryWriter)
+                        inHeader = False
 
-            # Parse the line
-            rec = Gff3Record.fromString(line)
+                    # Parse the line
+                    rec = Gff3Record.fromString(line)
 
-            if rec.type == 'region':
-                # Get the hits in this interval, add them to the gff record
-                intervalHits = [h for h in hits if rec.start <= h['pos'] <= rec.end and rec.seqid == h['seqid']]
+                    if rec.type == 'region':
+                        # Get the hits in this interval, add them to the gff record
+                        intervalHits = [h for h in hits if rec.start <= h['pos'] <= rec.end and rec.seqid == h['seqid']]
 
-                cFwd = self.countModificationTypes([h for h in intervalHits if h['strand'] == '+'])
-                cRev = self.countModificationTypes([h for h in intervalHits if h['strand'] == '-'])
+                        cFwd = self.countModificationTypes([h for h in intervalHits if h['strand'] == '+'])
+                        cRev = self.countModificationTypes([h for h in intervalHits if h['strand'] == '-'])
 
-                rec.modsfwd = ",".join([str(cFwd[x]) for x in self.knownModificationEvents])
-                rec.modsrev = ",".join([str(cRev[x]) for x in self.knownModificationEvents])
+                        rec.modsfwd = ",".join([str(cFwd[x]) for x in self.knownModificationEvents])  # pylint: disable=assigning-non-slot
+                        rec.modsrev = ",".join([str(cRev[x]) for x in self.knownModificationEvents])  # pylint: disable=assigning-non-slot
 
-                print(str(rec), file=summaryWriter)
+                        print(str(rec), file=summaryWriter)
         return 0
 
 
@@ -154,7 +150,7 @@ def args_runner(args):
     return ModificationSummary(
         modifications=args.modifications,
         alignmentSummary=args.alignmentSummary,
-        outfile=args.outfile).run()
+        outfile=args.gff_out).run()
 
 def get_parser():
     p = get_default_argparser_with_base_opts(

@@ -92,7 +92,7 @@ class MixtureEstimationMethods(object):
         # self.callEnd = callBounds[1]
 
         # Extents that we will attemp to call a modification
-        # self.callRange = xrange(self.callStart, self.callEnd)
+        # self.callRange = range(self.callStart, self.callEnd)
 
         # These switch because we changing viewpoints
         self.pre = gbmModelPost
@@ -102,8 +102,8 @@ class MixtureEstimationMethods(object):
         # self.lEnd = len(self.sequence) - self.post
 
         # Extents that we will use for likelihoods
-        # self.likelihoodRange = xrange(self.lStart, self.lEnd)
-        # self.alternateBases = dict((x, set(sequence[x])) for x in xrange(len(sequence)))
+        # self.likelihoodRange = range(self.lStart, self.lEnd)
+        # self.alternateBases = dict((x, set(sequence[x])) for x in range(len(sequence)))
 
         self.rawKinetics = rawKinetics
 

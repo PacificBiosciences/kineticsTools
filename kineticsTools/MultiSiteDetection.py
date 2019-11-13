@@ -106,7 +106,7 @@ class MultiSiteDetection(object):
         self.callEnd = callBounds[1]
 
         # Extents that we will attempt to call a modification
-        self.callRange = xrange(self.callStart, self.callEnd)
+        self.callRange = range(self.callStart, self.callEnd)
 
         # These switch because we changing viewpoints
         self.pre = gbmModel.post
@@ -116,9 +116,9 @@ class MultiSiteDetection(object):
         self.lEnd = len(self.sequence) - self.post
 
         # Extents that we will use for likelihoods
-        self.likelihoodRange = xrange(self.lStart, self.lEnd)
+        self.likelihoodRange = range(self.lStart, self.lEnd)
 
-        self.alternateBases = dict((x, list(sequence[x])) for x in xrange(len(sequence)))
+        self.alternateBases = dict((x, list(sequence[x])) for x in range(len(sequence)))
 
         self.rawKinetics = rawKinetics
 
@@ -163,7 +163,7 @@ class MultiSiteDetection(object):
     def getContexts(self, start, end, sequence):
         contexts = []
 
-        for pos in xrange(start, end + 1):
+        for pos in range(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             contexts.append(ctx)
 
@@ -175,7 +175,7 @@ class MultiSiteDetection(object):
         allContexts = []
 
         for pos in self.motifPositions:
-            for offsetPos in xrange(pos - self.post, pos + self.pre + 1):
+            for offsetPos in range(pos - self.post, pos + self.pre + 1):
                 cfgs = self.getConfigs(offsetPos)
                 allContexts.extend(cfgs)
 
@@ -221,7 +221,7 @@ class MultiSiteDetection(object):
         obsErr = np.zeros(nullPred.shape)
 
         # Get the observations into the same array format
-        for i in xrange(len(positions)):
+        for i in range(len(positions)):
             position = positions[i]
 
             if position in self.rawKinetics:
@@ -300,7 +300,7 @@ class MultiSiteDetection(object):
                 dnaSeq[pos] = originalBase
 
                 # Position that contribute to this call
-                positions = xrange(pos - self.post, pos + self.pre + 1)
+                positions = range(pos - self.post, pos + self.pre + 1)
 
                 # Run the multi-site detection and save the results
                 centerStats = self.rawKinetics[pos]
@@ -313,7 +313,7 @@ class MultiSiteDetection(object):
     def getRegionPredictions(self, start, end, sequence):
         predictions = np.zeros(end - start + 1)
 
-        for pos in xrange(start, end + 1):
+        for pos in range(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             predictions[pos - start] = self.contextMeanTable[ctx]
 

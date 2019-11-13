@@ -11,7 +11,7 @@ Load in data:
 
 Run basic ipdSummary:
 
-  $ ipdSummary --log-level=WARNING --gff tmp1.gff --csv tmp1.csv --numWorkers 4 --pvalue 0.001 --identify m6A,m4C --reference $REF_SEQ $INPUT
+  $ ipdSummary --log-level=WARNING --gff tmp1.gff --csv tmp1.csv --numWorkers 4 --pvalue 0.001 --identify m6A,m4C --reference $REF_SEQ --useChemistry P6-C4 $INPUT
 
 Look at output csv file:
 

@@ -87,8 +87,8 @@ class MultiSiteCommon(object):
         self.lEnd = len(self.sequence) - self.post
 
         # Extents that we will use for likelihoods
-        self.likelihoodRange = xrange(self.lStart, self.lEnd)
-        self.alternateBases = dict((x, set(sequence[x])) for x in xrange(len(sequence)))
+        self.likelihoodRange = range(self.lStart, self.lEnd)
+        self.alternateBases = dict((x, set(sequence[x])) for x in range(len(sequence)))
 
         self.rawKinetics = rawKinetics
 
@@ -167,7 +167,7 @@ class MultiSiteCommon(object):
     # Return expected IPDs for a portion [start, end] of the sequence.
     def getContextMeans(self, start, end, sequence):
         meanVector = []
-        for pos in xrange(start, end + 1):
+        for pos in range(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             if ctx in self.contextMeanTable:
                 meanVector.append(self.contextMeanTable[ctx])

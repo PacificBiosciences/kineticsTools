@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #################################################################################
 # Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
 #
@@ -46,7 +46,10 @@ import multiprocessing
 import time
 import threading
 import numpy as np
-import Queue
+try:
+   import queue
+except ImportError:
+   import Queue as queue
 import traceback
 from pkg_resources import Requirement, resource_filename
 
@@ -55,7 +58,7 @@ from pbcommand.cli import get_default_argparser_with_base_opts, pacbio_args_runn
 from pbcommand.utils import setup_log
 from pbcore.io import AlignmentSet
 
-from kineticsTools.KineticWorker import KineticWorkerThread, KineticWorkerProcess
+from kineticsTools.KineticWorker import KineticWorkerProcess
 from kineticsTools.ResultWriter import KineticsWriter
 from kineticsTools.ipdModel import IpdModel
 from kineticsTools.ReferenceUtils import ReferenceUtils
@@ -197,8 +200,6 @@ def get_parser():
 
 
     # Calculation options:
-
-
     p.add_argument('--control',
                         dest='control',
                         default=None,
@@ -221,6 +222,12 @@ def get_parser():
                         default=defaultParamsPathSpec,
                         type=validateNoneOrPathSpec,
                         help='List of :-delimited directory paths containing in-silico trained models (default is "%s")' % defaultParamsPathSpec)
+
+    # XXX hacky workaround for running tests using obsolete chemistry inputs
+    p.add_argument("--useChemistry",
+                   dest="useChemistry",
+                   default=None,
+                   help=argparse.SUPPRESS)
 
     p.add_argument('--minCoverage',
                         dest='minCoverage',
@@ -318,13 +325,6 @@ def get_parser():
         help="Use refWindows in dataset")
     
     # Debugging help options:
-
-    p.add_argument("--threaded", "-T",
-                        action="store_true",
-                        dest="threaded",
-                        default=False,
-                        help="Run threads instead of processes (for debugging purposes only)")
-
     p.add_argument("--profile",
                         action="store_true",
                         dest="doProfiling",
@@ -421,30 +421,20 @@ class KineticsToolsRunner(object):
                 ret = self._mainLoop()
             finally:
                 # Be sure to shutdown child processes if we get an exception on the main thread
-                if not self.args.threaded:
-                    for w in self._workers:
-                        if w.is_alive():
-                            w.terminate()
+                for w in self._workers:
+                    if w.is_alive():
+                        w.terminate()
 
             return ret
 
     def _initQueues(self):
-        if self.options.threaded:
-            # Work chunks are created by the main thread and put on this queue
-            # They will be consumed by KineticWorker threads, stored in self._workers
-            self._workQueue = Queue.Queue(self.options.maxQueueSize)
+        # Work chunks are created by the main thread and put on this queue
+        # They will be consumed by KineticWorker threads, stored in self._workers
+        self._workQueue = multiprocessing.JoinableQueue(self.options.maxQueueSize)
 
-            # Completed chunks are put on this queue by KineticWorker threads
-            # They are consumed by the KineticsWriter process
-            self._resultsQueue = multiprocessing.JoinableQueue(self.options.maxQueueSize)
-        else:
-            # Work chunks are created by the main thread and put on this queue
-            # They will be consumed by KineticWorker threads, stored in self._workers
-            self._workQueue = multiprocessing.JoinableQueue(self.options.maxQueueSize)
-
-            # Completed chunks are put on this queue by KineticWorker threads
-            # They are consumed by the KineticsWriter process
-            self._resultsQueue = multiprocessing.JoinableQueue(self.options.maxQueueSize)
+        # Completed chunks are put on this queue by KineticWorker threads
+        # They are consumed by the KineticsWriter process
+        self._resultsQueue = multiprocessing.JoinableQueue(self.options.maxQueueSize)
 
     def _launchSlaveProcesses(self):
         """
@@ -471,16 +461,13 @@ class KineticsToolsRunner(object):
 
         self._initQueues()
 
-        if self.options.threaded:
-            self.options.numWorkers = 1
-            WorkerType = KineticWorkerThread
-        else:
-            WorkerType = KineticWorkerProcess
-        
         # Launch the worker processes
         self._workers = []
-        for i in xrange(self.options.numWorkers):
-            p = WorkerType(self.options, self._workQueue, self._resultsQueue,
+        for i in range(self.options.numWorkers):
+            p = KineticWorkerProcess(
+                self.options,
+                self._workQueue,
+                self._resultsQueue,
                 self.ipdModel,
                 sharedAlignmentSet=self.alignments)
             self._workers.append(p)
@@ -513,15 +500,15 @@ class KineticsToolsRunner(object):
             alignmentSet=self.alignments, windows=self.referenceWindows)
         self.ipdModel = IpdModel(contigs, ipdModelFilename, self.args.modelIters)
 
-    def loadSharedAlignmentSet(self, cmpH5Filename):
+    def loadSharedAlignmentSet(self, alignmentFilename):
         """
         Read the input AlignmentSet so the indices can be shared with the
         slaves.  This is also used to pass to ReferenceUtils for setting up
         the ipdModel object.
         """
-        logging.info("Reading AlignmentSet: %s" % cmpH5Filename)
+        logging.info("Reading AlignmentSet: %s" % alignmentFilename)
         logging.info("           reference: %s" % self.args.reference)
-        self.alignments = AlignmentSet(cmpH5Filename,
+        self.alignments = AlignmentSet(alignmentFilename,
                                        referenceFastaFname=self.args.reference)
         # XXX this should ensure that the file(s) get opened, including any
         # .pbi indices - but need to confirm this
@@ -570,9 +557,13 @@ class KineticsToolsRunner(object):
                 self.refInfo)
 
         # Load reference and IpdModel
+        chemName = ReferenceUtils.loadAlignmentChemistry(self.alignments)
+        if self.args.useChemistry is not None:
+            chemName = self.args.useChemistry
         ipdModelFilename = basic.getIpdModelFilename(
-                self.args.ipdModel, ReferenceUtils.loadAlignmentChemistry(self.alignments),
-                self.args.paramsPath)
+            ipdModel=self.args.ipdModel,
+            majorityChem=chemName,
+            paramsPath=self.args.paramsPath)
         self.loadReferenceAndModel(self.args.reference, ipdModelFilename)
 
         # Spawn workers
@@ -598,7 +589,7 @@ class KineticsToolsRunner(object):
                 self.workChunkCounter += 1
 
         # Shutdown worker threads with None sentinels
-        for i in xrange(self.args.numWorkers):
+        for i in range(self.args.numWorkers):
             self._workQueue.put(None)
 
         for w in self._workers:

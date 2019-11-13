@@ -4,7 +4,7 @@ import sys
 
 setup(
     name='kineticsTools',
-    version='0.6.2',
+    version='0.7.0',
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license=open('LICENSES.txt').read(),
@@ -20,7 +20,8 @@ setup(
         'h5py >= 1.3.0',
         'scipy >= 0.9.0',
         'pbcommand >= 0.3.22',
-        #'pyBigWig'
+        'future >= 0.16.0',
+        'pyBigWig'
     ],
     entry_points={'console_scripts': [
         "ipdSummary = kineticsTools.ipdSummary:main",

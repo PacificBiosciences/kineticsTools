@@ -31,6 +31,7 @@
 # FIXME all of this belongs somewhere else (probably either pbcore.io.dataset
 # or a future base module for resequencing apps)
 
+from __future__ import division
 from collections import namedtuple
 import itertools
 import math
@@ -136,7 +137,7 @@ class ReferenceUtils():
             boundaries on multiple of stride.
             """
             def alignDown(chunk, x):
-                return (x/chunk)*chunk
+                return (x//chunk)*chunk
             def alignUp(chunk, x):
                 return int(math.ceil(float(x)/chunk)*chunk)
 
@@ -144,7 +145,7 @@ class ReferenceUtils():
             roundStart = alignDown(stride, start)
             roundEnd   = alignUp  (stride, end)
 
-            for s in xrange(roundStart, roundEnd, stride):
+            for s in range(roundStart, roundEnd, stride):
                 roundWin = (s, s + stride)
                 yield intersection(bounds, roundWin)
 

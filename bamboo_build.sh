@@ -6,8 +6,10 @@ module purge
 #module load gcc
 #module load ccache
 module load python/2
-module load htslib
+module load htslib/1.9
 module load hdf5-tools  # for h5ls
+module load zlib
+module load cram
 set -vex
 
 which gcc
@@ -36,26 +38,23 @@ mkdir -p build/{bin,lib,include,share}
 PIP_INSTALL="${PIP} install --no-index --find-links=${WHEELHOUSE}"
 #PIP_INSTALL="${PIP} install -v"
 
-#export HTSLIB_CONFIGURE_OPTIONS="--disable-lzma"
-#export HTSLIB_LIBRARY_DIR=/mnt/software/h/htslib/1.9/lib
-#export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
+export HTSLIB_MODE='external'
+export HTSLIB_LIBRARY_DIR=/mnt/software/h/htslib/1.9/lib
+export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
 #$PIP install -v --user pysam==0.15.3
 
 #python -c 'import pysam as p; print(p)'
 #$PIP_INSTALL --user pyBigWig
 #python -c 'import pysam as p; print(p)'
 
-$PIP_INSTALL --user -r requirements-ci.txt
-python -c 'import pysam as p; print(p)'
-$PIP_INSTALL --user -r requirements-dev.txt
-python -c 'import pysam as p; print(p)'
 #iso8601 xmlbuilder tabulate pysam avro?
-$PIP install --user ./
+$PIP_INSTALL --user ./
 python -c 'import pysam as p; print(p)'
 
 # Sanity-test for linkage errors.
 ipdSummary -h
 
-$PIP_INSTALL --user pytest-xdist pytest-cov
+$PIP_INSTALL --user --upgrade pytest
+$PIP_INSTALL --user pytest pytest-xdist pytest-cov
 
 make -j3 test
