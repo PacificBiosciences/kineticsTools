@@ -42,6 +42,8 @@ export HTSLIB_MODE='external'
 export HTSLIB_LIBRARY_DIR=/mnt/software/h/htslib/1.9/lib
 export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
 #$PIP install -v --user pysam==0.15.3
+$PIP_INSTALL --user repos/pbcommand
+$PIP_INSTALL --user repos/pbcore
 
 #python -c 'import pysam as p; print(p)'
 #$PIP_INSTALL --user pyBigWig
