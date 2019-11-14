@@ -5,7 +5,7 @@ type module >& /dev/null || . /mnt/software/Modules/current/init/bash
 module purge
 #module load gcc
 #module load ccache
-module load python/2
+module load python/3
 module load htslib/1.9
 module load hdf5-tools  # for h5ls
 module load zlib
@@ -14,8 +14,8 @@ set -vex
 
 which gcc
 gcc --version
-which python
-python --version
+which python3
+python3 --version
 
 export PYTHONUSERBASE=$PWD/build
 export PATH=${PYTHONUSERBASE}/bin:${PATH}
@@ -42,6 +42,8 @@ export HTSLIB_MODE='external'
 export HTSLIB_LIBRARY_DIR=/mnt/software/h/htslib/1.9/lib
 export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
 #$PIP install -v --user pysam==0.15.3
+$PIP_INSTALL --user repos/pbcommand
+$PIP_INSTALL --user repos/pbcore
 
 #python -c 'import pysam as p; print(p)'
 #$PIP_INSTALL --user pyBigWig
@@ -49,12 +51,12 @@ export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
 
 #iso8601 xmlbuilder tabulate pysam avro?
 $PIP_INSTALL --user ./
-python -c 'import pysam as p; print(p)'
+python3 -c 'import pysam as p; print(p)'
 
 # Sanity-test for linkage errors.
 ipdSummary -h
 
 $PIP_INSTALL --user --upgrade pytest
-$PIP_INSTALL --user pytest pytest-xdist pytest-cov
+$PIP_INSTALL --user pytest-xdist pytest-cov pylint
 
 make -j3 test

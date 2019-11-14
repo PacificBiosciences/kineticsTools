@@ -28,5 +28,5 @@ A simple test of the version and help options:
                     [--alignmentSetRefWindows] [--profile] [--pdb]
                     [--seed RANDOMSEED] [--referenceStride REFERENCESTRIDE]
                     alignment_set
-  ipdSummary: error: too few arguments
+  ipdSummary: error: the following arguments are required: alignment_set, --reference
   [2]
