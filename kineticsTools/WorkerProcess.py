@@ -131,7 +131,6 @@ class WorkerProcess(Process):
 
         self.controlAlignments = None
         if not self.options.control is None:
-            # We have a cmp.h5 with control vales -- load that cmp.h5
             self.controlAlignments = AlignmentSet(self.options.control,
                 referenceFastaFname=self.options.reference)
 

@@ -30,11 +30,11 @@
 
 from pkg_resources import Requirement, resource_filename
 import logging
+import gzip
 import os.path as op
 import os
 import re
 
-import h5py
 import numpy as np
 import ctypes as C
 
@@ -334,7 +334,7 @@ class IpdModel:
         """
         Load the reference sequences and the ipd lut into shared arrays that can be
         used as numpy arrays in worker processes.
-        fastaRecords is a list of FastaRecords, in the cmp.h5 file order
+        fastaRecords is a list of FastaRecords, in the alignments file order
         """
 
         self.pre = 10
@@ -347,7 +347,7 @@ class IpdModel:
         self.refLengthDict = {}
 
         for contig in fastaRecords:
-            if contig.cmph5ID is None:
+            if contig.alignmentID is None:
                 # This contig has no mapped reads -- skip it
                 continue
 
@@ -355,7 +355,7 @@ class IpdModel:
             refSeq = np.frombuffer(rawSeq.encode("utf-8"), dtype=byte)
 
             # Store the reference length
-            self.refLengthDict[contig.cmph5ID] = len(rawSeq)
+            self.refLengthDict[contig.alignmentID] = len(rawSeq)
 
             # Make a shared array
             sa = SharedArray(dtype='B', shape=len(rawSeq) + self.pad * 2)
@@ -374,7 +374,7 @@ class IpdModel:
             saWrap[0:self.pad] = outerCodes
             saWrap[(len(rawSeq) + self.pad):(len(rawSeq) + 2 * self.pad)] = outerCodes
 
-            self.refDict[contig.cmph5ID] = sa
+            self.refDict[contig.alignmentID] = sa
 
         # No correction factor for IPDs everything is normalized to 1
         self.meanIpd = 1
@@ -382,10 +382,9 @@ class IpdModel:
         # Find and open the ipd model file
         self.lutPath = modelFile
         if os.path.exists(self.lutPath):
-            h5File = h5py.File(self.lutPath, mode='r')
-
-            gbmModelGroup = h5File["/AllMods_GbmModel"]
-            self.gbmModel = GbmContextModel(gbmModelGroup, modelIterations)
+            with gzip.open(self.lutPath, "rb") as npz_in:
+                gbmModelData = np.load(npz_in, allow_pickle=True)
+                self.gbmModel = GbmContextModel(gbmModelData, modelIterations)
 
             # We always use the model -- no more LUTS
             self.predictIpdFunc = self.predictIpdFuncModel

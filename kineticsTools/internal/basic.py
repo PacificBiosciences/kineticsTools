@@ -37,7 +37,7 @@ def getIpdModelFilename(ipdModel, majorityChem, paramsPath):
 
     # go through each paramsPath in-order, checking if the model exists there or no
     for paramsPath in paramsPath:
-        ipdModel = os.path.join(paramsPath, majorityChem + ".h5")
+        ipdModel = os.path.join(paramsPath, majorityChem + ".npz.gz")
         if os.path.isfile(ipdModel):
             LOG.info("Using chemistry-matched kinetics model: {!r}".format(ipdModel))
             return ipdModel

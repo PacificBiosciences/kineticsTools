@@ -12,9 +12,6 @@ import os.path
 import csv
 import re
 
-import h5py
-
-
 os.environ["PACBIO_TEST_ENV"] = "1" # turns off --verbose
 
 DATA_DIR = "/pbi/dept/secondary/siv/testdata/kineticsTools"
@@ -34,13 +31,11 @@ class TestOutputs(unittest.TestCase):
     def setUpClass(cls):
         #prefix = tempfile.NamedTemporaryFile().name  # not sure of the problem, but misused anyway
         prefix = 'TestOutputs'
-        cls.h5_file = "{p}.h5".format(p=prefix)
         cls.csv_file = "{p}.csv".format(p=prefix)
         cls.gff_file = "{p}.gff".format(p=prefix)
         cls.bw_file = "{p}.bw".format(p=prefix)
         args = [
             "ipdSummary", "--log-level", "WARNING",
-            "--csv_h5", cls.h5_file,
             "--csv", cls.csv_file,
             "--gff", cls.gff_file,
             #"--bigwig", cls.bw_file,
@@ -61,30 +56,9 @@ class TestOutputs(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         return
-        for fn in [cls.h5_file, cls.csv_file, cls.gff_file, cls.bw_file]:
+        for fn in [cls.csv_file, cls.gff_file, cls.bw_file]:
             if os.path.exists(fn):
                 os.remove(fn)
-
-    def test_h5_output(self):
-        f = h5py.File(self.h5_file)
-        g = f[list(f.keys())[0]] # just one group in this file
-        bases = g['base'].__array__()
-        self.assertEqual(bases[0], b"A")
-        self.assertEqual(bases[100], b"T")
-        self.assertEqual(list(bases[0:400] != b"").count(True), 400)
-        seqh_fwd = ''.join([g['base'][x*2].decode("ascii") for x in range(200)])
-        seqc_fwd = ''.join([self.csv_records[x*2][3] for x in range(200)])
-        self.assertEqual(seqh_fwd, seqc_fwd)
-        seqh_rev = ''.join([g['base'][(x*2)+1].decode("ascii") for x in range(200)])
-        seqc_rev = ''.join([self.csv_records[(x*2)+1][3] for x in range(200)])
-        self.assertEqual(seqh_rev, seqc_rev)
-        tpl_fwd = [g['tpl'][x*2] for x in range(200)]
-        self.assertEqual(tpl_fwd, list(range(1, 201)))
-        f = h5py.File(self.h5_file)
-        for i_rec, rec in enumerate(self.csv_records):
-            self.assertEqual(str(g['tpl'][i_rec]), self.csv_records[i_rec][1])
-            self.assertEqual("%.3f"%g['ipdRatio'][i_rec],
-                             self.csv_records[i_rec][8])
 
     def test_csv_output(self):
         self.assertEqual(len(self.csv_records), 400)
