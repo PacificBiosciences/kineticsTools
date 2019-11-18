@@ -145,7 +145,8 @@ class ModificationDecode(MultiSiteCommon):
         fwdPrevState = dict()
 
         # Fill out first column of score & fwd matrix
-        scores[start] = dict((cfg, self.scorePosition(start, cfg)) for cfg in self.getConfigs(start))
+        scores[start] = dict((cfg, self.scorePosition(start, cfg))
+                             for cfg in self.getConfigs(start))
 
         # First column of fwd matrix is same a score matrix, with 'None' in the index matrix
         fwdScore[start] = scores[start]
@@ -272,21 +273,27 @@ class ModificationDecode(MultiSiteCommon):
         for (pos, call) in modCalls.items():
 
             # Score the modified template at all positions affected by this mod
-            modScore = self.scoreRegion(pos - self.post, pos + self.pre, modSeq)
-            modScores = self.getRegionScores(pos - self.post, pos + self.pre, modSeq)
+            modScore = self.scoreRegion(
+                pos - self.post, pos + self.pre, modSeq)
+            modScores = self.getRegionScores(
+                pos - self.post, pos + self.pre, modSeq)
 
             if self.methylFractionFlag and pos in self.rawKinetics:
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
-                    modifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
+                    modifiedMeanVectors = self.getContextMeans(
+                        pos - self.post, pos + self.pre, modSeq)
 
             # Switch back to the unmodified base and re-score
             modSeq[pos] = ord(canonicalBaseMap[call])
-            noModScore = self.scoreRegion(pos - self.post, pos + self.pre, modSeq)
-            noModScores = self.getRegionScores(pos - self.post, pos + self.pre, modSeq)
+            noModScore = self.scoreRegion(
+                pos - self.post, pos + self.pre, modSeq)
+            noModScores = self.getRegionScores(
+                pos - self.post, pos + self.pre, modSeq)
 
             if self.methylFractionFlag and pos in self.rawKinetics:
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
-                    unModifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
+                    unModifiedMeanVectors = self.getContextMeans(
+                        pos - self.post, pos + self.pre, modSeq)
 
             # Put back the modified base
             modSeq[pos] = ord(call)
@@ -312,20 +319,24 @@ class ModificationDecode(MultiSiteCommon):
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
 
                     # Instantiate mixture estimation methods:
-                    mixture = MixtureEstimationMethods(self.gbmModel.post, self.gbmModel.pre, self.rawKinetics, self.methylMinCov)
+                    mixture = MixtureEstimationMethods(
+                        self.gbmModel.post, self.gbmModel.pre, self.rawKinetics, self.methylMinCov)
 
                     # Use modifiedMeanVectors and unmodifiedMeanVectors to calculate mixing proportion, and 95% CI limits.
-                    methylFracEst, methylFracLow, methylFracUpp = mixture.estimateMethylatedFractions(pos, unModifiedMeanVectors, modifiedMeanVectors, ModificationPeakMask[modNames[call]])
+                    methylFracEst, methylFracLow, methylFracUpp = mixture.estimateMethylatedFractions(
+                        pos, unModifiedMeanVectors, modifiedMeanVectors, ModificationPeakMask[modNames[call]])
 
                     qvModCalls[pos] = {'modification': modNames[call], 'QMod': qModScore, 'LLR': llr, 'Mask': maskPos,
                                        FRAC: methylFracEst, FRAClow: methylFracLow, FRACup: methylFracUpp}
 
                 else:
-                    qvModCalls[pos] = {'modification': modNames[call], 'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
+                    qvModCalls[pos] = {'modification': modNames[call],
+                                       'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
 
             else:
                 # Store the full results
-                qvModCalls[pos] = {'modification': modNames[call], 'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
+                qvModCalls[pos] = {'modification': modNames[call],
+                                   'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
 
         return qvModCalls
 
@@ -333,7 +344,8 @@ class ModificationDecode(MultiSiteCommon):
 
         sc = 0.0
         for pos in range(start, end + 1):
-            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring().decode("ascii")
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)
+                           ].tostring().decode("ascii")
             if pos in self.scores:
                 sc += self.scores[pos][ctx]
 
@@ -343,7 +355,8 @@ class ModificationDecode(MultiSiteCommon):
         scores = np.zeros(end - start + 1)
 
         for pos in range(start, end + 1):
-            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring().decode("ascii")
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)
+                           ].tostring().decode("ascii")
             if pos in self.scores:
                 scores[pos - start] = self.scores[pos][ctx]
 

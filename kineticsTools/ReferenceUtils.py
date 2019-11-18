@@ -41,7 +41,8 @@ import os
 from pbcore.io import ReferenceSet
 
 # FIXME pbcore keys contigs by name, but kineticsTools usually keys by ID
-ReferenceWindow = namedtuple("ReferenceWindow", ["refId", "refName", "start", "end"])
+ReferenceWindow = namedtuple(
+    "ReferenceWindow", ["refId", "refName", "start", "end"])
 
 
 class ReferenceUtils():
@@ -83,10 +84,10 @@ class ReferenceUtils():
 
     @staticmethod
     def referenceWindowsFromAlignment(ds, refInfoLookup):
-        return [ ReferenceWindow(refId=refInfoLookup(w[0]).ID,
-                                 refName=w[0],
-                                 start=w[1],
-                                 end=w[2]) for w in ds.refWindows ]
+        return [ReferenceWindow(refId=refInfoLookup(w[0]).ID,
+                                refName=w[0],
+                                start=w[1],
+                                end=w[2]) for w in ds.refWindows]
 
     @staticmethod
     def parseReferenceWindow(s, refInfoLookup):
@@ -95,26 +96,25 @@ class ReferenceUtils():
         m = re.match("(.*):(.*)-(.*)", s)
         if m:
             refContigInfo = refInfoLookup(m.group(1))
-            refId    = refContigInfo.ID
-            refName  = refContigInfo.Name
+            refId = refContigInfo.ID
+            refName = refContigInfo.Name
             refStart = int(m.group(2))
-            refEnd   = min(int(m.group(3)), refContigInfo.Length)
+            refEnd = min(int(m.group(3)), refContigInfo.Length)
         else:
             refContigInfo = refInfoLookup(s)
-            refId    = refContigInfo.ID
-            refName  = refContigInfo.Name
+            refId = refContigInfo.ID
+            refName = refContigInfo.Name
             refStart = 0
-            refEnd   = refContigInfo.Length
+            refEnd = refContigInfo.Length
         return ReferenceWindow(refId=refId, refName=refName, start=refStart,
-            end=refEnd)
+                               end=refEnd)
 
     @staticmethod
     def createReferenceWindows(refInfo):
-        return [ ReferenceWindow(refId=r.ID,
-                    refName=r.Name,
-                    start=0,
-                    end=r.Length) for r in refInfo ]
-
+        return [ReferenceWindow(refId=r.ID,
+                                refName=r.Name,
+                                start=0,
+                                end=r.Length) for r in refInfo]
 
     @staticmethod
     def enumerateChunks(referenceStride, referenceWindow):
@@ -138,22 +138,23 @@ class ReferenceUtils():
             """
             def alignDown(chunk, x):
                 return (x//chunk)*chunk
+
             def alignUp(chunk, x):
                 return int(math.ceil(float(x)/chunk)*chunk)
 
             start, end = bounds
             roundStart = alignDown(stride, start)
-            roundEnd   = alignUp  (stride, end)
+            roundEnd = alignUp(stride, end)
 
             for s in range(roundStart, roundEnd, stride):
                 roundWin = (s, s + stride)
                 yield intersection(bounds, roundWin)
 
         for (s, e) in enumerateIntervals((referenceWindow.start,
-                referenceWindow.end), referenceStride):
+                                          referenceWindow.end), referenceStride):
             yield ReferenceWindow(refId=referenceWindow.refId,
-                refName=referenceWindow.refName,
-                start=s, end=e)
+                                  refName=referenceWindow.refName,
+                                  start=s, end=e)
 
     @staticmethod
     def loadAlignmentChemistry(alignmentSet):

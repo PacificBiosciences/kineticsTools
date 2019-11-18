@@ -85,14 +85,17 @@ class ModificationSummary(object):
         # Read in the existing modifications.gff
         modReader = GffReader(self.modifications)
 
-        headerString = ",".join(['"' + x + '"' for x in self.knownModificationEvents])
+        headerString = ",".join(
+            ['"' + x + '"' for x in self.knownModificationEvents])
 
         # Set up some additional headers to be injected
         headers = [
             ('source', 'kineticModificationCaller 1.3.3'),
             ('source-commandline', " ".join(sys.argv)),
-            ('attribute-description', 'modsfwd - count of detected DNA modifications on forward strand by modification event type'),
-            ('attribute-description', 'modsrev - count of detected DNA modifications on reverse strand by modification event type'),
+            ('attribute-description',
+             'modsfwd - count of detected DNA modifications on forward strand by modification event type'),
+            ('attribute-description',
+             'modsrev - count of detected DNA modifications on reverse strand by modification event type'),
             ('region-modsfwd', headerString),
             ('region-modsfwd', headerString)
         ]
@@ -118,7 +121,8 @@ class ModificationSummary(object):
                         field = splitFields[0]
                         value = " ".join(splitFields[1:])
                         if field == 'sequence-header':
-                            [internalTag, delim, externalTag] = value.strip().partition(' ')
+                            [internalTag, delim,
+                                externalTag] = value.strip().partition(' ')
                             self.seqMap[internalTag] = externalTag
                         print(line.strip(), file=summaryWriter)
                         continue
@@ -134,13 +138,18 @@ class ModificationSummary(object):
 
                     if rec.type == 'region':
                         # Get the hits in this interval, add them to the gff record
-                        intervalHits = [h for h in hits if rec.start <= h['pos'] <= rec.end and rec.seqid == h['seqid']]
+                        intervalHits = [h for h in hits if rec.start <=
+                                        h['pos'] <= rec.end and rec.seqid == h['seqid']]
 
-                        cFwd = self.countModificationTypes([h for h in intervalHits if h['strand'] == '+'])
-                        cRev = self.countModificationTypes([h for h in intervalHits if h['strand'] == '-'])
+                        cFwd = self.countModificationTypes(
+                            [h for h in intervalHits if h['strand'] == '+'])
+                        cRev = self.countModificationTypes(
+                            [h for h in intervalHits if h['strand'] == '-'])
 
-                        rec.modsfwd = ",".join([str(cFwd[x]) for x in self.knownModificationEvents])  # pylint: disable=assigning-non-slot
-                        rec.modsrev = ",".join([str(cRev[x]) for x in self.knownModificationEvents])  # pylint: disable=assigning-non-slot
+                        rec.modsfwd = ",".join(
+                            [str(cFwd[x]) for x in self.knownModificationEvents])  # pylint: disable=assigning-non-slot
+                        rec.modsrev = ",".join(
+                            [str(cRev[x]) for x in self.knownModificationEvents])  # pylint: disable=assigning-non-slot
 
                         print(str(rec), file=summaryWriter)
         return 0
@@ -151,6 +160,7 @@ def args_runner(args):
         modifications=args.modifications,
         alignmentSummary=args.alignmentSummary,
         outfile=args.gff_out).run()
+
 
 def get_parser():
     p = get_default_argparser_with_base_opts(
@@ -164,15 +174,17 @@ def get_parser():
                    help="Coverage summary for regions (bins) spanning the reference with basemod results for each region")
     return p
 
+
 def main(argv=sys.argv):
     setup_log_ = functools.partial(setup_log,
-        str_formatter='%(asctime)s [%(levelname)s] %(message)s')
+                                   str_formatter='%(asctime)s [%(levelname)s] %(message)s')
     return pacbio_args_runner(
         argv=argv[1:],
         parser=get_parser(),
         args_runner_func=args_runner,
         alog=logging.getLogger(__name__),
         setup_log_func=setup_log_)
+
 
 if __name__ == "__main__":
     main()

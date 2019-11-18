@@ -145,11 +145,12 @@ class KineticsWriter(ResultCollectorProcess):
         f = self.openWriteHandle(filename)
         delim = ","
 
-        cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", "signal", "variance", "MSscore"]
+        cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr",
+                "modelPrediction", "ipdRatio", "coverage", "signal", "variance", "MSscore"]
 
         # Special cases for formatting columns of the csv
         handlers = dict()
-        threeF = lambda x: "%.3f" % x
+        def threeF(x): return "%.3f" % x
 
         handlers["refName"] = lambda x: "\"%s\"" % x
 
@@ -167,7 +168,7 @@ class KineticsWriter(ResultCollectorProcess):
         handlers["controlStd"] = threeF
         handlers["tErr"] = threeF
 
-        fourF = lambda x: "%.4f" % x
+        def fourF(x): return "%.4f" % x
         handlers["signal"] = fourF
         handlers["variance"] = fourF
         handlers["MSscore"] = lambda x: "%d" % x
@@ -199,7 +200,6 @@ class KineticsWriter(ResultCollectorProcess):
         except Exception as e:
             print(e)
 
-
     @consumer
     def csvConsumer(self, filename):
         """
@@ -214,24 +214,29 @@ class KineticsWriter(ResultCollectorProcess):
 
             # Columns for in-silico control
             if self.options.methylFraction:
-                cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", FRAC, FRAClow, FRACup]
+                cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr",
+                        "modelPrediction", "ipdRatio", "coverage", FRAC, FRAClow, FRACup]
             else:
                 if self.options.useLDA:
                     # FIXME: For testing LDA model, to look at LDA scores in csv output (run without --methylFraction or --control):
-                    cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage", "Ca5C"]
+                    cols = ["refName", "tpl", "strand", "base", "score", "tMean",
+                            "tErr", "modelPrediction", "ipdRatio", "coverage", "Ca5C"]
                 else:
-                    cols = ["refName", "tpl", "strand", "base", "score", "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage"]
+                    cols = ["refName", "tpl", "strand", "base", "score",
+                            "tMean", "tErr", "modelPrediction", "ipdRatio", "coverage"]
 
         else:
             # Columns for case-control
             if self.options.methylFraction:
-                cols = ["refName", "tpl", "strand", "base", "score", "pvalue", "caseMean", "controlMean", "caseStd", "controlStd", "ipdRatio", "testStatistic", "coverage", "controlCoverage", "caseCoverage", FRAC, FRAClow, FRACup]
+                cols = ["refName", "tpl", "strand", "base", "score", "pvalue", "caseMean", "controlMean", "caseStd",
+                        "controlStd", "ipdRatio", "testStatistic", "coverage", "controlCoverage", "caseCoverage", FRAC, FRAClow, FRACup]
             else:
-                cols = ["refName", "tpl", "strand", "base", "score", "pvalue", "caseMean", "controlMean", "caseStd", "controlStd", "ipdRatio", "testStatistic", "coverage", "controlCoverage", "caseCoverage"]
+                cols = ["refName", "tpl", "strand", "base", "score", "pvalue", "caseMean", "controlMean", "caseStd",
+                        "controlStd", "ipdRatio", "testStatistic", "coverage", "controlCoverage", "caseCoverage"]
 
         # Special cases for formatting columns of the csv
         handlers = dict()
-        threeF = lambda x: "%.3f" % x
+        def threeF(x): return "%.3f" % x
 
         handlers["refName"] = lambda x: "\"%s\"" % x
 
@@ -324,8 +329,9 @@ class KineticsWriter(ResultCollectorProcess):
             ipd_enc = []
             # records are not necessarily consecutive or two per base!
             have_pos = set()
+
             def encode_ipds(plus, minus):
-                enc = lambda x: min(65535, int(round(100*x)))
+                def enc(x): return min(65535, int(round(100*x)))
                 return float(enc(minus) + 65536*enc(plus))
             for rec in records:
                 if (rec.seqid, rec.pos) in have_pos:
@@ -334,7 +340,8 @@ class KineticsWriter(ResultCollectorProcess):
                 strand_records = records_by_pos[(rec.seqid, rec.pos)]
                 if len(strand_records) == 2:
                     rec_minus = strand_records[k] if strand_records[k].sense else strand_records[k + 1]
-                    rec_plus = strand_records[k + 1] if strand_records[k].sense else strand_records[k]
+                    rec_plus = strand_records[k +
+                                              1] if strand_records[k].sense else strand_records[k]
                     assert rec_plus.pos == rec_minus.pos, (rec_plus, rec_minus)
                     seqids.append(rec_plus.seqid)
                     starts.append(rec_plus.pos-1)
@@ -384,8 +391,6 @@ class KineticsWriter(ResultCollectorProcess):
             f.close()
             return
 
-
-
     def makeGffRecord(self, siteObs):
         """
         Convert the internal site observation object into a GFF entry
@@ -429,7 +434,8 @@ class KineticsWriter(ResultCollectorProcess):
 
         if 'modificationScore' in siteObs:
             # Report the QV from the modification identification module as a special tag
-            attributes.append(('identificationQv', "%d" % int(round(siteObs['modificationScore']))))
+            attributes.append(('identificationQv', "%d" %
+                               int(round(siteObs['modificationScore']))))
 
         if 'modification' in siteObs:
 
@@ -486,7 +492,8 @@ class KineticsWriter(ResultCollectorProcess):
                 for siteObs in siteObsList:
                     # self.snippetFunc is a function that return a reference snippet given a template position and a strand
                     if snippetRef != siteObs['refId']:
-                        self.snippetFunc = self.ipdModel.snippetFunc(siteObs['refId'], 20, 20)
+                        self.snippetFunc = self.ipdModel.snippetFunc(
+                            siteObs['refId'], 20, 20)
                         snippetRef = siteObs['refId']
 
                     # Two cases for gff entries:
@@ -514,9 +521,7 @@ class KineticsWriter(ResultCollectorProcess):
             f.close()
             return
 
-
     def makeM5CgffRecord(self, siteObs):
-
 
         start = siteObs['tpl'] + 1
         end = siteObs['tpl'] + 1
@@ -533,25 +538,23 @@ class KineticsWriter(ResultCollectorProcess):
                           type=recordType,
                           score=score,
                           strand=strand,
-                          source='kinModCall',attributes=attributes)
-
+                          source='kinModCall', attributes=attributes)
 
     @consumer
-    def m5CgffConsumer( self, filename ):
-    
-        f = self.openWriteHandle( filename )        
-        gff = GffWriter( f )
+    def m5CgffConsumer(self, filename):
 
-              
-        # write headers describing the program that generated the data        
-        gff.writeHeader('##source ipdSummary v2.0')        
+        f = self.openWriteHandle(filename)
+        gff = GffWriter(f)
+
+        # write headers describing the program that generated the data
+        gff.writeHeader('##source ipdSummary v2.0')
         gff.writeHeader('##source-commandline %s' % self.options.cmdLine)
-        
-        # Write the reference renaming info into the gff headers ala evicons        
-        # for entry in self.refInfo:        
+
+        # Write the reference renaming info into the gff headers ala evicons
+        # for entry in self.refInfo:
         #     gff.writeHeader("##sequence-region %s 1 %d"
         #                     % (entry.Name, entry.Length))
-                
+
         try:
             while True:
                 # Pull in a single record?
@@ -559,14 +562,11 @@ class KineticsWriter(ResultCollectorProcess):
 
                 for siteObs in siteObsList:
                     if 'Ca5C' in siteObs and siteObs['strand'] == 0:
-                        gff.writeRecord( self.makeM5CgffRecord( siteObs ) )
+                        gff.writeRecord(self.makeM5CgffRecord(siteObs))
 
         except GeneratorExit:
             f.close()
             return
-
-
-
 
     def onStart(self):
 

@@ -47,9 +47,9 @@ import time
 import threading
 import numpy as np
 try:
-   import queue
+    import queue
 except ImportError:
-   import Queue as queue
+    import Queue as queue
 import traceback
 from pkg_resources import Requirement, resource_filename
 
@@ -69,13 +69,17 @@ __version__ = "3.0"
 
 log = logging.getLogger(__name__)
 
+
 class Constants(object):
     PVALUE_DEFAULT = 0.01
     MAX_LENGTH_DEFAULT = int(3e12)
 
+
 def _getResourcePathSpec():
-    default_dir = resource_filename(Requirement.parse('kineticsTools'), 'kineticsTools/resources')
+    default_dir = resource_filename(Requirement.parse(
+        'kineticsTools'), 'kineticsTools/resources')
     return basic.getResourcePathSpec(default_dir)
+
 
 def _validateResource(func, p):
     """Basic func for validating files, dirs, etc..."""
@@ -117,6 +121,7 @@ validateDir = functools.partial(_validateResource, os.path.isdir)
 validateNoneOrFile = functools.partial(_validateNoneOrResource, os.path.isfile)
 validateNoneOrDir = functools.partial(_validateNoneOrResource, os.path.isdir)
 
+
 def get_parser():
     p = get_default_argparser_with_base_opts(
         version=__version__,
@@ -124,20 +129,20 @@ def get_parser():
         default_level="INFO")
     p.add_argument("alignment_set", help="BAM or Alignment DataSet")
     p.add_argument("--reference", action="store",
-        required=True,
-        type=validateFile, help="Fasta or Reference DataSet")
+                   required=True,
+                   type=validateFile, help="Fasta or Reference DataSet")
     p.add_argument("--gff", action="store", default=None,
-        help="Output GFF file of modified bases")
+                   help="Output GFF file of modified bases")
     p.add_argument("--csv", action="store", default=None,
-        help="Output CSV file out per-nucleotide information")
+                   help="Output CSV file out per-nucleotide information")
     p.add_argument("--bigwig", action="store", default=None,
-        help="Output BigWig file encoding IpdRatio for both strands")
+                   help="Output BigWig file encoding IpdRatio for both strands")
     # FIXME use central --nproc option
     p.add_argument('--numWorkers', '-j',
-        dest='numWorkers',
-        default=1,
-        type=int,
-        help='Number of thread to use (-1 uses all logical cpus)')
+                   dest='numWorkers',
+                   default=1,
+                   type=int,
+                   help='Number of thread to use (-1 uses all logical cpus)')
     # common options
     p.add_argument("--pvalue",
                    type=float,
@@ -151,62 +156,62 @@ def get_parser():
         "--identify",
         action="store",
         default="m6A,m4C",
-        help="Specific modifications to identify (comma-separated "+\
-            "list).  Currrent options are m6A, m4C, m5C_TET.  Using --control "+\
-            "overrides this option.")
-    _DESC = "In the --identify mode, add --methylFraction to "+\
-            "command line to estimate the methylated fraction, along with "+\
+        help="Specific modifications to identify (comma-separated " +
+        "list).  Currrent options are m6A, m4C, m5C_TET.  Using --control " +
+        "overrides this option.")
+    _DESC = "In the --identify mode, add --methylFraction to " +\
+            "command line to estimate the methylated fraction, along with " +\
             "95%% confidence interval bounds."
     p.add_argument("--methylFraction", action="store_true",
-                    help=_DESC)
+                   help=_DESC)
     p.add_argument('--outfile',
-        dest='outfile',
-        default=None,
-        help='Use this option to generate all possible output files. Argument here is the root filename of the output files.')
+                   dest='outfile',
+                   default=None,
+                   help='Use this option to generate all possible output files. Argument here is the root filename of the output files.')
 
     # FIXME: Need to add an extra check for this; it can only be used if --useLDA flag is set.
     p.add_argument('--m5Cgff',
-        dest='m5Cgff',
-        default=None,
-        help='Name of output GFF file containing m5C scores')
+                   dest='m5Cgff',
+                   default=None,
+                   help='Name of output GFF file containing m5C scores')
 
     # FIXME: Make sure that this is specified if --useLDA flag is set.
     p.add_argument('--m5Cclassifier',
-                        dest='m5Cclassifier',
-                        default=None,
-                        help='Specify csv file containing a 127 x 2 matrix')
+                   dest='m5Cclassifier',
+                   default=None,
+                   help='Specify csv file containing a 127 x 2 matrix')
 
     p.add_argument('--pickle',
-                        dest='pickle',
-                        default=None,
-                        help='Name of output pickle file.')
+                   dest='pickle',
+                   default=None,
+                   help='Name of output pickle file.')
 
     p.add_argument('--ms_csv',
-                        dest='ms_csv',
-                        default=None,
-                        help='Multisite detection CSV file.')
+                   dest='ms_csv',
+                   default=None,
+                   help='Multisite detection CSV file.')
 
     # Calculation options:
     p.add_argument('--control',
-                        dest='control',
-                        default=None,
-                        type=validateNoneOrFile,
-                        help='AlignmentSet or mapped BAM file containing a control sample. Tool will perform a case-control analysis')
+                   dest='control',
+                   default=None,
+                   type=validateNoneOrFile,
+                   help='AlignmentSet or mapped BAM file containing a control sample. Tool will perform a case-control analysis')
 
     # Temporary addition to test LDA for Ca5C detection:
     p.add_argument('--useLDA',
-                        action="store_true",
-                        dest='useLDA',
-                        default=False,
-                        help='Set this flag to debug LDA for m5C/Ca5C detection')
+                   action="store_true",
+                   dest='useLDA',
+                   default=False,
+                   help='Set this flag to debug LDA for m5C/Ca5C detection')
 
     # Parameter options:
     defaultParamsPathSpec = _getResourcePathSpec()
     p.add_argument('--paramsPath',
-                        dest='paramsPath',
-                        default=defaultParamsPathSpec,
-                        type=validateNoneOrPathSpec,
-                        help='List of :-delimited directory paths containing in-silico trained models (default is "%s")' % defaultParamsPathSpec)
+                   dest='paramsPath',
+                   default=defaultParamsPathSpec,
+                   type=validateNoneOrPathSpec,
+                   help='List of :-delimited directory paths containing in-silico trained models (default is "%s")' % defaultParamsPathSpec)
 
     # XXX hacky workaround for running tests using obsolete chemistry inputs
     p.add_argument("--useChemistry",
@@ -215,120 +220,117 @@ def get_parser():
                    help=argparse.SUPPRESS)
 
     p.add_argument('--minCoverage',
-                        dest='minCoverage',
-                        default=3,
-                        type=int,
-                        help='Minimum coverage required to call a modified base')
+                   dest='minCoverage',
+                   default=3,
+                   type=int,
+                   help='Minimum coverage required to call a modified base')
 
     p.add_argument('--maxQueueSize',
-                        dest='maxQueueSize',
-                        default=20,
-                        type=int,
-                        help='Max Queue Size')
+                   dest='maxQueueSize',
+                   default=20,
+                   type=int,
+                   help='Max Queue Size')
 
     p.add_argument('--maxCoverage',
-                        dest='maxCoverage',
-                        type=int, default=-1,
-                        help='Maximum coverage to use at each site')
+                   dest='maxCoverage',
+                   type=int, default=-1,
+                   help='Maximum coverage to use at each site')
 
     p.add_argument('--mapQvThreshold',
-                        dest='mapQvThreshold',
-                        type=float,
-                        default=-1.0)
+                   dest='mapQvThreshold',
+                   type=float,
+                   default=-1.0)
 
     p.add_argument('--ipdModel',
-                        dest='ipdModel',
-                        default=None,
-                        type=validateNoneOrFile,
-                        help='Alternate synthetic IPD model HDF5 file')
+                   dest='ipdModel',
+                   default=None,
+                   type=validateNoneOrFile,
+                   help='Alternate synthetic IPD model HDF5 file')
 
     p.add_argument('--modelIters',
-                        dest='modelIters',
-                        type=int,
-                        default=-1,
-                        help='[Internal] Number of GBM model iteration to use')
+                   dest='modelIters',
+                   type=int,
+                   default=-1,
+                   help='[Internal] Number of GBM model iteration to use')
 
     p.add_argument('--cap_percentile',
-                        dest='cap_percentile',
-                        type=float,
-                        default=99.0,
-                        help='Global IPD percentile to cap IPDs at')
-
+                   dest='cap_percentile',
+                   type=float,
+                   default=99.0,
+                   help='Global IPD percentile to cap IPDs at')
 
     p.add_argument("--methylMinCov",
-                        type=int,
-                        dest='methylMinCov',
-                        default=10,
-                        help="Do not try to estimate methylFraction unless coverage is at least this.")
+                   type=int,
+                   dest='methylMinCov',
+                   default=10,
+                   help="Do not try to estimate methylFraction unless coverage is at least this.")
 
     p.add_argument("--identifyMinCov",
-                        type=int,
-                        dest='identifyMinCov',
-                        default=5,
-                        help="Do not try to identify the modification type unless coverage is at least this.")
+                   type=int,
+                   dest='identifyMinCov',
+                   default=5,
+                   help="Do not try to identify the modification type unless coverage is at least this.")
 
     p.add_argument("--maxAlignments",
-                        type=int,
-                        dest="maxAlignments",
-                        default=1500,
-                        help="Maximum number of alignments to use for a given window")
-
+                   type=int,
+                   dest="maxAlignments",
+                   default=1500,
+                   help="Maximum number of alignments to use for a given window")
 
     # Computation management options:
 
     p.add_argument("-w", "--referenceWindow", "--referenceWindows",
-                             "--refContigs", # backwards compatibility
-                             type=str,
-                             dest='referenceWindowsAsString',
-                             default=None,
-                             help="The window (or multiple comma-delimited windows) of the reference to " + \
-                                  "be processed, in the format refGroup[:refStart-refEnd] "               + \
-                                  "(default: entire reference).")
+                   "--refContigs",  # backwards compatibility
+                   type=str,
+                   dest='referenceWindowsAsString',
+                   default=None,
+                   help="The window (or multiple comma-delimited windows) of the reference to " + \
+                   "be processed, in the format refGroup[:refStart-refEnd] " + \
+                   "(default: entire reference).")
 
     def slurpWindowFile(fname):
         return ",".join(map(str.strip, open(fname).readlines()))
 
-
     p.add_argument("--refContigIndex", type=int, dest='refContigIndex', default=-1,
-                             help="For debugging purposes only - rather than enter a reference contig name, simply enter an index" ) 
+                   help="For debugging purposes only - rather than enter a reference contig name, simply enter an index")
 
     p.add_argument("-W", "--referenceWindowsFile",
-                        "--refContigsFile", # backwards compatibility
-                        type=slurpWindowFile,
-                        dest='referenceWindowsAsString',
-                        default=None,
-                        help="A file containing reference window designations, one per line")
+                   "--refContigsFile",  # backwards compatibility
+                   type=slurpWindowFile,
+                   dest='referenceWindowsAsString',
+                   default=None,
+                   help="A file containing reference window designations, one per line")
 
     p.add_argument("--skipUnrecognizedContigs",
-                        type=bool,
-                        default=False,
-                        help="Whether to skip, or abort, unrecognized contigs in the -w/-W flags")
+                   type=bool,
+                   default=False,
+                   help="Whether to skip, or abort, unrecognized contigs in the -w/-W flags")
     # FIXME shouldn't it always do this?
     p.add_argument("--alignmentSetRefWindows",
-        action="store_true",
-        dest="referenceWindowsFromAlignment",
-        help="Use refWindows in dataset")
-    
+                   action="store_true",
+                   dest="referenceWindowsFromAlignment",
+                   help="Use refWindows in dataset")
+
     # Debugging help options:
     p.add_argument("--profile",
-                        action="store_true",
-                        dest="doProfiling",
-                        default=False,
-                        help="Enable Python-level profiling (using cProfile).")
+                   action="store_true",
+                   dest="doProfiling",
+                   default=False,
+                   help="Enable Python-level profiling (using cProfile).")
 
     add_debug_option(p)
 
     p.add_argument("--seed",
-                        action="store",
-                        dest="randomSeed",
-                        type=int,
-                        default=None,
-                        help="Random seed (for development and debugging purposes only)")
+                   action="store",
+                   dest="randomSeed",
+                   type=int,
+                   default=None,
+                   help="Random seed (for development and debugging purposes only)")
 
     p.add_argument("--referenceStride", action="store", type=int,
-                        default=1000,
-                        help="Size of reference window in internal "+
-                             "parallelization.  For testing purposes only.")
+                   default=1000,
+                   help="Size of reference window in internal " +
+                   "parallelization.  For testing purposes only.")
 
     return p
 
@@ -356,11 +358,13 @@ class KineticsToolsRunner(object):
 
         if self.args.useLDA:
             if self.args.m5Cclassifier is None:
-                parser.error('Please specify a folder containing forward.csv and reverse.csv classifiers in --m5Cclassifier.')
+                parser.error(
+                    'Please specify a folder containing forward.csv and reverse.csv classifiers in --m5Cclassifier.')
 
         if self.args.m5Cgff:
             if not self.args.useLDA:
-                parser.error('m5Cgff file can only be generated in --useLDA mode.')
+                parser.error(
+                    'm5Cgff file can only be generated in --useLDA mode.')
 
         # if self.args.methylFraction and not self.args.identify:
         #    parser.error('Currently, --methylFraction only works when the --identify option is specified.')
@@ -415,11 +419,13 @@ class KineticsToolsRunner(object):
     def _initQueues(self):
         # Work chunks are created by the main thread and put on this queue
         # They will be consumed by KineticWorker threads, stored in self._workers
-        self._workQueue = multiprocessing.JoinableQueue(self.options.maxQueueSize)
+        self._workQueue = multiprocessing.JoinableQueue(
+            self.options.maxQueueSize)
 
         # Completed chunks are put on this queue by KineticWorker threads
         # They are consumed by the KineticsWriter process
-        self._resultsQueue = multiprocessing.JoinableQueue(self.options.maxQueueSize)
+        self._resultsQueue = multiprocessing.JoinableQueue(
+            self.options.maxQueueSize)
 
     def _launchSlaveProcesses(self):
         """
@@ -432,7 +438,8 @@ class KineticsToolsRunner(object):
         """
         availableCpus = multiprocessing.cpu_count()
         logging.info("Available CPUs: %d" % (availableCpus,))
-        logging.info("Requested worker processes: %d" % (self.options.numWorkers,))
+        logging.info("Requested worker processes: %d" %
+                     (self.options.numWorkers,))
 
         # Use all CPUs if numWorkers < 1
         if self.options.numWorkers < 1:
@@ -460,12 +467,14 @@ class KineticsToolsRunner(object):
         logging.info("Launched worker processes.")
 
         # Launch result collector
-        self._resultCollectorProcess = KineticsWriter(self.options, self._resultsQueue, self.refInfo, self.ipdModel)
+        self._resultCollectorProcess = KineticsWriter(
+            self.options, self._resultsQueue, self.refInfo, self.ipdModel)
         self._resultCollectorProcess.start()
         logging.info("Launched result collector process.")
 
         # Spawn a thread that monitors worker threads for crashes
-        self.monitoringThread = threading.Thread(target=monitorChildProcesses, args=(self._workers + [self._resultCollectorProcess],))
+        self.monitoringThread = threading.Thread(target=monitorChildProcesses, args=(
+            self._workers + [self._resultCollectorProcess],))
         self.monitoringThread.start()
 
     def _queueChunksForWindow(self, refWindow):
@@ -482,8 +491,9 @@ class KineticsToolsRunner(object):
         # Load the reference contigs - annotated with their refID from the alignments
         logging.info("Loading reference contigs {!r}".format(referencePath))
         contigs = ReferenceUtils.loadReferenceContigs(referencePath,
-            alignmentSet=self.alignments, windows=self.referenceWindows)
-        self.ipdModel = IpdModel(contigs, ipdModelFilename, self.args.modelIters)
+                                                      alignmentSet=self.alignments, windows=self.referenceWindows)
+        self.ipdModel = IpdModel(
+            contigs, ipdModelFilename, self.args.modelIters)
 
     def loadSharedAlignmentSet(self, alignmentFilename):
         """
@@ -516,7 +526,7 @@ class KineticsToolsRunner(object):
         # interpreter crashes sometimes.  See Bug 19704.  Since we
         # don't leak garbage cycles, disabling the cyclic GC is
         # essentially harmless.
-        #gc.disable()
+        # gc.disable()
 
         self.loadSharedAlignmentSet(self.args.alignment_set)
 
@@ -525,7 +535,8 @@ class KineticsToolsRunner(object):
             self.referenceWindows = []
             for s in self.args.referenceWindowsAsString.split(","):
                 try:
-                    win = ReferenceUtils.parseReferenceWindow(s, self.alignments.referenceInfo)
+                    win = ReferenceUtils.parseReferenceWindow(
+                        s, self.alignments.referenceInfo)
                     self.referenceWindows.append(win)
                 except:
                     if self.args.skipUnrecognizedContigs:
@@ -533,7 +544,8 @@ class KineticsToolsRunner(object):
                     else:
                         raise Exception("Unrecognized contig!")
         elif self.args.referenceWindowsFromAlignment:
-            self.referenceWindows = ReferenceUtils.referenceWindowsFromAlignment(self.alignments, self.alignments.referenceInfo)
+            self.referenceWindows = ReferenceUtils.referenceWindowsFromAlignment(
+                self.alignments, self.alignments.referenceInfo)
             refNames = set([rw.refName for rw in self.referenceWindows])
             # limit output to contigs that overlap with reference windows
             self.refInfo = [r for r in self.refInfo if r.Name in refNames]
@@ -554,7 +566,8 @@ class KineticsToolsRunner(object):
         # Spawn workers
         self._launchSlaveProcesses()
 
-        logging.info('Generating kinetics summary for [%s]' % self.args.alignment_set)
+        logging.info(
+            'Generating kinetics summary for [%s]' % self.args.alignment_set)
 
         #self.referenceMap = self.alignments['/RefGroup'].asDict('RefInfoID', 'ID')
         #self.alnInfo = self.alignments['/AlnInfo'].asRecArray()
@@ -604,7 +617,8 @@ def monitorChildProcesses(children):
         nonzero_exits = [p.exitcode for p in children if p.exitcode]
         if nonzero_exits:
             exitcode = nonzero_exits[0]
-            logging.error("Child process exited with exitcode=%d.  Aborting." % exitcode)
+            logging.error(
+                "Child process exited with exitcode=%d.  Aborting." % exitcode)
 
             # Kill all the child processes
             for p in children:
@@ -624,7 +638,7 @@ def args_runner(args):
 
 def main(argv=sys.argv, out=sys.stdout):
     setup_log_ = functools.partial(setup_log,
-        str_formatter='%(asctime)s [%(levelname)s] %(message)s')
+                                   str_formatter='%(asctime)s [%(levelname)s] %(message)s')
     try:
         return pacbio_args_runner(
             argv=argv[1:],

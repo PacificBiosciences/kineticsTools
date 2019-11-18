@@ -67,7 +67,7 @@ def _openFiles(self, refFile=None, sharedIndices=None):
                      "reduced speed and functionality".format(
                          f=location))
             resource = openAlignmentFile(location,
-                                        referenceFastaFname=refFile)
+                                         referenceFastaFname=refFile)
         if len(resource) == 0:
             log.warn("{f} has no mapped reads".format(f=location))
         else:
@@ -77,7 +77,7 @@ def _openFiles(self, refFile=None, sharedIndices=None):
     log.debug("Done opening resources")
 
 
-def _reopen (self):
+def _reopen(self):
     """
     Force re-opening of underlying alignment files, preserving the
     reference and indices if present, and return a copy of the
@@ -88,7 +88,7 @@ def _reopen (self):
     refFile = self._referenceFile
     newSet = copy.deepcopy(self)
     newSet._referenceFastaFname = refFile
-    indices = [ f.index for f in self.resourceReaders() ]
+    indices = [f.index for f in self.resourceReaders()]
     self.close()
     _openFiles(newSet, refFile=refFile, sharedIndices=indices)
     return newSet
@@ -108,7 +108,7 @@ class WorkerProcess(Process):
     """
 
     def __init__(self, options, workQueue, resultsQueue,
-            sharedAlignmentSet=None):
+                 sharedAlignmentSet=None):
         Process.__init__(self)
         self.options = options
         self.daemon = True
@@ -117,22 +117,23 @@ class WorkerProcess(Process):
         self._sharedAlignmentSet = sharedAlignmentSet
 
     def _run(self):
-        logging.info("Worker %s (PID=%d) started running" % (self.name, self.pid))
+        logging.info("Worker %s (PID=%d) started running" %
+                     (self.name, self.pid))
         if self._sharedAlignmentSet is not None:
             # XXX this will create an entirely new AlignmentSet object, but
             # keeping any indices already loaded into memory
             self.caseAlignments = _reopen(self._sharedAlignmentSet)
-            #`self._sharedAlignmentSet.close()
+            # `self._sharedAlignmentSet.close()
             self._sharedAlignmentSet = None
         else:
             warnings.warn("Shared AlignmentSet not used")
             self.caseAlignments = AlignmentSet(self.options.infile,
-                referenceFastaFname=self.options.reference)
+                                               referenceFastaFname=self.options.reference)
 
         self.controlAlignments = None
         if not self.options.control is None:
             self.controlAlignments = AlignmentSet(self.options.control,
-                referenceFastaFname=self.options.reference)
+                                                  referenceFastaFname=self.options.reference)
 
         if self.options.randomSeed is None:
             np.random.seed(42)
@@ -151,16 +152,20 @@ class WorkerProcess(Process):
                 break
             else:
                 (chunkId, datum) = chunkDesc
-                logging.info("Got chunk: (%s, %s) -- Process: %s" % (chunkId, str(datum), current_process()))
-                result = self.onChunk(datum)  # pylint: disable=assignment-from-none
+                logging.info("Got chunk: (%s, %s) -- Process: %s" %
+                             (chunkId, str(datum), current_process()))
+                result = self.onChunk(
+                    datum)  # pylint: disable=assignment-from-none
 
-                logging.debug("Process %s: putting result." % current_process())
+                logging.debug("Process %s: putting result." %
+                              current_process())
                 self._resultsQueue.put((chunkId, result))
                 self._workQueue.task_done()
 
         self.onFinish()
 
-        logging.info("Process %s (PID=%d) done; exiting." % (self.name, self.pid))
+        logging.info("Process %s (PID=%d) done; exiting." %
+                     (self.name, self.pid))
 
     def run(self):
         # Make the workers run with lower priority -- hopefully the results writer will win
@@ -175,9 +180,9 @@ class WorkerProcess(Process):
         else:
             self._run()
 
-    #==
+    # ==
     # Begin overridable interface
-    #==
+    # ==
     def onStart(self):
         pass
 

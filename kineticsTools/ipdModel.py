@@ -68,13 +68,17 @@ seqMapComplementNp = np.array(['T', 'G', 'C', 'A', 'N'])
 
 # Base letters for modification calling
 # 'H' : m6A, 'I' : m5C, 'J' : m4C, 'K' : m5C/TET
-baseToCode = {'N': 0, 'A': 0, 'C': 1, 'G': 2, 'T': 3, 'H': 4, 'I': 5, 'J': 6, 'K': 7}
-baseToCanonicalCode = {'N': 0, 'A': 0, 'C': 1, 'G': 2, 'T': 3, 'H': 0, 'I': 1, 'J': 1, 'K': 1}
+baseToCode = {'N': 0, 'A': 0, 'C': 1, 'G': 2,
+              'T': 3, 'H': 4, 'I': 5, 'J': 6, 'K': 7}
+baseToCanonicalCode = {'N': 0, 'A': 0, 'C': 1,
+                       'G': 2, 'T': 3, 'H': 0, 'I': 1, 'J': 1, 'K': 1}
 
 codeToBase = dict([(y, x) for (x, y) in baseToCode.items()])
 
+
 def _getAbsPath(fname):
-    return resource_filename(Requirement.parse('kineticsTools'),'kineticsTools/%s' % fname)
+    return resource_filename(Requirement.parse('kineticsTools'), 'kineticsTools/%s' % fname)
+
 
 class GbmContextModel(object):
 
@@ -94,8 +98,10 @@ class GbmContextModel(object):
             return modelH5Group[name][:]
 
         self.varNames = [v.decode("ascii") for v in ds("VarNames")]
-        self.modFeatureIdx = dict((int(self.varNames[x][1:]), x) for x in range(len(self.varNames)) if self.varNames[x][0] == 'M')
-        self.canonicalFeatureIdx = dict((int(self.varNames[x][1:]), x) for x in range(len(self.varNames)) if self.varNames[x][0] == 'R')
+        self.modFeatureIdx = dict((int(self.varNames[x][1:]), x) for x in range(
+            len(self.varNames)) if self.varNames[x][0] == 'M')
+        self.canonicalFeatureIdx = dict((int(self.varNames[x][1:]), x) for x in range(
+            len(self.varNames)) if self.varNames[x][0] == 'R')
 
         self.pre = 10
         self.post = 4
@@ -122,7 +128,8 @@ class GbmContextModel(object):
         self.nTrees = self.splitVar.shape[0]
         self.treeSize = self.splitVar.shape[1]
 
-        offsets = np.floor(np.arange(0, self.leftNodes.size) / self.treeSize) * self.treeSize
+        offsets = np.floor(np.arange(0, self.leftNodes.size) /
+                           self.treeSize) * self.treeSize
         offsets = offsets.astype(np.int32)
 
         self.leftNodesOffset = self.leftNodes.flatten().astype(np.int32) + offsets
@@ -164,7 +171,8 @@ class GbmContextModel(object):
         if os.path.exists(DLL_PATH):
             self._lib = np.ctypeslib.load_library("tree_predict", DLL_PATH)
         else:
-            raise ImportError("can't find tree_predict.so at '{}'".format(DLL_PATH))
+            raise ImportError(
+                "can't find tree_predict.so at '{}'".format(DLL_PATH))
 
         lpb = self._lib
 
@@ -176,7 +184,8 @@ class GbmContextModel(object):
         sp = C.POINTER(C.c_int16)
         ui64p = C.POINTER(C.c_uint64)
 
-        args = [fp, fpp, C.c_int, ip, ip, ip, fp, ip, ip, ip, C.c_float, C.c_int, C.c_int, C.c_int]
+        args = [fp, fpp, C.c_int, ip, ip, ip, fp, ip,
+                ip, ip, C.c_float, C.c_int, C.c_int, C.c_int]
         lpb.innerPredict.argtypes = args
         self.nativeInnerPredict = lpb.innerPredict
 
@@ -187,7 +196,8 @@ class GbmContextModel(object):
         #    int16 left[], int16 right[], int16 missing[], float splitCode[], int16 splitVar[],
         #    int varTypes[], float initialValue, int treeSize, int numTrees, int maxCSplitSize)
 
-        args = [C.c_int, fp, ui64p, C.c_int, ip, ip, ip, fp, sp, ip, C.c_float, C.c_int, C.c_int, C.c_int]
+        args = [C.c_int, fp, ui64p, C.c_int, ip, ip, ip, fp,
+                sp, ip, C.c_float, C.c_int, C.c_int, C.c_int]
         lpb.innerPredictCtx.argtypes = args
         self.nativeInnerPredictCtx = lpb.innerPredictCtx
 
@@ -232,8 +242,10 @@ class GbmContextModel(object):
         varTypes = np.zeros(2 * self.ctxSize, dtype=np.int32)
 
         for i in range(self.ctxSize):
-            dataPtrs[self.modFeatureIdx[i]] = mCols[i].ctypes.data_as(C.POINTER(C.c_float))
-            dataPtrs[self.canonicalFeatureIdx[i]] = rCols[i].ctypes.data_as(C.POINTER(C.c_float))
+            dataPtrs[self.modFeatureIdx[i]] = mCols[i].ctypes.data_as(
+                C.POINTER(C.c_float))
+            dataPtrs[self.canonicalFeatureIdx[i]
+                     ] = rCols[i].ctypes.data_as(C.POINTER(C.c_float))
 
             varTypes[self.modFeatureIdx[i]] = 8
             varTypes[self.canonicalFeatureIdx[i]] = 4
@@ -283,7 +295,7 @@ class GbmContextModel(object):
         packCol = np.zeros(n, dtype=np.uint64)
 
         for stringIdx in range(len(ctxStrings)):
-            s = ctxStrings[stringIdx] #.strip().strip('\x00')
+            s = ctxStrings[stringIdx]  # .strip().strip('\x00')
             code = 0
 
             for i in range(len(s)):
@@ -311,7 +323,8 @@ class GbmContextModel(object):
 
         self.nativeInnerPredictCtx(
             self.ctxSize, fp(self.predictions), ulp(packCol),
-            n, ip(self.leftNodesOffset), ip(self.rightNodesOffset), ip(self.missingNodesOffset),
+            n, ip(self.leftNodesOffset), ip(
+                self.rightNodesOffset), ip(self.missingNodesOffset),
             fp(self.splitCodesCtx), sp(self.splitVar16),
             ip(varTypes), self.initialValue, self.treeSize, nTrees, self.maxCSplits)
 
@@ -365,14 +378,15 @@ class IpdModel:
             # Seq Codes leaves Ns as Ns for getting reference snippets out
             innerLutCodes = lutCodeMap[refSeq]
             innerSeqCodes = seqCodeMap[refSeq]
-            innerCodes = np.bitwise_or(innerLutCodes, np.left_shift(innerSeqCodes, 4))
+            innerCodes = np.bitwise_or(
+                innerLutCodes, np.left_shift(innerSeqCodes, 4))
 
             saWrap[self.pad:(len(rawSeq) + self.pad)] = innerCodes
 
             # Padding codes -- the lut array is padded with 0s the sequence array is padded with N's (4)
             outerCodes = np.left_shift(np.ones(self.pad, dtype=uint8) * 4, 4)
             saWrap[0:self.pad] = outerCodes
-            saWrap[(len(rawSeq) + self.pad):(len(rawSeq) + 2 * self.pad)] = outerCodes
+            saWrap[(len(rawSeq) + self.pad)                   :(len(rawSeq) + 2 * self.pad)] = outerCodes
 
             self.refDict[contig.alignmentID] = sa
 
@@ -513,11 +527,14 @@ class IpdModel:
 
             # Forward strand
             if tplStrand == 0:
-                slc = np.bitwise_and(refArray[(tplPos + self.pre):(tplPos - self.post - 1):-1], 0xf)
+                slc = np.bitwise_and(
+                    refArray[(tplPos + self.pre):(tplPos - self.post - 1):-1], 0xf)
 
             # Reverse strand
             else:
-                slc = 3 - np.bitwise_and(refArray[(tplPos - self.pre):(tplPos + 1 + self.post)], 0xf)
+                slc = 3 - \
+                    np.bitwise_and(
+                        refArray[(tplPos - self.pre):(tplPos + 1 + self.post)], 0xf)
 
             code = (self.base4 * slc).sum()
             return floatLut[max(1, lutArray[code])]
@@ -584,11 +601,14 @@ class IpdModel:
 
             # Read sequence matches forward strand
             if readStrand == 0:
-                slc = 3 - np.bitwise_and(refArray[(tplPos - self.pre):(tplPos + 1 + self.post)], 0xf)
+                slc = 3 - \
+                    np.bitwise_and(
+                        refArray[(tplPos - self.pre):(tplPos + 1 + self.post)], 0xf)
 
             # Reverse strand
             else:
-                slc = np.bitwise_and(refArray[(tplPos + self.pre):(tplPos - self.post - 1):-1], 0xf)
+                slc = np.bitwise_and(
+                    refArray[(tplPos + self.pre):(tplPos - self.post - 1):-1], 0xf)
 
             # Modify the indicated position
             slc[relativeModPos + self.pre] = baseToCode[mod]

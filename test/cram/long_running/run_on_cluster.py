@@ -9,6 +9,7 @@ for org_code in ["Bsub", "Cagg", "Hpyl", "Mjan"]:
     with open(script_name, "w") as f:
         f.write("#!/bin/sh\n")
         f.write("module load cram\n")
-        f.write("time cram %s/detect_and_identify_%s.t\n" % (dir_name, org_code))
-    subprocess.call(["chmod","755", "%s" % script_name])
+        f.write("time cram %s/detect_and_identify_%s.t\n" %
+                (dir_name, org_code))
+    subprocess.call(["chmod", "755", "%s" % script_name])
     subprocess.call(["qsub", "-cwd", "-pe", "smp", "12", "%s" % script_name])

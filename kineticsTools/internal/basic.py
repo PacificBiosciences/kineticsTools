@@ -39,11 +39,12 @@ def getIpdModelFilename(ipdModel, majorityChem, paramsPath):
     for paramsPath in paramsPath:
         ipdModel = os.path.join(paramsPath, majorityChem + ".npz.gz")
         if os.path.isfile(ipdModel):
-            LOG.info("Using chemistry-matched kinetics model: {!r}".format(ipdModel))
+            LOG.info(
+                "Using chemistry-matched kinetics model: {!r}".format(ipdModel))
             return ipdModel
 
     msg = "No kinetics model available for this chemistry ({!r}) on paramsPath {!r}".format(
-            ipdModel, paramsPath)
+        ipdModel, paramsPath)
     LOG.error(msg)
     raise Exception(msg)
 

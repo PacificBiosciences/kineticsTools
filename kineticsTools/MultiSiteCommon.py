@@ -40,9 +40,11 @@ import numpy as np
 
 
 log10e = log10(e)
-canonicalBaseMap = {'A': 'A', 'C': 'C', 'G': 'G', 'T': 'T', 'H': 'A', 'I': 'C', 'J': 'C', 'K': 'C'}
+canonicalBaseMap = {'A': 'A', 'C': 'C', 'G': 'G',
+                    'T': 'T', 'H': 'A', 'I': 'C', 'J': 'C', 'K': 'C'}
 modNames = {'H': 'm6A', 'I': 'm5C', 'J': 'm4C', 'K': 'm5C'}
-ModificationPeakMask = {'m6A': [0, -5], 'm4C': [0, -5], 'm5C': [2, 0, -1, -2, -4, -5, -6]}
+ModificationPeakMask = {
+    'm6A': [0, -5], 'm4C': [0, -5], 'm5C': [2, 0, -1, -2, -4, -5, -6]}
 
 # Labels for modified fraction:
 
@@ -88,7 +90,8 @@ class MultiSiteCommon(object):
 
         # Extents that we will use for likelihoods
         self.likelihoodRange = range(self.lStart, self.lEnd)
-        self.alternateBases = dict((x, set(sequence[x])) for x in range(len(sequence)))
+        self.alternateBases = dict(
+            (x, set(sequence[x])) for x in range(len(sequence)))
 
         self.rawKinetics = rawKinetics
 
@@ -112,7 +115,8 @@ class MultiSiteCommon(object):
 
     def computeContextMeans(self):
         """Generate a hash of the mean ipd for all candidate contexts"""
-        allContexts = list(set([cfg for pos in self.likelihoodRange for cfg in self.getConfigs(pos)]))
+        allContexts = list(
+            set([cfg for pos in self.likelihoodRange for cfg in self.getConfigs(pos)]))
         predictions = self.gbmModel.getPredictions(allContexts)
         self.contextMeanTable = dict(zip(allContexts, predictions))
 
