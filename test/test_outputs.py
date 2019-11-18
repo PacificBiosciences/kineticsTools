@@ -12,7 +12,7 @@ import os.path
 import csv
 import re
 
-os.environ["PACBIO_TEST_ENV"] = "1" # turns off --verbose
+os.environ["PACBIO_TEST_ENV"] = "1"  # turns off --verbose
 
 DATA_DIR = "/pbi/dept/secondary/siv/testdata/kineticsTools"
 REF_DIR = "/pbi/dept/secondary/siv/references/Helicobacter_pylori_J99"
@@ -23,13 +23,14 @@ skip_if_no_data = unittest.skipUnless(
     os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),
     "%s or %s not available" % (DATA_DIR, REF_DIR))
 
+
 @skip_if_no_data
 class TestOutputs(unittest.TestCase):
 
     @classmethod
     @skip_if_no_data
     def setUpClass(cls):
-        #prefix = tempfile.NamedTemporaryFile().name  # not sure of the problem, but misused anyway
+        # prefix = tempfile.NamedTemporaryFile().name  # not sure of the problem, but misused anyway
         prefix = 'TestOutputs'
         cls.csv_file = "{p}.csv".format(p=prefix)
         cls.gff_file = "{p}.gff".format(p=prefix)

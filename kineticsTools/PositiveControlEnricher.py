@@ -23,8 +23,10 @@ class PositiveControlEnricher(MultiSiteCommon):
     def __init__(self, gbmModel, sequence, rawKinetics):
 
         MultiSiteCommon.__init__(self, gbmModel, sequence, rawKinetics)
-        self.fwd_model = np.genfromtxt("/home/UNIXHOME/obanerjee/initial_lr_model_weights_fwd.csv", delimiter=',')
-        self.rev_model = np.genfromtxt("/home/UNIXHOME/obanerjee/initial_lr_model_weights_rev.csv", delimiter=',')
+        self.fwd_model = np.genfromtxt(
+            "/home/UNIXHOME/obanerjee/initial_lr_model_weights_fwd.csv", delimiter=',')
+        self.rev_model = np.genfromtxt(
+            "/home/UNIXHOME/obanerjee/initial_lr_model_weights_rev.csv", delimiter=',')
         self.fwd_model = np.squeeze(np.asarray(self.fwd_model))
         self.rev_model = np.squeeze(np.asarray(self.rev_model))
 
@@ -52,7 +54,8 @@ class PositiveControlEnricher(MultiSiteCommon):
         # range from -down to +up
         for offset in range(-down, (up + 1)):
             a = pos + offset
-            tmp = np.squeeze(np.asarray([kinetics[a]["tMean"], kinetics[a]["tErr"], kinetics[a]["coverage"], unmodIPDs[offset + down], modifIPDs[offset + down]]))
+            tmp = np.squeeze(np.asarray([kinetics[a]["tMean"], kinetics[a]["tErr"], kinetics[a]
+                                         ["coverage"], unmodIPDs[offset + down], modifIPDs[offset + down]]))
 
             # get t-statistics corresponding to mu0 and mu1:
             den = self.tStatisticDenominator(tmp[3], tmp[1])
@@ -103,7 +106,8 @@ class PositiveControlEnricher(MultiSiteCommon):
                 modSeq[pos] = 'C'
                 unmodIPDs = self.getContextMeans(pos - 10, pos + 10, modSeq)
 
-                tmp[pos]["Ca5C"] = self.applyLRmodel(tmp, pos, unmodIPDs, modifIPDs, model, up, down, modSeq)
+                tmp[pos]["Ca5C"] = self.applyLRmodel(
+                    tmp, pos, unmodIPDs, modifIPDs, model, up, down, modSeq)
 
         return tmp
 
@@ -135,14 +139,17 @@ class PositiveControlEnricher(MultiSiteCommon):
 
             # now apply the modification at this position:
             modSeq[pos] = 'K'
-            modifIPDs = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
+            modifIPDs = self.getContextMeans(
+                pos - self.post, pos + self.pre, modSeq)
 
             # using canonical base map, try to get H0 means:
             modSeq[pos] = canonicalBaseMap[call]
-            unmodIPDs = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
+            unmodIPDs = self.getContextMeans(
+                pos - self.post, pos + self.pre, modSeq)
 
             # try to collect related statistics:  tMean, tErr, tStatistic
-            tmp = self.applyLRmodel(kinetics, pos, unmodIPDs, modifIPDs, modSeq, up, down)
+            tmp = self.applyLRmodel(
+                kinetics, pos, unmodIPDs, modifIPDs, modSeq, up, down)
 
             # now try to use these vectors to make a basic decision:
             basicDecision[pos] = {'score': tmp}

@@ -20,6 +20,7 @@ from kineticsTools.tasks.gather_bigwig import gather_bigwig
 
 log = logging.getLogger(__name__)
 
+
 def _generate_chunk_output_file(i=None):
     if pyBigWig is None:
         raise unittest.SkipTest("pyBigWig not installed")

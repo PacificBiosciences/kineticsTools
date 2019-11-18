@@ -40,7 +40,8 @@ import re
 
 log10e = log10(e)
 
-canonicalBaseMap = {'A': 'A', 'C': 'C', 'G': 'G', 'T': 'T', 'H': 'A', 'I': 'C', 'J': 'C', 'K': 'C'}
+canonicalBaseMap = {'A': 'A', 'C': 'C', 'G': 'G',
+                    'T': 'T', 'H': 'A', 'I': 'C', 'J': 'C', 'K': 'C'}
 modNames = {'H': 'm6A', 'I': 'm5C', 'J': 'm4C', 'K': 'm5C'}
 
 m5CCode = 'I'
@@ -118,7 +119,8 @@ class MultiSiteDetection(object):
         # Extents that we will use for likelihoods
         self.likelihoodRange = range(self.lStart, self.lEnd)
 
-        self.alternateBases = dict((x, list(sequence[x])) for x in range(len(sequence)))
+        self.alternateBases = dict(
+            (x, list(sequence[x])) for x in range(len(sequence)))
 
         self.rawKinetics = rawKinetics
 
@@ -145,17 +147,17 @@ class MultiSiteDetection(object):
 
             noModsSuffix = allSuffixes[0]
             if len(allSuffixes) > 1:
-                    restSuffixes = allSuffixes[1:]
+                restSuffixes = allSuffixes[1:]
             else:
-                    restSuffixes = []
+                restSuffixes = []
 
             # The noMods suffix get the alternates
             for c in self.alternateBases[start]:
-                    r.append(c + noModsSuffix)
+                r.append(c + noModsSuffix)
 
             # the other suffixes already have mods -- they just get the unmodified base
             for suffix in restSuffixes:
-                    r.append(self.alternateBases[start][0] + suffix)
+                r.append(self.alternateBases[start][0] + suffix)
 
             return r
 
@@ -242,7 +244,8 @@ class MultiSiteDetection(object):
 
         # Error of null prediction and mod prediction are probably correlated -- need a better estimate of the error of the difference!!
         dPred = modPred - nullPred
-        dPredSigma = (obsErr ** 2 + nullErr ** 2) / 2  # Just stubbing in a factor of 2 here...
+        # Just stubbing in a factor of 2 here...
+        dPredSigma = (obsErr ** 2 + nullErr ** 2) / 2
 
         weightsNumerator = invObsSigma * dPred
         weights = weightsNumerator / (dPred * weightsNumerator).sum()
@@ -291,12 +294,14 @@ class MultiSiteDetection(object):
             if pos in self.rawKinetics:
 
                 # Fetch unmodified positions
-                nullPred = self.getRegionPredictions(pos - self.post, pos + self.pre, dnaSeq)
+                nullPred = self.getRegionPredictions(
+                    pos - self.post, pos + self.pre, dnaSeq)
 
                 # Fetch modified positions and reset sequence
                 originalBase = dnaSeq[pos]
                 dnaSeq[pos] = m5CCode
-                modifiedPred = self.getRegionPredictions(pos - self.post, pos + self.pre, dnaSeq)
+                modifiedPred = self.getRegionPredictions(
+                    pos - self.post, pos + self.pre, dnaSeq)
                 dnaSeq[pos] = originalBase
 
                 # Position that contribute to this call
@@ -304,7 +309,8 @@ class MultiSiteDetection(object):
 
                 # Run the multi-site detection and save the results
                 centerStats = self.rawKinetics[pos]
-                centerStats = self.multiSiteDetection(positions, nullPred, modifiedPred, centerStats)
+                centerStats = self.multiSiteDetection(
+                    positions, nullPred, modifiedPred, centerStats)
 
                 qvModCalls[pos] = centerStats
 

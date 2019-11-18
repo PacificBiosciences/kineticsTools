@@ -115,13 +115,13 @@ class MixtureEstimationMethods(object):
 
     # Try to speed up calculation by avoiding a call to scipy.stats.norm.pdf()
     def replaceScipyNormPdf(self, data, mu):
-        return np.exp( -np.divide( data, mu) ) / mu
+        return np.exp(-np.divide(data, mu)) / mu
         # tmp = np.divide(data, mu)
         # return np.exp(np.subtract(tmp, np.power(tmp, 2) / 2.0)) / mu
         # pdf for normal distribution: res = res / sqrt( 2 * pi ) (can factor out sqrt(2 * pi))
 
     # Return optimum argument (mixing proportion) of mixture model log likelihood function.
-    def estimateSingleFraction(self, mu1, data, mu0, L, optProp = True ):
+    def estimateSingleFraction(self, mu1, data, mu0, L, optProp=True):
         # NOTE: ignoring the warnings here is sloppy, should be looked
         # at later.
         with np.errstate(all="ignore"):
@@ -136,15 +136,15 @@ class MixtureEstimationMethods(object):
                 res = 1.0
             else:
                 # unconstrained minimization of convex, single-variable function
-                res = fminbound(self.mixModelFn, 0.01, 0.99, args=(a0, a1), xtol=1e-02)
+                res = fminbound(self.mixModelFn, 0.01, 0.99,
+                                args=(a0, a1), xtol=1e-02)
 
             if optProp:
                 # return the optimal proportion
                 return res
             else:
                 # return the corresponding log likelihood function value
-                return self.mixModelFn( res, a0, a1 )
-
+                return self.mixModelFn(res, a0, a1)
 
     # Try bias-corrected, accelerated quantiles for bootstrap confidence intervals
     def bcaQuantile(self, estimate, bootDist, data, mu0, mu1, nSamples, n):
@@ -158,7 +158,8 @@ class MixtureEstimationMethods(object):
             # acceleration
             x = np.zeros(n)
             for i in range(n):
-                x[i] = self.estimateSingleFraction(mu1, np.delete(data, i), mu0, n - 1)
+                x[i] = self.estimateSingleFraction(
+                    mu1, np.delete(data, i), mu0, n - 1)
             xbar = np.mean(x)
             denom = np.power(np.sum(np.power(x - xbar, 2)), 1.5)
             if abs(denom) < 1e-4:
@@ -196,9 +197,11 @@ class MixtureEstimationMethods(object):
 
         for i in range(nSamples):
             bootstrappedSamples = sample[s.randint.rvs(0, L - 1, size=L)]
-            X[i] = self.estimateSingleFraction(mu1, bootstrappedSamples, mu0, L)
+            X[i] = self.estimateSingleFraction(
+                mu1, bootstrappedSamples, mu0, L)
 
-        q1, q2 = self.bcaQuantile(res[0], X, sample, mu0, mu1, (nSamples + 1), L)
+        q1, q2 = self.bcaQuantile(
+            res[0], X, sample, mu0, mu1, (nSamples + 1), L)
         res[1] = np.percentile(X, q1)
         res[2] = np.percentile(X, q2)
         return res
@@ -210,7 +213,8 @@ class MixtureEstimationMethods(object):
         maskPos = np.array(maskPos)
         L = len(maskPos)
         if L == 0:
-            res = self.bootstrap(pos, meanVector[self.post], modMeanVector[self.post])
+            res = self.bootstrap(
+                pos, meanVector[self.post], modMeanVector[self.post])
         else:
             est = np.zeros(L)
             low = np.zeros(L)
@@ -239,11 +243,12 @@ class MixtureEstimationMethods(object):
         # print str(res)
         return res
 
-
     # Return the optimal mixing proportion in the detection case: estimate both p and mu1
+
     def optimalMixProportion(self, data, mu0, L):
         # mistake:  want a function that returns optimum likelihood function value, not optimizing proportion
-        mu1 = fminbound(self.estimateSingleFraction, mu0, 10.0 * mu0, args=(data, mu0, L, False), xtol=1e-01)
+        mu1 = fminbound(self.estimateSingleFraction, mu0, 10.0 *
+                        mu0, args=(data, mu0, L, False), xtol=1e-01)
         return self.estimateSingleFraction(mu1, data, mu0, L)
 
     # Bootstraps mix prop estimates to return estimate and simple bounds for 95% confidence interval
@@ -251,7 +256,7 @@ class MixtureEstimationMethods(object):
         # Case-resampled bootstrapped estimates:
         L = len(data)
         res = np.zeros(4)
-        
+
         res[0] = self.optimalMixProportion(data, modelPrediction, L)
         X = np.zeros(nSamples + 1)
         X[nSamples] = res[0]

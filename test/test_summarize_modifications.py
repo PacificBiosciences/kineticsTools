@@ -8,6 +8,7 @@ TESTDATA = "/pbi/dept/secondary/siv/testdata/kineticsTools"
 skip_unless_testdata = unittest.skipUnless(op.isdir(TESTDATA),
                                            "Testdata missing")
 
+
 class TestSummarizeModifications(PbIntegrationBase):
 
     @skip_unless_testdata

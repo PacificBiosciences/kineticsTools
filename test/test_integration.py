@@ -22,6 +22,7 @@ Escherichia_coli_K12\tkinModCall\tmodified_base\t20051\t20051\t44\t+\t.\tcoverag
 Escherichia_coli_K12\tkinModCall\tm4C\t20296\t20296\t24\t-\t.\tcoverage=17;context=GGATGCCGGGCAACAGCCCGCATTATGGGCGTTGGCCTCAA;IPDRatio=1.86;identificationQv=9
 Escherichia_coli_K12\tkinModCall\tmodified_base\t20449\t20449\t31\t+\t.\tcoverage=18;context=TGTCCGGCGGTGCTTTTGCCGTTACGCACCACCCCGTCAGT;IPDRatio=2.49"""
 
+
 class TestKineticsTools(PbIntegrationBase):
 
     def test_help(self):
@@ -59,4 +60,5 @@ class TestKineticsTools(PbIntegrationBase):
             for line in csv.read().splitlines():
                 csv_records.append(line)
         self.assertEqual(len(csv_records), 3222)
-        self.assertEqual(csv_records[1], "\"Escherichia_coli_K12\",6214,0,C,8,0.784,0.144,0.631,1.242,33")
+        self.assertEqual(
+            csv_records[1], "\"Escherichia_coli_K12\",6214,0,C,8,0.784,0.144,0.631,1.242,33")
