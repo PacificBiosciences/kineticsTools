@@ -1,8 +1,6 @@
-
 """
 Test sanity of various output formats for a minimal real-world example.
 """
-from __future__ import print_function
 
 import pytest
 import subprocess

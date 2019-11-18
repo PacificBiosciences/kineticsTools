@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 # Basic LDA Enricher class
 
 from math import sqrt
