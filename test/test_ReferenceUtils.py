@@ -22,7 +22,7 @@ class ReferenceUtilsTest (unittest.TestCase):
         ds = AlignmentSet(bamFile, referenceFastaFname=refFile)
         contigs = ReferenceUtils.loadReferenceContigs(refFile, ds)
         self.assertEquals(len(contigs), 1)
-        self.assertEquals(contigs[0].cmph5ID, 0)
+        self.assertEquals(contigs[0].alignmentID, 0)
         chemistry = ReferenceUtils.loadAlignmentChemistry(ds)
         self.assertEquals(chemistry, "S/P3-C3/5.0")
 

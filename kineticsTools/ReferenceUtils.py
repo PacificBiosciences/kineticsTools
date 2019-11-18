@@ -52,7 +52,7 @@ class ReferenceUtils():
         # fixing the inconsistency in how contigs are referenced here versus in
         # pbcore.io
         """
-        Load the reference contigs, and tag each one with the ref.cmpH5ID it
+        Load the reference contigs, and tag each one with the ref.alignmentID it
         was assigned in the alignment file(s).  Return a list of contigs,
         which are used to set up IpdModel.
         """
@@ -69,15 +69,15 @@ class ReferenceUtils():
             contigs.extend([x for x in refReader])
         contigDict = dict([(x.id, x) for x in contigs])
 
-        # initially each contig has an id of None -- this will be overwritten with the id from the cmp.h5, if there are any
+        # initially each contig has an id of None -- this will be overwritten with the id from the alignments if there are any
         # reads mapped to it.
         for x in contigs:
-            x.cmph5ID = None
+            x.alignmentID = None
 
-        # Mark each contig with it's ID from the cmp.h5 - match them up using MD5s
+        # Mark each contig with it's ID from the alignments - match them up using MD5s
         for x in alignmentSet.referenceInfoTable:
             if x.FullName in contigDict:
-                contigDict[x.FullName].cmph5ID = x.ID
+                contigDict[x.FullName].alignmentID = x.ID
 
         return contigs
 

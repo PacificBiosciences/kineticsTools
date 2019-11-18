@@ -241,7 +241,7 @@ class KineticWorkerProcess(WorkerProcess):
         (caseChunks, capValue) = self._fetchChunks(caseReferenceGroupId, targetBounds, self.caseAlignments)
 
         if self.controlAlignments is None:
-            # in silico control workflow -- only get data from the main 'case' cmp.h5
+            # in silico control workflow -- only get data from the main 'case' alignments
 
             goodSites = [x for x in caseChunks if x['data']['ipd'].size > 2]
 
@@ -258,7 +258,7 @@ class KineticWorkerProcess(WorkerProcess):
             contigName = self.caseAlignments.referenceInfo(self.refName).FullName
             controlRefTable = self.controlAlignments.referenceInfoTable
 
-            # Make sure this RefId contains a refGroup in the control cmp.h5 file
+            # Make sure this RefId contains a refGroup in the control alignments file
             # if self.refId in self.controlAlignments.referenceInfoTable.Name:
             # if self.refId in [ int( str.split('ref')[1] ) for str in self.controlAlignments.referenceInfoTable.Name ]:
             if contigName in controlRefTable.FullName:

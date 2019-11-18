@@ -121,7 +121,7 @@ def get_parser():
     p = get_default_argparser_with_base_opts(
         version=__version__,
         description=__doc__,
-        default_level="WARN")
+        default_level="INFO")
     p.add_argument("alignment_set", help="BAM or Alignment DataSet")
     p.add_argument("--reference", action="store",
         required=True,
@@ -176,35 +176,22 @@ def get_parser():
                         default=None,
                         help='Specify csv file containing a 127 x 2 matrix')
 
-
-    p.add_argument('--csv_h5',
-                        dest='csv_h5',
-                        default=None,
-                        help='Name of csv output to be written in hdf5 format.')
-
     p.add_argument('--pickle',
                         dest='pickle',
                         default=None,
                         help='Name of output pickle file.')
-
-    p.add_argument('--summary_h5',
-                        dest='summary_h5',
-                        default=None,
-                        help='Name of output summary h5 file.')
-
 
     p.add_argument('--ms_csv',
                         dest='ms_csv',
                         default=None,
                         help='Multisite detection CSV file.')
 
-
     # Calculation options:
     p.add_argument('--control',
                         dest='control',
                         default=None,
                         type=validateNoneOrFile,
-                        help='cmph.h5 file containing a control sample. Tool will perform a case-control analysis')
+                        help='AlignmentSet or mapped BAM file containing a control sample. Tool will perform a case-control analysis')
 
     # Temporary addition to test LDA for Ca5C detection:
     p.add_argument('--useLDA',
@@ -212,8 +199,6 @@ def get_parser():
                         dest='useLDA',
                         default=False,
                         help='Set this flag to debug LDA for m5C/Ca5C detection')
-
-
 
     # Parameter options:
     defaultParamsPathSpec = _getResourcePathSpec()
@@ -494,7 +479,7 @@ class KineticsToolsRunner(object):
 
     def loadReferenceAndModel(self, referencePath, ipdModelFilename):
         assert self.alignments is not None and self.referenceWindows is not None
-        # Load the reference contigs - annotated with their refID from the cmp.h5
+        # Load the reference contigs - annotated with their refID from the alignments
         logging.info("Loading reference contigs {!r}".format(referencePath))
         contigs = ReferenceUtils.loadReferenceContigs(referencePath,
             alignmentSet=self.alignments, windows=self.referenceWindows)
@@ -518,7 +503,7 @@ class KineticsToolsRunner(object):
         """
         Main loop
         First launch the worker and writer processes
-        Then we loop over ReferenceGroups in the cmp.h5.  For each contig we will:
+        Then we loop over ReferenceGroups in the alignments.  For each contig we will:
         1. Load the sequence into the main memory of the parent process
         3. Chunk up the contig and submit the chunk descriptions to the work queue
         Finally, wait for the writer process to finish.
@@ -574,7 +559,7 @@ class KineticsToolsRunner(object):
         #self.referenceMap = self.alignments['/RefGroup'].asDict('RefInfoID', 'ID')
         #self.alnInfo = self.alignments['/AlnInfo'].asRecArray()
 
-        # Main loop -- we loop over ReferenceGroups in the cmp.h5.  For each contig we will:
+        # Main loop -- we loop over ReferenceGroups in the alignments.  For each contig we will:
         # 1. Load the sequence into the main memory of the parent process
         # 2. Fork the workers
         # 3. chunk up the contig and
