@@ -2,7 +2,6 @@
 # FIXME this is currently non-functional and not used anywhere, should we
 # remove it?
 
-from __future__ import absolute_import
 from math import sqrt
 import math
 import scipy.stats as s

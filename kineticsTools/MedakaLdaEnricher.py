@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
 # Try to implement method used in Morishita et al.'s Medaka fish genome paper here
 
 from collections import defaultdict, Counter
