@@ -1,6 +1,6 @@
 import os
 import pytest
-import kineticsTools.internal.basic as B
+import kineticsTools.loader as B
 
 
 def test_basic():

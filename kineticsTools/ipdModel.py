@@ -14,7 +14,6 @@ from kineticsTools.sharedArray import SharedArray
 LINUX_SO_FILE = "tree_predict.cpython-37m-x86_64-linux-gnu.so"
 
 byte = np.dtype('byte')
-float32 = np.dtype('float32')
 uint8 = np.dtype('uint8')
 
 # Map for ascii encoded bases to integers 0-3 -- will be used to define a 24-bit lookup code
@@ -137,12 +136,12 @@ class GbmContextModel(object):
         Needs to be invoked lazily because the native function pointer cannot be pickled
         """
 
-        DLL_PATH = op.dirname(_getAbsPath(LINUX_SO_FILE))
-        if os.path.exists(DLL_PATH):
-            self._lib = np.ctypeslib.load_library("tree_predict", DLL_PATH)
+        dll_path = op.dirname(_getAbsPath(LINUX_SO_FILE))
+        if os.path.exists(dll_path):
+            self._lib = np.ctypeslib.load_library("tree_predict", dll_path)
         else:
             raise ImportError(
-                "can't find tree_predict.so at '{}'".format(DLL_PATH))
+                "can't find tree_predict.so at '{}'".format(dll_path))
 
         lpb = self._lib
 
@@ -307,10 +306,10 @@ class IpdModel:
     Predicts the IPD of an any context, possibly containing multiple modifications.
     We use a 4^12 entry LUT to get the predictions for contexts without modifications,
     then we use the GbmModel to get predictions in the presence of arbitrary mods.
-        Note on the coding scheme.  For each contig we store a byte-array that has size = contig.length + 2*self.pad
-        The upper 4 bits contain a lookup into seqReverseMap, which can contains N's. This is used for giving
-        template snippets that may contains N's if the reference sequence does, or if the snippet
-        The lowe 4 bits contain a lookup into lutReverseMap, which
+    Note on the coding scheme.  For each contig we store a byte-array that has size = contig.length + 2*self.pad
+    The upper 4 bits contain a lookup into seqReverseMap, which can contains N's. This is used for giving
+    template snippets that may contains N's if the reference sequence does, or if the snippet
+    The lowe 4 bits contain a lookup into lutReverseMap, which
     """
 
     def __init__(self, fastaRecords, modelFile, modelIterations=-1):
@@ -551,42 +550,3 @@ class IpdModel:
             return self.gbmModel.getPredictions(contexts)
 
         return fMany
-
-    def modPredictIpdFunc(self, refId, mod):
-        """
-        Each (pre+post+1) base context gets mapped to an integer
-        by converting each nucleotide to a base-4 number A=0, C=1, etc,
-        and treating the 'pre' end of the context of the least significant
-        digit.  This code is used to lookup the expected IPD in a
-        pre-computed table.  Contexts near the ends of the reference
-        are coded by padding the context with 0
-        """
-
-        refArray = self.refDict[refId].getNumpyWrapper()
-
-        def f(tplPos, relativeModPos, readStrand):
-
-            # skip over the padding
-            tplPos += self.pad
-
-            # Read sequence matches forward strand
-            if readStrand == 0:
-                slc = 3 - \
-                    np.bitwise_and(
-                        refArray[(tplPos - self.pre):(tplPos + 1 + self.post)], 0xf)
-
-            # Reverse strand
-            else:
-                slc = np.bitwise_and(
-                    refArray[(tplPos + self.pre):(tplPos - self.post - 1):-1], 0xf)
-
-            # Modify the indicated position
-            slc[relativeModPos + self.pre] = baseToCode[mod]
-
-            slcString = "".join([codeToBase[x] for x in slc])
-
-            # Get the prediction for this context
-            # return self.gbmModel.getPredictions([slcString])[0]
-            return 0.0
-
-        return f

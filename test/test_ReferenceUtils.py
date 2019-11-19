@@ -3,7 +3,7 @@ import logging
 import unittest
 import os.path as op
 
-from kineticsTools.ReferenceUtils import ReferenceUtils
+from kineticsTools import ReferenceUtils
 from pbcore.io import AlignmentSet
 
 big_data_dir = "/pbi/dept/secondary/siv/testdata/kineticsTools"
