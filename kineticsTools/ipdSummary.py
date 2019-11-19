@@ -30,9 +30,7 @@ from pbcore.io import AlignmentSet
 from kineticsTools.KineticWorker import KineticWorkerProcess
 from kineticsTools.ResultWriter import KineticsWriter
 from kineticsTools.ipdModel import IpdModel
-from kineticsTools.ReferenceUtils import ReferenceUtils
-
-from .internal import basic
+from kineticsTools import ReferenceUtils, loader
 
 __version__ = "3.0"
 
@@ -47,7 +45,7 @@ class Constants(object):
 def _getResourcePathSpec():
     default_dir = resource_filename(Requirement.parse(
         'kineticsTools'), 'kineticsTools/resources')
-    return basic.getResourcePathSpec(default_dir)
+    return loader.getResourcePathSpec(default_dir)
 
 
 def _validateResource(func, p):
@@ -526,7 +524,7 @@ class KineticsToolsRunner(object):
         chemName = ReferenceUtils.loadAlignmentChemistry(self.alignments)
         if self.args.useChemistry is not None:
             chemName = self.args.useChemistry
-        ipdModelFilename = basic.getIpdModelFilename(
+        ipdModelFilename = loader.getIpdModelFilename(
             ipdModel=self.args.ipdModel,
             majorityChem=chemName,
             paramsPath=self.args.paramsPath)

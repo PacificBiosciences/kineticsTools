@@ -6,7 +6,6 @@ import os
 LOG = logging.getLogger(__name__)
 
 
-#majorityChem = ReferenceUtils.loadAlignmentChemistry(self.alignments)
 def getIpdModelFilename(ipdModel, majorityChem, paramsPath):
     """
     ipdModel: str
