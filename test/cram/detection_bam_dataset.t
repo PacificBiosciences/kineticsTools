@@ -10,7 +10,7 @@ Load in data:
 
 Run basic ipdSummary:
 
-  $ ipdSummary --log-level=WARNING --outfile tmp_xml1 --numWorkers 4 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
+  $ ipdSummary --log-level=WARNING --outfile tmp_xml1 --numWorkers 4 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" --useChemistry P6-C4 $INPUT
 
 Look at output csv file:
 
@@ -51,6 +51,6 @@ Look at output gff file:
 Now try with a split dataset:
 
   $ INPUT=$DATA/Hpyl_1_5000_split.xml
-  $ ipdSummary --log-level=WARNING --gff tmp_xml2.gff --csv tmp_xml2.csv --numWorkers 4 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" $INPUT
+  $ ipdSummary --log-level=WARNING --gff tmp_xml2.gff --csv tmp_xml2.csv --numWorkers 4 --pvalue 0.001 --identify m6A,m4C --reference $REFERENCE --referenceWindows="gi|12057207|gb|AE001439.1|:0-5000" --useChemistry P6-C4 $INPUT
   $ linecount tmp_xml2.gff
   274

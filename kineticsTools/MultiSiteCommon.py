@@ -1,33 +1,3 @@
-#################################################################################
-# Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
-#
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in the
-#   documentation and/or other materials provided with the distribution.
-# * Neither the name of Pacific Biosciences nor the names of its
-#   contributors may be used to endorse or promote products derived from
-#   this software without specific prior written permission.
-#
-# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
-# THIS LICENSE.  THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS
-# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR
-# ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#################################################################################
-
 from math import sqrt
 import math
 import scipy.stats as s
@@ -40,9 +10,11 @@ import numpy as np
 
 
 log10e = log10(e)
-canonicalBaseMap = {'A': 'A', 'C': 'C', 'G': 'G', 'T': 'T', 'H': 'A', 'I': 'C', 'J': 'C', 'K': 'C'}
+canonicalBaseMap = {'A': 'A', 'C': 'C', 'G': 'G',
+                    'T': 'T', 'H': 'A', 'I': 'C', 'J': 'C', 'K': 'C'}
 modNames = {'H': 'm6A', 'I': 'm5C', 'J': 'm4C', 'K': 'm5C'}
-ModificationPeakMask = {'m6A': [0, -5], 'm4C': [0, -5], 'm5C': [2, 0, -1, -2, -4, -5, -6]}
+ModificationPeakMask = {
+    'm6A': [0, -5], 'm4C': [0, -5], 'm5C': [2, 0, -1, -2, -4, -5, -6]}
 
 # Labels for modified fraction:
 
@@ -87,8 +59,9 @@ class MultiSiteCommon(object):
         self.lEnd = len(self.sequence) - self.post
 
         # Extents that we will use for likelihoods
-        self.likelihoodRange = xrange(self.lStart, self.lEnd)
-        self.alternateBases = dict((x, set(sequence[x])) for x in xrange(len(sequence)))
+        self.likelihoodRange = range(self.lStart, self.lEnd)
+        self.alternateBases = dict(
+            (x, set(sequence[x])) for x in range(len(sequence)))
 
         self.rawKinetics = rawKinetics
 
@@ -112,7 +85,8 @@ class MultiSiteCommon(object):
 
     def computeContextMeans(self):
         """Generate a hash of the mean ipd for all candidate contexts"""
-        allContexts = list(set([cfg for pos in self.likelihoodRange for cfg in self.getConfigs(pos)]))
+        allContexts = list(
+            set([cfg for pos in self.likelihoodRange for cfg in self.getConfigs(pos)]))
         predictions = self.gbmModel.getPredictions(allContexts)
         self.contextMeanTable = dict(zip(allContexts, predictions))
 
@@ -167,7 +141,7 @@ class MultiSiteCommon(object):
     # Return expected IPDs for a portion [start, end] of the sequence.
     def getContextMeans(self, start, end, sequence):
         meanVector = []
-        for pos in xrange(start, end + 1):
+        for pos in range(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             if ctx in self.contextMeanTable:
                 meanVector.append(self.contextMeanTable[ctx])

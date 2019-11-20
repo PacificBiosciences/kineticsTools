@@ -1,34 +1,3 @@
-from __future__ import absolute_import
-#################################################################################
-# Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
-#
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in the
-#   documentation and/or other materials provided with the distribution.
-# * Neither the name of Pacific Biosciences nor the names of its
-#   contributors may be used to endorse or promote products derived from
-#   this software without specific prior written permission.
-#
-# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
-# THIS LICENSE.  THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS
-# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR
-# ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#################################################################################
-
 from math import sqrt
 import math
 import scipy.stats as s
@@ -52,7 +21,7 @@ class ModificationDecode(MultiSiteCommon):
         # Extents that we will attemp to call a modification
         self.callStart = callBounds[0]
         self.callEnd = callBounds[1]
-        self.callRange = xrange(self.callStart, self.callEnd)
+        self.callRange = range(self.callStart, self.callEnd)
 
         self.methylMinCov = methylMinCov
         self.modsToCall = modsToCall
@@ -145,13 +114,14 @@ class ModificationDecode(MultiSiteCommon):
         fwdPrevState = dict()
 
         # Fill out first column of score & fwd matrix
-        scores[start] = dict((cfg, self.scorePosition(start, cfg)) for cfg in self.getConfigs(start))
+        scores[start] = dict((cfg, self.scorePosition(start, cfg))
+                             for cfg in self.getConfigs(start))
 
         # First column of fwd matrix is same a score matrix, with 'None' in the index matrix
         fwdScore[start] = scores[start]
         fwdPrevState[start] = dict((x, None) for x in scores[start].keys())
 
-        for centerPos in xrange(start + 1, end):
+        for centerPos in range(start + 1, end):
 
             # Score and fwd column for current position
             scoreCol = dict()
@@ -262,34 +232,40 @@ class ModificationDecode(MultiSiteCommon):
 
         qvModCalls = dict()
 
-        modSeq = a.array('c')
+        modSeq = a.array('b')
         modSeq.fromstring(self.sequence)
 
         # Apply the found modifications to the raw sequence
         for (pos, call) in modCalls.items():
-            modSeq[pos] = call
+            modSeq[pos] = ord(call)
 
         for (pos, call) in modCalls.items():
 
             # Score the modified template at all positions affected by this mod
-            modScore = self.scoreRegion(pos - self.post, pos + self.pre, modSeq)
-            modScores = self.getRegionScores(pos - self.post, pos + self.pre, modSeq)
+            modScore = self.scoreRegion(
+                pos - self.post, pos + self.pre, modSeq)
+            modScores = self.getRegionScores(
+                pos - self.post, pos + self.pre, modSeq)
 
             if self.methylFractionFlag and pos in self.rawKinetics:
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
-                    modifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
+                    modifiedMeanVectors = self.getContextMeans(
+                        pos - self.post, pos + self.pre, modSeq)
 
             # Switch back to the unmodified base and re-score
-            modSeq[pos] = canonicalBaseMap[call]
-            noModScore = self.scoreRegion(pos - self.post, pos + self.pre, modSeq)
-            noModScores = self.getRegionScores(pos - self.post, pos + self.pre, modSeq)
+            modSeq[pos] = ord(canonicalBaseMap[call])
+            noModScore = self.scoreRegion(
+                pos - self.post, pos + self.pre, modSeq)
+            noModScores = self.getRegionScores(
+                pos - self.post, pos + self.pre, modSeq)
 
             if self.methylFractionFlag and pos in self.rawKinetics:
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
-                    unModifiedMeanVectors = self.getContextMeans(pos - self.post, pos + self.pre, modSeq)
+                    unModifiedMeanVectors = self.getContextMeans(
+                        pos - self.post, pos + self.pre, modSeq)
 
             # Put back the modified base
-            modSeq[pos] = call
+            modSeq[pos] = ord(call)
 
             # Compute score difference
             llr = modScore - noModScore
@@ -312,28 +288,33 @@ class ModificationDecode(MultiSiteCommon):
                 if self.rawKinetics[pos]["coverage"] > self.methylMinCov:
 
                     # Instantiate mixture estimation methods:
-                    mixture = MixtureEstimationMethods(self.gbmModel.post, self.gbmModel.pre, self.rawKinetics, self.methylMinCov)
+                    mixture = MixtureEstimationMethods(
+                        self.gbmModel.post, self.gbmModel.pre, self.rawKinetics, self.methylMinCov)
 
                     # Use modifiedMeanVectors and unmodifiedMeanVectors to calculate mixing proportion, and 95% CI limits.
-                    methylFracEst, methylFracLow, methylFracUpp = mixture.estimateMethylatedFractions(pos, unModifiedMeanVectors, modifiedMeanVectors, ModificationPeakMask[modNames[call]])
+                    methylFracEst, methylFracLow, methylFracUpp = mixture.estimateMethylatedFractions(
+                        pos, unModifiedMeanVectors, modifiedMeanVectors, ModificationPeakMask[modNames[call]])
 
                     qvModCalls[pos] = {'modification': modNames[call], 'QMod': qModScore, 'LLR': llr, 'Mask': maskPos,
                                        FRAC: methylFracEst, FRAClow: methylFracLow, FRACup: methylFracUpp}
 
                 else:
-                    qvModCalls[pos] = {'modification': modNames[call], 'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
+                    qvModCalls[pos] = {'modification': modNames[call],
+                                       'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
 
             else:
                 # Store the full results
-                qvModCalls[pos] = {'modification': modNames[call], 'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
+                qvModCalls[pos] = {'modification': modNames[call],
+                                   'QMod': qModScore, 'LLR': llr, 'Mask': maskPos}
 
         return qvModCalls
 
     def scoreRegion(self, start, end, sequence):
 
         sc = 0.0
-        for pos in xrange(start, end + 1):
-            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
+        for pos in range(start, end + 1):
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)
+                           ].tostring().decode("ascii")
             if pos in self.scores:
                 sc += self.scores[pos][ctx]
 
@@ -342,8 +323,9 @@ class ModificationDecode(MultiSiteCommon):
     def getRegionScores(self, start, end, sequence):
         scores = np.zeros(end - start + 1)
 
-        for pos in xrange(start, end + 1):
-            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
+        for pos in range(start, end + 1):
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)
+                           ].tostring().decode("ascii")
             if pos in self.scores:
                 scores[pos - start] = self.scores[pos][ctx]
 
@@ -355,7 +337,7 @@ class ModificationDecode(MultiSiteCommon):
         start = pos - self.post
         end = pos + self.pre
 
-        for i in xrange(start, end + 1):
+        for i in range(start, end + 1):
             # Add a neighboring peak to the mask if
             # a) it has a single-site qv > 20
             # b) the observed IPDs are somewhat more likely under the modified hypothesis than the unmodified hypothesis

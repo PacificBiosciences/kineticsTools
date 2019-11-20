@@ -11,9 +11,8 @@ A simple test of the version and help options:
                     [--pvalue PVALUE] [--maxLength MAXLENGTH]
                     [--identify IDENTIFY] [--methylFraction] [--outfile OUTFILE]
                     [--m5Cgff M5CGFF] [--m5Cclassifier M5CCLASSIFIER]
-                    [--csv_h5 CSV_H5] [--pickle PICKLE]
-                    [--summary_h5 SUMMARY_H5] [--ms_csv MS_CSV]
-                    [--control CONTROL] [--useLDA] [--paramsPath PARAMSPATH]
+                    [--pickle PICKLE] [--ms_csv MS_CSV] [--control CONTROL]
+                    [--useLDA] [--paramsPath PARAMSPATH]
                     [--minCoverage MINCOVERAGE] [--maxQueueSize MAXQUEUESIZE]
                     [--maxCoverage MAXCOVERAGE]
                     [--mapQvThreshold MAPQVTHRESHOLD] [--ipdModel IPDMODEL]
@@ -25,8 +24,8 @@ A simple test of the version and help options:
                     [--refContigIndex REFCONTIGINDEX]
                     [-W REFERENCEWINDOWSASSTRING]
                     [--skipUnrecognizedContigs SKIPUNRECOGNIZEDCONTIGS]
-                    [--alignmentSetRefWindows] [--threaded] [--profile] [--pdb]
+                    [--alignmentSetRefWindows] [--profile] [--pdb]
                     [--seed RANDOMSEED] [--referenceStride REFERENCESTRIDE]
                     alignment_set
-  ipdSummary: error: too few arguments
+  ipdSummary: error: the following arguments are required: alignment_set, --reference
   [2]
