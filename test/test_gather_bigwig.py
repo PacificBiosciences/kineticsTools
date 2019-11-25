@@ -1,15 +1,10 @@
-
-import subprocess
-import unittest
-import tempfile
 import logging
 import os.path as op
+import subprocess
 import sys
+import tempfile
 
-try:
-    import pyBigWig
-except ImportError:
-    pyBigWig = None
+import pytest
 
 from pbcommand.pb_io.common import load_pipeline_chunks_from_json, \
     write_pipeline_chunks
@@ -22,8 +17,7 @@ log = logging.getLogger(__name__)
 
 
 def _generate_chunk_output_file(i=None):
-    if pyBigWig is None:
-        raise unittest.SkipTest("pyBigWig not installed")
+    import pyBigWig
     records = [
         ("chr1", 4, 5, 0.45),
         ("chr2", 8, 9, 1.0),
@@ -33,7 +27,7 @@ def _generate_chunk_output_file(i=None):
         ("chr1", 3, 4, 1.9)
     ]
     fn = tempfile.NamedTemporaryFile(suffix=".bw").name
-    _records = records[(i*3):(i*3)+3]
+    _records = records[(i * 3):(i * 3) + 3]
     assert len(_records) == 3
     ranges = {}
     for rec in _records:
@@ -43,31 +37,32 @@ def _generate_chunk_output_file(i=None):
         ranges[seqid] = (min(ranges[seqid][0], pos),
                          max(ranges[seqid][1], pos))
     bw = pyBigWig.open(fn, "w")
-    regions = [(s, ranges[s][1]+1) for s in sorted(ranges.keys())]
+    regions = [(s, ranges[s][1] + 1) for s in sorted(ranges.keys())]
     bw.addHeader(regions)
     bw.addEntries([rec[0] for rec in _records],
-                  [rec[1]-1 for rec in _records],
-                  ends=[rec[2]-1 for rec in _records],
+                  [rec[1] - 1 for rec in _records],
+                  ends=[rec[2] - 1 for rec in _records],
                   values=[rec[3] for rec in _records])
     bw.close()
     return fn
 
 
-@unittest.skipUnless(pyBigWig is not None, "pyBigWig not installed")
-class TestGatherBigwig(unittest.TestCase):
+@pytest.mark.pybigwig
+class TestGatherBigwig:
     NCHUNKS = 2
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         cls._data_files = [_generate_chunk_output_file(i=i)
                            for i in range(cls.NCHUNKS)]
 
     def validate_output(self, output_file):
+        import pyBigWig
         bw = pyBigWig.open(output_file)
         nrec = bw.header()["nBasesCovered"]
-        self.assertEqual(nrec, 6, "{n} != 6".format(n=nrec))
-        self.assertAlmostEqual(bw.stats("chr1", 2, 3)[0], 1.9, places=5)
-        self.assertAlmostEqual(bw.stats("chr2", 7, 8)[0], 1.0, places=5)
+        assert nrec == 6
+        assert pytest.approx(bw.stats("chr1", 2, 3)[0], 1.9)
+        assert pytest.approx(bw.stats("chr2", 7, 8)[0], 1.0)
 
     def test_gather_bigwig(self):
         ofn = tempfile.NamedTemporaryFile(suffix=".bw").name

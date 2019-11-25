@@ -1,10 +1,11 @@
-
 import logging
-import unittest
 import os.path as op
 
-from kineticsTools import ReferenceUtils
+import pytest
+
 from pbcore.io import AlignmentSet
+
+from kineticsTools import ReferenceUtils
 
 big_data_dir = "/pbi/dept/secondary/siv/testdata/kineticsTools"
 ref_dir = "/pbi/dept/secondary/siv/references"
@@ -13,8 +14,8 @@ logging.basicConfig()
 log = logging.getLogger()
 
 
-@unittest.skipUnless(op.isdir(big_data_dir), "Shared data folder missing")
-class ReferenceUtilsTest (unittest.TestCase):
+@pytest.mark.internal_data
+class TestReferenceUtils:
 
     def test_bam(self):
         bamFile = op.join(big_data_dir, "ecoli_first_50k.mapped.bam")
@@ -22,10 +23,10 @@ class ReferenceUtilsTest (unittest.TestCase):
                           "ecoli_k12_MG1655_first50k.referenceset.xml")
         ds = AlignmentSet(bamFile, referenceFastaFname=refFile)
         contigs = ReferenceUtils.loadReferenceContigs(refFile, ds)
-        self.assertEquals(len(contigs), 1)
-        self.assertEquals(contigs[0].alignmentID, 0)
+        assert len(contigs) == 1
+        assert contigs[0].alignmentID == 0
         chemistry = ReferenceUtils.loadAlignmentChemistry(ds)
-        self.assertEquals(chemistry, "S/P3-C3/5.0")
+        assert chemistry == "S/P3-C3/5.0"
 
     def test_dataset(self):
         pass  # TODO
@@ -38,23 +39,19 @@ class ReferenceUtilsTest (unittest.TestCase):
         alnFile = AlignmentSet(bamFile, referenceFastaFname=refFile)
         win = ReferenceUtils.parseReferenceWindow(window,
                                                   alnFile.referenceInfo)
-        self.assertEquals([win.refId, win.start, win.end], [0, 1, 5000])
+        assert [win.refId, win.start, win.end] == [0, 1, 5000]
 
     def test_createReferenceWindows(self):
         bamFile = op.join(big_data_dir, "Hpyl_1_5000.bam")
         ds = AlignmentSet(bamFile, referenceFastaFname=None)
         refInfoTable = ds.referenceInfoTable
         windows = ReferenceUtils.createReferenceWindows(refInfoTable)
-        self.assertEqual(len(windows), 1)
+        assert len(windows) == 1
         w = windows[0]
-        self.assertEqual(w.refId, 0)
-        self.assertEqual(w.refName, 'gi|12057207|gb|AE001439.1|')
-        self.assertEqual(w.start, 0)
-        self.assertEqual(w.end, 1643831)
+        assert w.refId == 0
+        assert w.refName == 'gi|12057207|gb|AE001439.1|'
+        assert w.start == 0
+        assert w.end == 1643831
 
     def test_enumerateChunks(self):
         pass  # TODO
-
-
-if __name__ == "__main__":
-    unittest.main()
