@@ -98,7 +98,8 @@ class ModificationSummary(object):
                         continue
 
                     if inHeader:
-                        # We are at the end of the header -- write the tool-specific headers
+                        # We are at the end of the header -- write the
+                        # tool-specific headers
                         for field in headers:
                             print(("##%s %s" % field), file=summaryWriter)
                         inHeader = False
@@ -107,7 +108,8 @@ class ModificationSummary(object):
                     rec = Gff3Record.fromString(line)
 
                     if rec.type == 'region':
-                        # Get the hits in this interval, add them to the gff record
+                        # Get the hits in this interval, add them to the gff
+                        # record
                         intervalHits = [h for h in hits if rec.start <=
                                         h['pos'] <= rec.end and rec.seqid == h['seqid']]
 

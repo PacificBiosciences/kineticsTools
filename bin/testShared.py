@@ -15,13 +15,15 @@ class Sub(Process):
     def run(self):
         import time
 
-        print("self.arr[10] = %f, Process = %s" % (self.arr[10], current_process()))
+        print("self.arr[10] = %f, Process = %s" %
+              (self.arr[10], current_process()))
 
         print(self.arr.shape)
 
         n = self.arr.shape[0] - 1
 
-        print("self.arr[%d] = %f, Process = %s" % (n, self.arr[n], current_process()))
+        print("self.arr[%d] = %f, Process = %s" %
+              (n, self.arr[n], current_process()))
         time.sleep(10)
 
 

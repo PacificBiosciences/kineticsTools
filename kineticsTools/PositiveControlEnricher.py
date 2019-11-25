@@ -44,7 +44,8 @@ class PositiveControlEnricher(MultiSiteCommon):
         den = sqrt(em ** 2 + tErr ** 2)
         return den
 
-    def applyLRmodel(self, kinetics, pos, unmodIPDs, modifIPDs, model, up, down, context):
+    def applyLRmodel(self, kinetics, pos, unmodIPDs,
+                     modifIPDs, model, up, down, context):
         """ Test out LDA model """
 
         res = np.zeros((up + down + 1, 7))
@@ -112,7 +113,8 @@ class PositiveControlEnricher(MultiSiteCommon):
 
     def callEnricherFunction(self, kinetics, up=10, down=10):
 
-        # Compute all the required mean ipds under all possible composite hypotheses
+        # Compute all the required mean ipds under all possible composite
+        # hypotheses
         self.computeContextMeans()
 
         fwd = self.callLRstrand(kinetics, 0, self.fwd_model, up, down)

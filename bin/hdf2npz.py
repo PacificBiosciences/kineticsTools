@@ -11,6 +11,7 @@ import sys
 import h5py
 import numpy as np
 
+
 def run(argv):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("file_name", help="Path to hdf5 file")
@@ -19,10 +20,11 @@ def run(argv):
     npz_file = re.sub(".h5", ".npz", args.file_name)
     with h5py.File(args.file_name, 'r') as f:
         k = list(f.keys())[0]
-        d = {k2:f[k][k2][:] for k2 in f[k].keys()}
+        d = {k2: f[k][k2][:] for k2 in f[k].keys()}
         np.savez(npz_file, **d)
         print("Wrote {o}".format(o=npz_file))
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1:]))

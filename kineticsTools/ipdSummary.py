@@ -136,7 +136,8 @@ def get_parser():
                    default=None,
                    help='Use this option to generate all possible output files. Argument here is the root filename of the output files.')
 
-    # FIXME: Need to add an extra check for this; it can only be used if --useLDA flag is set.
+    # FIXME: Need to add an extra check for this; it can only be used if
+    # --useLDA flag is set.
     p.add_argument('--m5Cgff',
                    dest='m5Cgff',
                    default=None,
@@ -376,7 +377,8 @@ class KineticsToolsRunner(object):
             try:
                 ret = self._mainLoop()
             finally:
-                # Be sure to shutdown child processes if we get an exception on the main thread
+                # Be sure to shutdown child processes if we get an exception on
+                # the main thread
                 for w in self._workers:
                     if w.is_alive():
                         w.terminate()
@@ -385,7 +387,8 @@ class KineticsToolsRunner(object):
 
     def _initQueues(self):
         # Work chunks are created by the main thread and put on this queue
-        # They will be consumed by KineticWorker threads, stored in self._workers
+        # They will be consumed by KineticWorker threads, stored in
+        # self._workers
         self._workQueue = multiprocessing.JoinableQueue(
             self.options.maxQueueSize)
 
@@ -455,7 +458,8 @@ class KineticsToolsRunner(object):
 
     def loadReferenceAndModel(self, referencePath, ipdModelFilename):
         assert self.alignments is not None and self.referenceWindows is not None
-        # Load the reference contigs - annotated with their refID from the alignments
+        # Load the reference contigs - annotated with their refID from the
+        # alignments
         logging.info("Loading reference contigs {!r}".format(referencePath))
         contigs = ReferenceUtils.loadReferenceContigs(referencePath,
                                                       alignmentSet=self.alignments, windows=self.referenceWindows)
@@ -505,7 +509,7 @@ class KineticsToolsRunner(object):
                     win = ReferenceUtils.parseReferenceWindow(
                         s, self.alignments.referenceInfo)
                     self.referenceWindows.append(win)
-                except:
+                except BaseException:
                     if self.args.skipUnrecognizedContigs:
                         continue
                     else:
@@ -549,7 +553,8 @@ class KineticsToolsRunner(object):
         # Iterate over references
         for window in self.referenceWindows:
             logging.info('Processing window/contig: %s' % (window,))
-            for chunk in ReferenceUtils.enumerateChunks(self.args.referenceStride, window):
+            for chunk in ReferenceUtils.enumerateChunks(
+                    self.args.referenceStride, window):
                 self._workQueue.put((self.workChunkCounter, chunk))
                 self.workChunkCounter += 1
 

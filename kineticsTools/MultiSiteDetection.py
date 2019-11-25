@@ -62,7 +62,8 @@ def findMotifPositions(seq, motifs):
 
 class MultiSiteDetection(object):
 
-    def __init__(self, gbmModel, sequence, rawKinetics, callBounds, methylMinCov, motifs=['CG']):
+    def __init__(self, gbmModel, sequence, rawKinetics,
+                 callBounds, methylMinCov, motifs=['CG']):
         """
 
         """
@@ -125,7 +126,8 @@ class MultiSiteDetection(object):
             for c in self.alternateBases[start]:
                 r.append(c + noModsSuffix)
 
-            # the other suffixes already have mods -- they just get the unmodified base
+            # the other suffixes already have mods -- they just get the
+            # unmodified base
             for suffix in restSuffixes:
                 r.append(self.alternateBases[start][0] + suffix)
 
@@ -160,7 +162,8 @@ class MultiSiteDetection(object):
         # Find sites matching the desired motif
         self.findMotifs()
 
-        # Compute all the required mean ipds under all possible composite hypotheses
+        # Compute all the required mean ipds under all possible composite
+        # hypotheses
         self.computeContextMeans()
 
         # Compute a confidence for each mod and return results
@@ -180,8 +183,8 @@ class MultiSiteDetection(object):
                 self.motifPositions.append(pos)
 
     def multiSiteDetection(self, positions, nullPred, modPred, centerPosition):
-        ''' kinetics, nullPred, and modifiedPred are parallel arrays 
-            containing the observations and predictions surrounding a 
+        ''' kinetics, nullPred, and modifiedPred are parallel arrays
+            containing the observations and predictions surrounding a
             single candidate motif site.  Estimate the p-value of
             modification and the modified fraction here'''
 
@@ -206,13 +209,15 @@ class MultiSiteDetection(object):
                 obsMean[i] = 0.0
                 obsErr[i] = 999999999
 
-        # Subtract off the background model from the observations and the modified prediction
+        # Subtract off the background model from the observations and the
+        # modified prediction
         dObs = obsMean - nullPred
         # Error of observation and prediction are uncorrelated
         obsSigma = obsErr ** 2 + nullErr ** 2
         invObsSigma = 1.0 / obsSigma
 
-        # Error of null prediction and mod prediction are probably correlated -- need a better estimate of the error of the difference!!
+        # Error of null prediction and mod prediction are probably correlated
+        # -- need a better estimate of the error of the difference!!
         dPred = modPred - nullPred
         # Just stubbing in a factor of 2 here...
         dPredSigma = (obsErr ** 2 + nullErr ** 2) / 2

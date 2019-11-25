@@ -34,7 +34,8 @@ def getIpdModelFilename(ipdModel, majorityChem, paramsPath):
     # '/' is not a valid character in a file, unescaped--remove it
     majorityChem = majorityChem.replace("/", "")
 
-    # go through each paramsPath in-order, checking if the model exists there or no
+    # go through each paramsPath in-order, checking if the model exists there
+    # or no
     for paramsPath in paramsPath:
         ipdModel = os.path.join(paramsPath, majorityChem + ".npz.gz")
         if os.path.isfile(ipdModel):
