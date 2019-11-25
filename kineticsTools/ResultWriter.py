@@ -187,7 +187,8 @@ class KineticsWriter(ResultCollectorProcess):
                         "modelPrediction", "ipdRatio", "coverage", FRAC, FRAClow, FRACup]
             else:
                 if self.options.useLDA:
-                    # FIXME: For testing LDA model, to look at LDA scores in csv output (run without --methylFraction or --control):
+                    # FIXME: For testing LDA model, to look at LDA scores in
+                    # csv output (run without --methylFraction or --control):
                     cols = ["refName", "tpl", "strand", "base", "score", "tMean",
                             "tErr", "modelPrediction", "ipdRatio", "coverage", "Ca5C"]
                 else:
@@ -274,7 +275,7 @@ class KineticsWriter(ResultCollectorProcess):
                     seqid = x['refName']
                     ranges.setdefault(seqid, (sys.maxsize, 0))
                     ranges[seqid] = (min(ranges[seqid][0], pos),
-                                     max(ranges[seqid][1], pos+1))
+                                     max(ranges[seqid][1], pos + 1))
                     rec = BaseInfo(
                         seqid=seqid,
                         pos=pos,
@@ -285,7 +286,7 @@ class KineticsWriter(ResultCollectorProcess):
         except GeneratorExit:
             records.sort(key=lambda x: x.pos)
             records.sort(key=lambda x: x.seqid)
-            regions = [(s, ranges[s][1]-1) for s in sorted(ranges.keys())]
+            regions = [(s, ranges[s][1] - 1) for s in sorted(ranges.keys())]
             if len(regions) == 0:
                 with open(filename, "wb") as _:
                     return
@@ -300,8 +301,8 @@ class KineticsWriter(ResultCollectorProcess):
             have_pos = set()
 
             def encode_ipds(plus, minus):
-                def enc(x): return min(65535, int(round(100*x)))
-                return float(enc(minus) + 65536*enc(plus))
+                def enc(x): return min(65535, int(round(100 * x)))
+                return float(enc(minus) + 65536 * enc(plus))
             for rec in records:
                 if (rec.seqid, rec.pos) in have_pos:
                     continue
@@ -313,12 +314,12 @@ class KineticsWriter(ResultCollectorProcess):
                                               1] if strand_records[k].sense else strand_records[k]
                     assert rec_plus.pos == rec_minus.pos, (rec_plus, rec_minus)
                     seqids.append(rec_plus.seqid)
-                    starts.append(rec_plus.pos-1)
+                    starts.append(rec_plus.pos - 1)
                     ends.append(rec_plus.pos)
                     ipd_enc.append(encode_ipds(rec_plus.ipd, rec_minus.ipd))
                 else:
                     seqids.append(rec.seqid)
-                    starts.append(rec.pos-1)
+                    starts.append(rec.pos - 1)
                     ends.append(rec.pos)
                     if rec.sense == 0:
                         ipd_enc.append(encode_ipds(rec.ipd, 0))
@@ -402,7 +403,8 @@ class KineticsWriter(ResultCollectorProcess):
             attributes.append(('fracUp', "%.3f" % siteObs[FRACup]))
 
         if 'modificationScore' in siteObs:
-            # Report the QV from the modification identification module as a special tag
+            # Report the QV from the modification identification module as a
+            # special tag
             attributes.append(('identificationQv', "%d" %
                                int(round(siteObs['modificationScore']))))
 
@@ -415,7 +417,8 @@ class KineticsWriter(ResultCollectorProcess):
                 recordType = '.'
 
             else:
-                # if we have an identified mod, use it; otherwise use the old generic term
+                # if we have an identified mod, use it; otherwise use the old
+                # generic term
                 recordType = siteObs['modification']
 
         else:
@@ -459,7 +462,8 @@ class KineticsWriter(ResultCollectorProcess):
                 siteObsList = (yield)
 
                 for siteObs in siteObsList:
-                    # self.snippetFunc is a function that return a reference snippet given a template position and a strand
+                    # self.snippetFunc is a function that return a reference
+                    # snippet given a template position and a strand
                     if snippetRef != siteObs['refId']:
                         self.snippetFunc = self.ipdModel.snippetFunc(
                             siteObs['refId'], 20, 20)
@@ -540,7 +544,8 @@ class KineticsWriter(ResultCollectorProcess):
     def onStart(self):
 
         # Spec for what kinds of output files we can generate.
-        # Entry format is (<option field name>, <extension>, <writer consumer function>)
+        # Entry format is (<option field name>, <extension>, <writer consumer
+        # function>)
         fileSpec = [
             ('m5Cgff', 'm5C.gff', self.m5CgffConsumer),
             ('gff', 'gff', self.gffConsumer),
@@ -569,7 +574,8 @@ class KineticsWriter(ResultCollectorProcess):
                 else:
                     name = self.options.outfile + '.' + ext
 
-            # Individual outputs can specified - these filename override the default
+            # Individual outputs can specified - these filename override the
+            # default
             if self.options.__getattribute__(fileType):
                 name = self.options.__getattribute__(fileType)
 

@@ -19,7 +19,8 @@ uint8 = np.dtype('uint8')
 # Map for ascii encoded bases to integers 0-3 -- will be used to define a 24-bit lookup code
 # for fetching predicted IPDs from the kinetic LUT.
 
-# We start everything at 0, so anything will map to 'A' unless it appears in this table
+# We start everything at 0, so anything will map to 'A' unless it appears
+# in this table
 lutCodeMap = np.zeros(256, dtype=uint8)
 maps = {'a': 0, 'A': 0, 'c': 1, 'C': 1, 'g': 2, 'G': 2, 't': 3, 'T': 3}
 for k in maps:
@@ -46,7 +47,8 @@ codeToBase = dict([(y, x) for (x, y) in baseToCode.items()])
 
 
 def _getAbsPath(fname):
-    return resource_filename(Requirement.parse('kineticsTools'), 'kineticsTools/%s' % fname)
+    return resource_filename(Requirement.parse(
+        'kineticsTools'), 'kineticsTools/%s' % fname)
 
 
 class GbmContextModel(object):
@@ -352,10 +354,11 @@ class IpdModel:
 
             saWrap[self.pad:(len(rawSeq) + self.pad)] = innerCodes
 
-            # Padding codes -- the lut array is padded with 0s the sequence array is padded with N's (4)
+            # Padding codes -- the lut array is padded with 0s the sequence
+            # array is padded with N's (4)
             outerCodes = np.left_shift(np.ones(self.pad, dtype=uint8) * 4, 4)
             saWrap[0:self.pad] = outerCodes
-            saWrap[(len(rawSeq) + self.pad)                   :(len(rawSeq) + 2 * self.pad)] = outerCodes
+            saWrap[(len(rawSeq) + self.pad):(len(rawSeq) + 2 * self.pad)] = outerCodes
 
             self.refDict[contig.alignmentID] = sa
 

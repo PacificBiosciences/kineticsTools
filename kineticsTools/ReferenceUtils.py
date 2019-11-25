@@ -41,18 +41,21 @@ def loadReferenceContigs(referencePath, alignmentSet, windows=None):
     for x in contigs:
         x.alignmentID = None
 
-    # Mark each contig with it's ID from the alignments - match them up using MD5s
+    # Mark each contig with it's ID from the alignments - match them up using
+    # MD5s
     for x in alignmentSet.referenceInfoTable:
         if x.FullName in contigDict:
             contigDict[x.FullName].alignmentID = x.ID
 
     return contigs
 
+
 def referenceWindowsFromAlignment(ds, refInfoLookup):
     return [ReferenceWindow(refId=refInfoLookup(w[0]).ID,
                             refName=w[0],
                             start=w[1],
                             end=w[2]) for w in ds.refWindows]
+
 
 def parseReferenceWindow(s, refInfoLookup):
     if s is None:
@@ -73,11 +76,13 @@ def parseReferenceWindow(s, refInfoLookup):
     return ReferenceWindow(refId=refId, refName=refName, start=refStart,
                            end=refEnd)
 
+
 def createReferenceWindows(refInfo):
     return [ReferenceWindow(refId=r.ID,
                             refName=r.Name,
                             start=0,
                             end=r.Length) for r in refInfo]
+
 
 def enumerateChunks(referenceStride, referenceWindow):
     """
@@ -99,10 +104,10 @@ def enumerateChunks(referenceStride, referenceWindow):
         boundaries on multiple of stride.
         """
         def alignDown(chunk, x):
-            return (x//chunk)*chunk
+            return (x // chunk) * chunk
 
         def alignUp(chunk, x):
-            return int(math.ceil(float(x)/chunk)*chunk)
+            return int(math.ceil(float(x) / chunk) * chunk)
 
         start, end = bounds
         roundStart = alignDown(stride, start)
@@ -117,6 +122,7 @@ def enumerateChunks(referenceStride, referenceWindow):
         yield ReferenceWindow(refId=referenceWindow.refId,
                               refName=referenceWindow.refName,
                               start=s, end=e)
+
 
 def loadAlignmentChemistry(alignmentSet):
     chems = alignmentSet.sequencingChemistry

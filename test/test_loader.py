@@ -1,5 +1,7 @@
 import os
+
 import pytest
+
 import kineticsTools.loader as B
 
 
@@ -45,7 +47,8 @@ def test_path(monkeypatch):
 
 def test_path_with_prefixed_chem(monkeypatch):
     def isfile(fn):
-        if fn in ('path1/SP2-C2.npz.gz', 'path2/SP2-C2.npz.gz', 'path1/SP3-C3.npz.gz', 'path2/SP3-C3.npz.gz'):
+        if fn in ('path1/SP2-C2.npz.gz', 'path2/SP2-C2.npz.gz',
+                  'path1/SP3-C3.npz.gz', 'path2/SP3-C3.npz.gz'):
             return True
         if fn in ('pathmissing/SP2-C2.npz.gz', 'pathmissing/SP3-C3.npz.gz'):
             return False

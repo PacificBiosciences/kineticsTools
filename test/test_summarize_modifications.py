@@ -1,22 +1,20 @@
-
-import unittest
 import os.path as op
+
+import pytest
 
 from pbcommand.testkit import PbIntegrationBase
 
 TESTDATA = "/pbi/dept/secondary/siv/testdata/kineticsTools"
-skip_unless_testdata = unittest.skipUnless(op.isdir(TESTDATA),
-                                           "Testdata missing")
 
 
 class TestSummarizeModifications(PbIntegrationBase):
 
-    @skip_unless_testdata
+    @pytest.mark.internal_data
     def test_integration(self):
         args = [
             "python", "-m", "kineticsTools.summarizeModifications",
             op.join(TESTDATA, "basemods.gff"),
             op.join(TESTDATA, "coverage.gff"),
-            "basemods_summary.gff"
+            "basemods_summary.gff",
         ]
         self._check_call(args)

@@ -125,7 +125,8 @@ class MultiSiteCommon(object):
         """ Compute the likelihood of the observed IPDs at position, given the context"""
 
         # Handle the prior for a modification at the current base here
-        # unmodified bases get a prior of 0, modified bases get a prior less than 0.
+        # unmodified bases get a prior of 0, modified bases get a prior less
+        # than 0.
         prior = 0.0
         if context[self.pre] in self.modPriors:
             prior = self.modPriors[context[self.pre]]
