@@ -16,11 +16,13 @@ from .MixtureEstimationMethods import MixtureEstimationMethods
 
 class BasicLdaEnricher(MultiSiteCommon):
 
-    def __init__(self, gbmModel, sequence, rawKinetics, identifyFlag, modsToCall=['H', 'J', 'K']):
+    def __init__(self, gbmModel, sequence, rawKinetics,
+                 identifyFlag, modsToCall=['H', 'J', 'K']):
 
         MultiSiteCommon.__init__(self, gbmModel, sequence, rawKinetics)
 
-        # FIXME: For debugging LDA, load in parameters for forward and reverse strands:
+        # FIXME: For debugging LDA, load in parameters for forward and reverse
+        # strands:
 
         self.fwd_model = np.genfromtxt(
             "/home/UNIXHOME/obanerjee/nat_fwd_model_expanded.csv", delimiter=',')

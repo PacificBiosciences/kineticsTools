@@ -14,7 +14,8 @@ from .MixtureEstimationMethods import MixtureEstimationMethods
 
 class ModificationDecode(MultiSiteCommon):
 
-    def __init__(self, gbmModel, sequence, rawKinetics, callBounds, methylMinCov, modsToCall=['H', 'J', 'K'], methylFractionFlag=False, useLDAFlag=False):
+    def __init__(self, gbmModel, sequence, rawKinetics, callBounds, methylMinCov, modsToCall=[
+                 'H', 'J', 'K'], methylFractionFlag=False, useLDAFlag=False):
 
         MultiSiteCommon.__init__(self, gbmModel, sequence, rawKinetics)
 
@@ -34,7 +35,8 @@ class ModificationDecode(MultiSiteCommon):
         # Find potential modification sites
         self.findAlternates()
 
-        # Compute all the required mean ipds under all possible composite hypotheses
+        # Compute all the required mean ipds under all possible composite
+        # hypotheses
         self.computeContextMeans()
 
         # Fill out the forward matrix
@@ -117,7 +119,8 @@ class ModificationDecode(MultiSiteCommon):
         scores[start] = dict((cfg, self.scorePosition(start, cfg))
                              for cfg in self.getConfigs(start))
 
-        # First column of fwd matrix is same a score matrix, with 'None' in the index matrix
+        # First column of fwd matrix is same a score matrix, with 'None' in the
+        # index matrix
         fwdScore[start] = scores[start]
         fwdPrevState[start] = dict((x, None) for x in scores[start].keys())
 
@@ -138,7 +141,8 @@ class ModificationDecode(MultiSiteCommon):
 
                 # Loop over previous state options
                 for (prevCfg, prevScore) in fwdScore[centerPos - 1].items():
-                    if self.compareStates(cfg, prevCfg) and prevScore + score > bestScore:
+                    if self.compareStates(
+                            cfg, prevCfg) and prevScore + score > bestScore:
                         bestScore = prevScore + score
                         bestPrevState = prevCfg
 
@@ -291,7 +295,8 @@ class ModificationDecode(MultiSiteCommon):
                     mixture = MixtureEstimationMethods(
                         self.gbmModel.post, self.gbmModel.pre, self.rawKinetics, self.methylMinCov)
 
-                    # Use modifiedMeanVectors and unmodifiedMeanVectors to calculate mixing proportion, and 95% CI limits.
+                    # Use modifiedMeanVectors and unmodifiedMeanVectors to
+                    # calculate mixing proportion, and 95% CI limits.
                     methylFracEst, methylFracLow, methylFracUpp = mixture.estimateMethylatedFractions(
                         pos, unModifiedMeanVectors, modifiedMeanVectors, ModificationPeakMask[modNames[call]])
 
@@ -340,7 +345,8 @@ class ModificationDecode(MultiSiteCommon):
         for i in range(start, end + 1):
             # Add a neighboring peak to the mask if
             # a) it has a single-site qv > 20
-            # b) the observed IPDs are somewhat more likely under the modified hypothesis than the unmodified hypothesis
+            # b) the observed IPDs are somewhat more likely under the modified
+            # hypothesis than the unmodified hypothesis
             if i in self.rawKinetics and self.rawKinetics[i]["score"] > 20:
                 if modScores[i - start] - noModScores[i - start] > 1.0:
                     maskPos.append(i - pos)

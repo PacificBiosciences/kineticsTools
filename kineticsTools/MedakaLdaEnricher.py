@@ -1,4 +1,5 @@
-# Try to implement method used in Morishita et al.'s Medaka fish genome paper here
+# Try to implement method used in Morishita et al.'s Medaka fish genome
+# paper here
 
 from collections import defaultdict, Counter
 
@@ -65,10 +66,12 @@ class MedakaLdaEnricher(MultiSiteCommon):
 
         L = len(tmp)
         for pos in range(down, (L - up)):
-            if (strand == 0 and tmp[pos]["base"] == 'C' and tmp[pos+1]["base"] == 'G'):
+            if (strand == 0 and tmp[pos]["base"] ==
+                    'C' and tmp[pos + 1]["base"] == 'G'):
                 tmp[pos]["Ca5C"] = self.useLDAmodel(tmp, pos, model, up, down)
 
-            if (strand == 1 and tmp[pos]["base"] == 'C' and tmp[pos-1]["base"] == 'G'):
+            if (strand == 1 and tmp[pos]["base"] ==
+                    'C' and tmp[pos - 1]["base"] == 'G'):
                 tmp[pos -
                     1]["Ca5C"] = self.useLDAmodel(tmp, pos, model, up, down)
 

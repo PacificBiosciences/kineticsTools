@@ -41,10 +41,12 @@ class IpdRatioSummaryWriter(PBToolRunner):
 
     def validateArgs(self):
         if not os.path.exists(self.args.modifications):
-            self.parser.error('input modifications gff file provided does not exist')
+            self.parser.error(
+                'input modifications gff file provided does not exist')
 
         if not os.path.exists(self.args.alignmentSummary):
-            self.parser.error('input alignment summary gff file provided does not exist')
+            self.parser.error(
+                'input alignment summary gff file provided does not exist')
 
     def run(self):
         self.options = self.args
@@ -74,12 +76,15 @@ class IpdRatioSummaryWriter(PBToolRunner):
         headers = [
             ('source', 'kineticModificationCaller 1.3.1'),
             ('source-commandline', " ".join(sys.argv)),
-            ('attribute-description', 'modsfwd - count of detected DNA modifications on forward strand'),
-            ('attribute-description', 'modsrev - count of detected DNA modifications on reverse strand')
+            ('attribute-description',
+             'modsfwd - count of detected DNA modifications on forward strand'),
+            ('attribute-description',
+             'modsrev - count of detected DNA modifications on reverse strand')
         ]
 
         # Get modification calls
-        hits = [{"pos": x.start, "strand": x.strand} for x in modReader if x.type == 'modified_base']
+        hits = [{"pos": x.start, "strand": x.strand}
+                for x in modReader if x.type == 'modified_base']
 
         # Summary reader
         summaryFile = file(self.args.alignmentSummary)
@@ -106,7 +111,8 @@ class IpdRatioSummaryWriter(PBToolRunner):
                 continue
 
             if inHeader:
-                # We are at the end of the header -- write the tool-specific headers
+                # We are at the end of the header -- write the tool-specific
+                # headers
                 for field in headers:
                     print(("##%s %s" % field), file=summaryWriter)
                 inHeader = False
@@ -116,14 +122,18 @@ class IpdRatioSummaryWriter(PBToolRunner):
 
             if rec.type == 'region':
                 # Get the hits in this interval, add them to the gff record
-                intervalHits = [h for h in hits if rec.start <= h['pos'] <= rec.end]
-                strand0Hits = len([h for h in intervalHits if h['strand'] == '+'])
-                strand1Hits = len([h for h in intervalHits if h['strand'] == '-'])
+                intervalHits = [
+                    h for h in hits if rec.start <= h['pos'] <= rec.end]
+                strand0Hits = len(
+                    [h for h in intervalHits if h['strand'] == '+'])
+                strand1Hits = len(
+                    [h for h in intervalHits if h['strand'] == '-'])
 
                 rec.modsfwd = strand0Hits
                 rec.modsrev = strand1Hits
 
                 print(str(rec), file=summaryWriter)
+
 
 if __name__ == "__main__":
     kt = ModificationSummary()

@@ -2,13 +2,13 @@
 Test sanity of various output formats for a minimal real-world example.
 """
 
-import pytest
+import csv
+import os.path
+import re
 import subprocess
 import tempfile
-import unittest
-import os.path
-import csv
-import re
+
+import pytest
 
 os.environ["PACBIO_TEST_ENV"] = "1"  # turns off --verbose
 
@@ -17,18 +17,14 @@ REF_DIR = "/pbi/dept/secondary/siv/references/Helicobacter_pylori_J99"
 ALIGNMENTS = os.path.join(DATA_DIR, "Hpyl_1_5000.xml")
 REFERENCE = os.path.join(REF_DIR, "sequence", "Helicobacter_pylori_J99.fasta")
 
-skip_if_no_data = unittest.skipUnless(
-    os.path.isdir(DATA_DIR) and os.path.isdir(REF_DIR),
-    "%s or %s not available" % (DATA_DIR, REF_DIR))
 
-
-@skip_if_no_data
-class TestOutputs(unittest.TestCase):
+@pytest.mark.internal_data
+class TestOutputs:
 
     @classmethod
-    @skip_if_no_data
-    def setUpClass(cls):
-        # prefix = tempfile.NamedTemporaryFile().name  # not sure of the problem, but misused anyway
+    def setup_class(cls):
+        # prefix = tempfile.NamedTemporaryFile().name  # not sure of the
+        # problem, but misused anyway
         prefix = 'TestOutputs'
         cls.csv_file = "{p}.csv".format(p=prefix)
         cls.gff_file = "{p}.gff".format(p=prefix)
@@ -53,16 +49,16 @@ class TestOutputs(unittest.TestCase):
             cls.csv_records = [l.split(",") for l in f.read().splitlines()][1:]
 
     @classmethod
-    def tearDownClass(cls):
+    def teardown_class(cls):
         return
         for fn in [cls.csv_file, cls.gff_file, cls.bw_file]:
             if os.path.exists(fn):
                 os.remove(fn)
 
     def test_csv_output(self):
-        self.assertEqual(len(self.csv_records), 400)
-        self.assertEqual(self.csv_records[0][3], "A")
-        self.assertEqual(self.csv_records[100][3], "T")
+        assert len(self.csv_records) == 400
+        assert self.csv_records[0][3] == "A"
+        assert self.csv_records[100][3] == "T"
 
     @pytest.mark.skip(reason="missing bw_file, so i disabled this (cd)")
     def test_bigwig(self):
@@ -71,14 +67,10 @@ class TestOutputs(unittest.TestCase):
         for i_rec, rec in enumerate(self.csv_records):
             seqid = re.sub('\"', "", rec[0])
             tpl = int(rec[1]) - 1
-            s = int(f.values(seqid, tpl, tpl+1)[0])
+            s = int(f.values(seqid, tpl, tpl + 1)[0])
             ipd_minus = (s % 65536) / 100.0
             ipd_plus = (s >> 16) / 100.0
             if rec[2] == "1":
-                self.assertAlmostEqual(ipd_minus, float(rec[8]), places=1)
+                assert pytest.approx(ipd_minus, float(rec[8]))
             else:
-                self.assertAlmostEqual(ipd_plus, float(rec[8]), places=1)
-
-
-if __name__ == "__main__":
-    unittest.main()
+                assert pytest.approx(ipd_plus, float(rec[8]))

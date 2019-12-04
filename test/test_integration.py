@@ -1,16 +1,13 @@
-
-from collections import defaultdict
-import unittest
-import tempfile
 import os.path as op
+import tempfile
+from collections import defaultdict
+
+import pytest
 
 from pbcommand.testkit import PbIntegrationBase
 
 DATA_DIR = "/pbi/dept/secondary/siv/testdata/kineticsTools"
 REF_DIR = "/pbi/dept/secondary/siv/references"
-skip_if_no_data = unittest.skipUnless(
-    op.isdir(DATA_DIR) and op.isdir(REF_DIR),
-    "%s or %s not available" % (DATA_DIR, REF_DIR))
 
 EXPECTED_GFF = """\
 Escherichia_coli_K12\tkinModCall\tmodified_base\t6307\t6307\t34\t-\t.\tcoverage=56;context=CAGATTAGCACGCTGATGCGCATCAGCGACAAACTGGCGGG;IPDRatio=1.92
@@ -29,7 +26,7 @@ class TestKineticsTools(PbIntegrationBase):
         args = ["ipdSummary", "--help"]
         self._check_call(args)
 
-    @skip_if_no_data
+    @pytest.mark.internal_data
     def test_ecoli_first_50k(self):
         gff_out = tempfile.NamedTemporaryFile(suffix=".gff").name
         csv_out = tempfile.NamedTemporaryFile(suffix=".csv").name
@@ -46,19 +43,19 @@ class TestKineticsTools(PbIntegrationBase):
             alignments
         ]
         self._check_call(args)
-        self.assertTrue(op.isfile(gff_out))
-        self.assertTrue(op.isfile(csv_out))
+        assert op.isfile(gff_out)
+        assert op.isfile(csv_out)
         records = []
         with open(gff_out, "rt") as gff:
             for line in gff.read().splitlines():
                 if not line.startswith("##"):
                     records.append(line)
         for rec1, rec2 in zip(records, EXPECTED_GFF.splitlines()):
-            self.assertEqual(rec1, rec2)
+            assert rec1 == rec2
         csv_records = []
         with open(csv_out, "rt") as csv:
             for line in csv.read().splitlines():
                 csv_records.append(line)
-        self.assertEqual(len(csv_records), 3222)
-        self.assertEqual(
-            csv_records[1], "\"Escherichia_coli_K12\",6214,0,C,8,0.784,0.144,0.631,1.242,33")
+        assert len(csv_records) == 3222
+        assert csv_records[1] == \
+            r'"Escherichia_coli_K12",6214,0,C,8,0.784,0.144,0.631,1.242,33'
