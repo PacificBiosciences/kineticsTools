@@ -5,15 +5,16 @@ type module >& /dev/null || . /mnt/software/Modules/current/init/bash
 module purge
 #module load gcc
 #module load ccache
-module load python/2
-module load htslib
-module load hdf5-tools  # for h5ls
+module load python/3
+module load htslib/1.9
+module load zlib
+module load cram
 set -vex
 
 which gcc
 gcc --version
-which python
-python --version
+which python3
+python3 --version
 
 export PYTHONUSERBASE=$PWD/build
 export PATH=${PYTHONUSERBASE}/bin:${PATH}
@@ -36,22 +37,25 @@ mkdir -p build/{bin,lib,include,share}
 PIP_INSTALL="${PIP} install --no-index --find-links=${WHEELHOUSE}"
 #PIP_INSTALL="${PIP} install -v"
 
-#$PIP_INSTALL --user pysam==0.15.2
+export HTSLIB_MODE='external'
+export HTSLIB_LIBRARY_DIR=/mnt/software/h/htslib/1.9/lib
+export HTSLIB_INCLUDE_DIR=/mnt/software/h/htslib/1.9/include
+#$PIP install -v --user pysam==0.15.3
+$PIP_INSTALL --user repos/pbcommand
+$PIP_INSTALL --user repos/pbcore
+
 #python -c 'import pysam as p; print(p)'
 #$PIP_INSTALL --user pyBigWig
 #python -c 'import pysam as p; print(p)'
 
-$PIP_INSTALL --user -r requirements-ci.txt
-python -c 'import pysam as p; print(p)'
-$PIP_INSTALL --user -r requirements-dev.txt
-python -c 'import pysam as p; print(p)'
 #iso8601 xmlbuilder tabulate pysam avro?
-$PIP install --user ./
-python -c 'import pysam as p; print(p)'
+$PIP_INSTALL --user ./
+python3 -c 'import pysam as p; print(p)'
 
 # Sanity-test for linkage errors.
 ipdSummary -h
 
-$PIP_INSTALL --user pytest-xdist pytest-cov
+$PIP_INSTALL --user --upgrade pytest
+$PIP_INSTALL --user pytest-xdist pytest-cov pylint
 
-make test
+make -j3 test

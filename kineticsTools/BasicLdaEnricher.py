@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 # Basic LDA Enricher class
 
 from math import sqrt
@@ -17,19 +16,25 @@ from .MixtureEstimationMethods import MixtureEstimationMethods
 
 class BasicLdaEnricher(MultiSiteCommon):
 
-    def __init__(self, gbmModel, sequence, rawKinetics, identifyFlag, modsToCall=['H', 'J', 'K']):
+    def __init__(self, gbmModel, sequence, rawKinetics,
+                 identifyFlag, modsToCall=['H', 'J', 'K']):
 
         MultiSiteCommon.__init__(self, gbmModel, sequence, rawKinetics)
 
-        # FIXME: For debugging LDA, load in parameters for forward and reverse strands:
+        # FIXME: For debugging LDA, load in parameters for forward and reverse
+        # strands:
 
-        self.fwd_model = np.genfromtxt("/home/UNIXHOME/obanerjee/nat_fwd_model_expanded.csv", delimiter=',')
-        self.rev_model = np.genfromtxt("/home/UNIXHOME/obanerjee/nat_rev_model_expanded.csv", delimiter=',')
+        self.fwd_model = np.genfromtxt(
+            "/home/UNIXHOME/obanerjee/nat_fwd_model_expanded.csv", delimiter=',')
+        self.rev_model = np.genfromtxt(
+            "/home/UNIXHOME/obanerjee/nat_rev_model_expanded.csv", delimiter=',')
 
         if identifyFlag:
             if 'K' in modsToCall:
-                self.fwd_model = np.genfromtxt("/home/UNIXHOME/obanerjee/tet_fwd_model_expanded.csv", delimiter=',')
-                self.rev_model = np.genfromtxt("/home/UNIXHOME/obanerjee/tet_rev_model_expanded.csv", delimiter=',')
+                self.fwd_model = np.genfromtxt(
+                    "/home/UNIXHOME/obanerjee/tet_fwd_model_expanded.csv", delimiter=',')
+                self.rev_model = np.genfromtxt(
+                    "/home/UNIXHOME/obanerjee/tet_rev_model_expanded.csv", delimiter=',')
 
     # write a method to take perSiteResults dictionary in and add a column Ca5C
     def useLDAmodel(self, kinetics, pos, model, up, down):
@@ -42,7 +47,8 @@ class BasicLdaEnricher(MultiSiteCommon):
         for offset in range(-down, (up + 1)):
             a = pos + offset
             # res[ind,] = [kinetics[a]["tMean"], kinetics[a]["modelPrediction"], kinetics[a]["tErr"], kinetics[a]["coverage"]]
-            res[ind, ] = [kinetics[a]["tMean"], kinetics[a]["modelPrediction"], kinetics[a]["tErr"], kinetics[a]["coverage"], np.exp(kinetics[a]["tStatistic"]) - 0.01]
+            res[ind, ] = [kinetics[a]["tMean"], kinetics[a]["modelPrediction"], kinetics[a]
+                          ["tErr"], kinetics[a]["coverage"], np.exp(kinetics[a]["tStatistic"]) - 0.01]
             ind += 1
 
         apply = np.hstack(np.log(res + 0.01).transpose())

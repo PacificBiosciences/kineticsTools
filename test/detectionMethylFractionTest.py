@@ -1,9 +1,9 @@
-from __future__ import print_function
 import logging
 import os
 import platform
-import unittest
+
 from pbcore.io import CmpH5Reader
+
 from kineticsTools.ReferenceUtils import ReferenceWindow
 from kineticsTools.KineticWorker import KineticWorker
 from kineticsTools.ipdModel import IpdModel
@@ -14,8 +14,8 @@ from test import TestSetup
 class TestDetectionMethylFraction(TestSetup):
 
     # We inherit the setup method for test.py.
-    # If you need to customize your dataset, we should set up some different conventions
-    # def setUp(self):
+    # If you need to customize your dataset, we should set up some different
+    # conventions
 
     def getOpts(self):
         opts = self.basicOpts()
@@ -46,8 +46,4 @@ class TestDetectionMethylFraction(TestSetup):
         print(m6AMods)
 
         for mod in m6AMods:
-            self.assertGreater(mod["frac"], 0.5)
-
-
-if __name__ == '__main__':
-    unittest.main()
+            assert mod["frac"] > 0.5

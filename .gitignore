@@ -1,8 +1,10 @@
 build/
 dist/
+/.eggs
 src/pbtools.kineticsTools.egg-info/
 *.pyc
 kineticsTools.egg-info/
 /cramtests.xml
 /nosetests.xml
-/tree_predict.so
+/tree_predict*.so
+test/cram/*.err

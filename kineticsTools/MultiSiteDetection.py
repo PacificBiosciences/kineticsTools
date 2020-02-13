@@ -1,33 +1,3 @@
-#################################################################################
-# Copyright (c) 2011-2013, Pacific Biosciences of California, Inc.
-#
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# * Redistributions of source code must retain the above copyright
-#   notice, this list of conditions and the following disclaimer.
-# * Redistributions in binary form must reproduce the above copyright
-#   notice, this list of conditions and the following disclaimer in the
-#   documentation and/or other materials provided with the distribution.
-# * Neither the name of Pacific Biosciences nor the names of its
-#   contributors may be used to endorse or promote products derived from
-#   this software without specific prior written permission.
-#
-# NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
-# THIS LICENSE.  THIS SOFTWARE IS PROVIDED BY PACIFIC BIOSCIENCES AND ITS
-# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PACIFIC BIOSCIENCES OR
-# ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#################################################################################
-
 from math import sqrt
 import math
 import scipy.stats as s
@@ -40,7 +10,8 @@ import re
 
 log10e = log10(e)
 
-canonicalBaseMap = {'A': 'A', 'C': 'C', 'G': 'G', 'T': 'T', 'H': 'A', 'I': 'C', 'J': 'C', 'K': 'C'}
+canonicalBaseMap = {'A': 'A', 'C': 'C', 'G': 'G',
+                    'T': 'T', 'H': 'A', 'I': 'C', 'J': 'C', 'K': 'C'}
 modNames = {'H': 'm6A', 'I': 'm5C', 'J': 'm4C', 'K': 'm5C'}
 
 m5CCode = 'I'
@@ -91,7 +62,8 @@ def findMotifPositions(seq, motifs):
 
 class MultiSiteDetection(object):
 
-    def __init__(self, gbmModel, sequence, rawKinetics, callBounds, methylMinCov, motifs=['CG']):
+    def __init__(self, gbmModel, sequence, rawKinetics,
+                 callBounds, methylMinCov, motifs=['CG']):
         """
 
         """
@@ -106,7 +78,7 @@ class MultiSiteDetection(object):
         self.callEnd = callBounds[1]
 
         # Extents that we will attempt to call a modification
-        self.callRange = xrange(self.callStart, self.callEnd)
+        self.callRange = range(self.callStart, self.callEnd)
 
         # These switch because we changing viewpoints
         self.pre = gbmModel.post
@@ -116,9 +88,10 @@ class MultiSiteDetection(object):
         self.lEnd = len(self.sequence) - self.post
 
         # Extents that we will use for likelihoods
-        self.likelihoodRange = xrange(self.lStart, self.lEnd)
+        self.likelihoodRange = range(self.lStart, self.lEnd)
 
-        self.alternateBases = dict((x, list(sequence[x])) for x in xrange(len(sequence)))
+        self.alternateBases = dict(
+            (x, list(sequence[x])) for x in range(len(sequence)))
 
         self.rawKinetics = rawKinetics
 
@@ -145,17 +118,18 @@ class MultiSiteDetection(object):
 
             noModsSuffix = allSuffixes[0]
             if len(allSuffixes) > 1:
-                    restSuffixes = allSuffixes[1:]
+                restSuffixes = allSuffixes[1:]
             else:
-                    restSuffixes = []
+                restSuffixes = []
 
             # The noMods suffix get the alternates
             for c in self.alternateBases[start]:
-                    r.append(c + noModsSuffix)
+                r.append(c + noModsSuffix)
 
-            # the other suffixes already have mods -- they just get the unmodified base
+            # the other suffixes already have mods -- they just get the
+            # unmodified base
             for suffix in restSuffixes:
-                    r.append(self.alternateBases[start][0] + suffix)
+                r.append(self.alternateBases[start][0] + suffix)
 
             return r
 
@@ -163,7 +137,7 @@ class MultiSiteDetection(object):
     def getContexts(self, start, end, sequence):
         contexts = []
 
-        for pos in xrange(start, end + 1):
+        for pos in range(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             contexts.append(ctx)
 
@@ -175,7 +149,7 @@ class MultiSiteDetection(object):
         allContexts = []
 
         for pos in self.motifPositions:
-            for offsetPos in xrange(pos - self.post, pos + self.pre + 1):
+            for offsetPos in range(pos - self.post, pos + self.pre + 1):
                 cfgs = self.getConfigs(offsetPos)
                 allContexts.extend(cfgs)
 
@@ -188,7 +162,8 @@ class MultiSiteDetection(object):
         # Find sites matching the desired motif
         self.findMotifs()
 
-        # Compute all the required mean ipds under all possible composite hypotheses
+        # Compute all the required mean ipds under all possible composite
+        # hypotheses
         self.computeContextMeans()
 
         # Compute a confidence for each mod and return results
@@ -208,8 +183,8 @@ class MultiSiteDetection(object):
                 self.motifPositions.append(pos)
 
     def multiSiteDetection(self, positions, nullPred, modPred, centerPosition):
-        ''' kinetics, nullPred, and modifiedPred are parallel arrays 
-            containing the observations and predictions surrounding a 
+        ''' kinetics, nullPred, and modifiedPred are parallel arrays
+            containing the observations and predictions surrounding a
             single candidate motif site.  Estimate the p-value of
             modification and the modified fraction here'''
 
@@ -221,7 +196,7 @@ class MultiSiteDetection(object):
         obsErr = np.zeros(nullPred.shape)
 
         # Get the observations into the same array format
-        for i in xrange(len(positions)):
+        for i in range(len(positions)):
             position = positions[i]
 
             if position in self.rawKinetics:
@@ -234,15 +209,18 @@ class MultiSiteDetection(object):
                 obsMean[i] = 0.0
                 obsErr[i] = 999999999
 
-        # Subtract off the background model from the observations and the modified prediction
+        # Subtract off the background model from the observations and the
+        # modified prediction
         dObs = obsMean - nullPred
         # Error of observation and prediction are uncorrelated
         obsSigma = obsErr ** 2 + nullErr ** 2
         invObsSigma = 1.0 / obsSigma
 
-        # Error of null prediction and mod prediction are probably correlated -- need a better estimate of the error of the difference!!
+        # Error of null prediction and mod prediction are probably correlated
+        # -- need a better estimate of the error of the difference!!
         dPred = modPred - nullPred
-        dPredSigma = (obsErr ** 2 + nullErr ** 2) / 2  # Just stubbing in a factor of 2 here...
+        # Just stubbing in a factor of 2 here...
+        dPredSigma = (obsErr ** 2 + nullErr ** 2) / 2
 
         weightsNumerator = invObsSigma * dPred
         weights = weightsNumerator / (dPred * weightsNumerator).sum()
@@ -291,20 +269,23 @@ class MultiSiteDetection(object):
             if pos in self.rawKinetics:
 
                 # Fetch unmodified positions
-                nullPred = self.getRegionPredictions(pos - self.post, pos + self.pre, dnaSeq)
+                nullPred = self.getRegionPredictions(
+                    pos - self.post, pos + self.pre, dnaSeq)
 
                 # Fetch modified positions and reset sequence
                 originalBase = dnaSeq[pos]
                 dnaSeq[pos] = m5CCode
-                modifiedPred = self.getRegionPredictions(pos - self.post, pos + self.pre, dnaSeq)
+                modifiedPred = self.getRegionPredictions(
+                    pos - self.post, pos + self.pre, dnaSeq)
                 dnaSeq[pos] = originalBase
 
                 # Position that contribute to this call
-                positions = xrange(pos - self.post, pos + self.pre + 1)
+                positions = range(pos - self.post, pos + self.pre + 1)
 
                 # Run the multi-site detection and save the results
                 centerStats = self.rawKinetics[pos]
-                centerStats = self.multiSiteDetection(positions, nullPred, modifiedPred, centerStats)
+                centerStats = self.multiSiteDetection(
+                    positions, nullPred, modifiedPred, centerStats)
 
                 qvModCalls[pos] = centerStats
 
@@ -313,7 +294,7 @@ class MultiSiteDetection(object):
     def getRegionPredictions(self, start, end, sequence):
         predictions = np.zeros(end - start + 1)
 
-        for pos in xrange(start, end + 1):
+        for pos in range(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
             predictions[pos - start] = self.contextMeanTable[ctx]
 
