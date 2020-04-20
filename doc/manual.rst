@@ -112,11 +112,11 @@ The modifications.gff file will not work directly with most genome browsers.  Yo
 
 The auxiliary data column of the GFF file contains other statistics which may be useful downstream analysis or filtering.  In particular the coverage level of the reads used to make the call, and +/- 20bp sequence context surrounding the site.
 
-================  ===========
-Column      Description
-================  ===========
-seqid     Fasta contig name
-source            Name of tool -- 'kinModCall'
+================        ===========
+Column                  Description
+================        ===========
+seqid                   Fasta contig name
+source                  Name of tool -- 'kinModCall'
 type                    Modification type -- in identification mode this will be m6A, m4C, or m5C for identified bases, or the generic tag 'modified_base' if a kinetic event was detected that does not match a known modification signature
 start                   Modification position on contig
 end                     Modification position on contig
@@ -124,7 +124,7 @@ score                   Phred transformed p-value of detection - this is the sin
 strand                  Sample strand containing modification
 phase                   Not applicable
 attributes              Extra fields relevant to base mods. IPDRatio is traditional IPDRatio, context is the reference sequence -20bp to +20bp around the modification, and coverage level is the number of IPD observations used after Mapping QV filtering and accuracy filtering. If the row results from an identified modification we also include an identificationQv tag with the from the modification identification procedure. identificationQv is the phred-transformed probability of an incorrect identification, for bases that were identified as having a particular modification. frac, fracLow, fracUp are the estimated fraction of molecules carrying the modification, and the 5% confidence intervals of the estimate. The methylated fraction estimation is a beta-level feature, and should only be used for exploratory purposes.
-================  ===========
+================        ===========
 
 modifications.csv
 -----------------
