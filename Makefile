@@ -6,17 +6,17 @@ utest:
 all: build install
 
 build:
-	python setup.py build --executable="/usr/bin/env python"
+	python3 setup.py build --executable="/usr/bin/env python"
 
 bdist:
-	python setup.py build --executable="/usr/bin/env python"
-	python setup.py bdist --formats=egg
+	python3 setup.py build --executable="/usr/bin/env python"
+	python3 setup.py bdist --formats=egg
 
 install:
-	python setup.py install
+	python3 setup.py install
 
 develop:
-	python setup.py develop
+	python3 setup.py develop
 
 clean:
 	rm -rf build/;\
@@ -29,17 +29,17 @@ check: tests
 tests: cram-tests py-tests extra-tests
 
 cram-tests:
-	cram --xunit-file=cramtests.xml test/cram/*.t
+	cram3 --xunit-file=cramtests.xml test/cram/*.t
 
 long-tests:
-	cram test/cram/long_running/*.t
+	cram3 test/cram/long_running/*.t
 
 py-tests:
 	# pytest --cov=kineticsTools  # does not quite work since we run in test/ dir.
 	cd test/; pytest -s -v -p no:warnings -n auto --dist=loadscope --durations=20 --junitxml=../nosetests.xml --cov-report=xml:../coverage.xml test_*.py
 
 extra-tests:
-	#cram --xunit-file=cramtests-extra.xml test/cram/extra/*.t
+	#cram3 --xunit-file=cramtests-extra.xml test/cram/extra/*.t
 	# TODO: Fix chemistry and re-enable this test.
 
 pylint:

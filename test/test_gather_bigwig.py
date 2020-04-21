@@ -72,7 +72,7 @@ class TestGatherBigwig:
     def test_gather_bigwig_cli(self):
         tmp_dir = tempfile.mkdtemp()
         ofn = op.join(tmp_dir, "gathered.bw")
-        args = ["python", "-m", "kineticsTools.tasks.gather_bigwig",
+        args = ["python3", "-m", "kineticsTools.tasks.gather_bigwig",
                 ofn] + self._data_files
         log.info("Output will be in %s", tmp_dir)
         with open(op.join(tmp_dir, "stdout"), "w") as stdout:
