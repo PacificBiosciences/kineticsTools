@@ -1,5 +1,5 @@
 from multiprocessing.process import Process, current_process
-from src.kineticsTools.sharedArray import SharedArray
+from kineticsTools.sharedArray import SharedArray
 
 # Test script for making sure that shared memory backed numpy arrays work properly
 # FIXME -- migrate to test dir if possible
