@@ -13,10 +13,10 @@ EXPECTED_GFF = """\
 Escherichia_coli_K12\tkinModCall\tmodified_base\t6307\t6307\t34\t-\t.\tcoverage=56;context=CAGATTAGCACGCTGATGCGCATCAGCGACAAACTGGCGGG;IPDRatio=1.92
 Escherichia_coli_K12\tkinModCall\tmodified_base\t6455\t6455\t32\t-\t.\tcoverage=53;context=CCTGCAAGGACTGGATATGCTGATTCTTATTTCACCTGCGA;IPDRatio=1.78
 Escherichia_coli_K12\tkinModCall\tmodified_base\t6512\t6512\t32\t-\t.\tcoverage=55;context=GTAATCACAACTATCGATCAACTCATTCTCATTTTTTGCTA;IPDRatio=1.81
-Escherichia_coli_K12\tkinModCall\tm6A\t6984\t6984\t34\t-\t.\tcoverage=56;context=TACTGGCGGGTAACGGCACAACCTACATGCCGCTGGAAGGT;IPDRatio=2.02;identificationQv=5
-Escherichia_coli_K12\tkinModCall\tm4C\t7111\t7111\t24\t+\t.\tcoverage=19;context=GGAGGCCAGGACGCCGCTGCCGCTGCCGCGTTTGGCGTCGA;IPDRatio=2.45;identificationQv=4
+Escherichia_coli_K12\tkinModCall\tm6A\t6984\t6984\t34\t-\t.\tcoverage=56;context=TACTGGCGGGTAACGGCACAACCTACATGCCGCTGGAAGGT;IPDRatio=2.02;frac=0.627;fracLow=0.321;fracUp=0.911;identificationQv=5
+Escherichia_coli_K12\tkinModCall\tm4C\t7111\t7111\t24\t+\t.\tcoverage=19;context=GGAGGCCAGGACGCCGCTGCCGCTGCCGCGTTTGGCGTCGA;IPDRatio=2.45;frac=1.000;fracLow=0.370;fracUp=1.000;identificationQv=4
 Escherichia_coli_K12\tkinModCall\tmodified_base\t20051\t20051\t44\t+\t.\tcoverage=19;context=ACGTCAAAGGGTGACAGCAGGCTCATAAGACGCCCCAGCGT;IPDRatio=2.54
-Escherichia_coli_K12\tkinModCall\tm4C\t20296\t20296\t24\t-\t.\tcoverage=17;context=GGATGCCGGGCAACAGCCCGCATTATGGGCGTTGGCCTCAA;IPDRatio=1.86;identificationQv=9
+Escherichia_coli_K12\tkinModCall\tm4C\t20296\t20296\t24\t-\t.\tcoverage=17;context=GGATGCCGGGCAACAGCCCGCATTATGGGCGTTGGCCTCAA;IPDRatio=1.86;frac=1.000;fracLow=0.379;fracUp=1.000;identificationQv=9
 Escherichia_coli_K12\tkinModCall\tmodified_base\t20449\t20449\t31\t+\t.\tcoverage=18;context=TGTCCGGCGGTGCTTTTGCCGTTACGCACCACCCCGTCAGT;IPDRatio=2.49"""
 
 
@@ -39,6 +39,7 @@ class TestKineticsTools(PbIntegrationBase):
             "--csv", csv_out,
             "--pvalue", "0.001",
             "--identify", "m6A,m4C",
+            "--methylFraction",
             "--reference", ref_set,
             alignments
         ]
@@ -46,6 +47,7 @@ class TestKineticsTools(PbIntegrationBase):
         assert op.isfile(gff_out)
         assert op.isfile(csv_out)
         records = []
+        print(gff_out)
         with open(gff_out, "rt") as gff:
             for line in gff.read().splitlines():
                 if not line.startswith("##"):
@@ -58,4 +60,4 @@ class TestKineticsTools(PbIntegrationBase):
                 csv_records.append(line)
         assert len(csv_records) == 3222
         assert csv_records[1] == \
-            r'"Escherichia_coli_K12",6214,0,C,8,0.784,0.144,0.631,1.242,33'
+            r'"Escherichia_coli_K12",6214,0,C,8,0.784,0.144,0.631,1.242,33,,,'
