@@ -26,9 +26,6 @@ setup(
         'ipdSummary = kineticsTools.ipdSummary:main',
         'summarizeModifications = kineticsTools.summarizeModifications:main',
     ]},
-    setup_requires=[
-        'pytest-runner',
-    ],
     install_requires=[
         'numpy >= 1.17',
         'pbcommand >= 2.0.0',
