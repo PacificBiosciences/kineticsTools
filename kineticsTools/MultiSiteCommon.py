@@ -143,7 +143,7 @@ class MultiSiteCommon(object):
     def getContextMeans(self, start, end, sequence):
         meanVector = []
         for pos in range(start, end + 1):
-            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring().decode("ascii")
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tobytes().decode("ascii")
             if ctx in self.contextMeanTable:
                 meanVector.append(self.contextMeanTable[ctx])
             else:
