@@ -8,3 +8,6 @@ kineticsTools.egg-info/
 /nosetests.xml
 /tree_predict*.so
 test/cram/*.err
+test/TestOutputs.csv
+test/TestOutputs.gff
+test/nosetests.xml
