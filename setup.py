@@ -11,7 +11,7 @@ test_deps = [
 
 setup(
     name='kineticsTools',
-    version='0.7.0',
+    version='0.8.0',
     author='Pacific Biosciences',
     author_email='devnet@pacificbiosciences.com',
     license='BSD-3-Clause-Clear',
@@ -27,13 +27,13 @@ setup(
         'summarizeModifications = kineticsTools.summarizeModifications:main',
     ]},
     install_requires=[
-        'numpy >= 1.17',
+        'numpy >= 1.21.0',
         'pbcommand >= 2.0.0',
-        'pbcore >= 2.0.0',
+        'pbcore >= 2.2.4',
         'pyBigWig',
         'scipy >= 1.3',
     ],
     tests_require=test_deps,
     extras_require={'test': test_deps},
-    python_requires='>=3.7',
+    python_requires='>=3.9',
 )

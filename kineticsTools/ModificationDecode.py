@@ -237,7 +237,7 @@ class ModificationDecode(MultiSiteCommon):
         qvModCalls = dict()
 
         modSeq = a.array('b')
-        modSeq.fromstring(self.sequence)
+        modSeq.frombytes(bytes(self.sequence, "ascii"))
 
         # Apply the found modifications to the raw sequence
         for (pos, call) in modCalls.items():
@@ -319,7 +319,7 @@ class ModificationDecode(MultiSiteCommon):
         sc = 0.0
         for pos in range(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)
-                           ].tostring().decode("ascii")
+                           ].tobytes().decode("ascii")
             if pos in self.scores:
                 sc += self.scores[pos][ctx]
 
@@ -330,7 +330,7 @@ class ModificationDecode(MultiSiteCommon):
 
         for pos in range(start, end + 1):
             ctx = sequence[(pos - self.pre):(pos + self.post + 1)
-                           ].tostring().decode("ascii")
+                           ].tobytes().decode("ascii")
             if pos in self.scores:
                 scores[pos - start] = self.scores[pos][ctx]
 

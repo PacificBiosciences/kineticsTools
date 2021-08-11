@@ -44,6 +44,10 @@ def test_path(monkeypatch):
     expected = 'path1/foo.npz.gz'
     assert expected == B.getIpdModelFilename(None, chem, ['path1', 'path2'])
 
+    # Missing path first.
+    expected = 'path1/foo.npz.gz'
+    assert expected == B.getIpdModelFilename(None, chem, ['pathmissing', 'path1', 'path2'])
+
 
 def test_path_with_prefixed_chem(monkeypatch):
     def isfile(fn):

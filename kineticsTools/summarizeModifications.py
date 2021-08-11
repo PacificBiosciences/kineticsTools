@@ -118,10 +118,10 @@ class ModificationSummary(object):
                         cRev = self.countModificationTypes(
                             [h for h in intervalHits if h['strand'] == '-'])
 
-                        rec.modsfwd = ",".join(
-                            [str(cFwd[x]) for x in self.knownModificationEvents])  # pylint: disable=assigning-non-slot
-                        rec.modsrev = ",".join(
-                            [str(cRev[x]) for x in self.knownModificationEvents])  # pylint: disable=assigning-non-slot
+                        rec.modsfwd = ",".join(  # pylint: disable=assigning-non-slot
+                            [str(cFwd[x]) for x in self.knownModificationEvents])
+                        rec.modsrev = ",".join(  # pylint: disable=assigning-non-slot
+                            [str(cRev[x]) for x in self.knownModificationEvents])
 
                         print(str(rec), file=summaryWriter)
         return 0
