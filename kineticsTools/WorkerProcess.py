@@ -124,8 +124,8 @@ class WorkerProcess(Process):
                 (chunkId, datum) = chunkDesc
                 logging.info("Got chunk: (%s, %s) -- Process: %s" %
                              (chunkId, str(datum), current_process()))
-                result = self.onChunk(
-                    datum)  # pylint: disable=assignment-from-none
+                result = self.onChunk(  # pylint: disable=assignment-from-none
+                    datum)
 
                 logging.debug("Process %s: putting result." %
                               current_process())

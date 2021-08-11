@@ -138,7 +138,7 @@ class MultiSiteDetection(object):
         contexts = []
 
         for pos in range(start, end + 1):
-            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tobytes()
             contexts.append(ctx)
 
         return contexts
@@ -263,7 +263,7 @@ class MultiSiteDetection(object):
         qvModCalls = dict()
 
         dnaSeq = a.array('c')
-        dnaSeq.fromstring(self.sequence)
+        dnaSeq.frombytes(bytes(self.sequence, "ascii"))
 
         for pos in self.motifPositions:
             if pos in self.rawKinetics:
@@ -295,7 +295,7 @@ class MultiSiteDetection(object):
         predictions = np.zeros(end - start + 1)
 
         for pos in range(start, end + 1):
-            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tostring()
+            ctx = sequence[(pos - self.pre):(pos + self.post + 1)].tobytes()
             predictions[pos - start] = self.contextMeanTable[ctx]
 
         return predictions
