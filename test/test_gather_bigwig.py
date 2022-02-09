@@ -61,8 +61,8 @@ class TestGatherBigwig:
         bw = pyBigWig.open(output_file)
         nrec = bw.header()["nBasesCovered"]
         assert nrec == 6
-        assert pytest.approx(bw.stats("chr1", 2, 3)[0], 1.9)
-        assert pytest.approx(bw.stats("chr2", 7, 8)[0], 1.0)
+        assert pytest.approx(bw.stats("chr1", 2, 3)[0]) == 1.9
+        assert pytest.approx(bw.stats("chr2", 7, 8)[0]) == 1.0
 
     def test_gather_bigwig(self):
         ofn = tempfile.NamedTemporaryFile(suffix=".bw").name
