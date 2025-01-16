@@ -1,4 +1,4 @@
-from pkg_resources import Requirement, resource_filename
+from importlib import resources
 import logging
 import gzip
 import os.path as op
@@ -47,8 +47,11 @@ codeToBase = dict([(y, x) for (x, y) in baseToCode.items()])
 
 
 def _getAbsPath(fname):
-    return resource_filename(Requirement.parse(
-        'kineticsTools'), 'kineticsTools/%s' % fname)
+    try:
+        with resources.as_file(resources.files('kineticsTools') / fname) as path:
+            return str(path)
+    except:
+        return os.path.join(os.path.dirname(__file__), path)
 
 
 class GbmContextModel(object):

@@ -20,7 +20,7 @@ import threading
 import numpy as np
 import queue
 import traceback
-from pkg_resources import Requirement, resource_filename
+from importlib import resources
 
 from pbcommand.common_options import add_debug_option
 from pbcommand.cli import get_default_argparser_with_base_opts, pacbio_args_runner
@@ -43,9 +43,11 @@ class Constants(object):
 
 
 def _getResourcePathSpec():
-    default_dir = resource_filename(Requirement.parse(
-        'kineticsTools'), 'kineticsTools/resources')
-    return loader.getResourcePathSpec(default_dir)
+    try:
+        with resources.as_file(resources.files('kineticTools') / 'resources') as path:
+            return loader.getResourcePathSpec(path)
+    except:
+        return loader.getResourcePathSpec(os.path.join(os.path.dirname(__file__), 'resources'))
 
 
 def _validateResource(func, p):
